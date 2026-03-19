@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sessions — BookMyShoot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root { --primary: #6366f1; --success: #22c55e; --danger: #ef4444; --warn: #f59e0b; --bg: #0b1224; --text: #e5e7eb; --muted: #9ca3af; --card: rgba(255,255,255,0.08); --stroke: rgba(255,255,255,0.14); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Poppins', sans-serif; background: radial-gradient(circle at 20% 20%, rgba(99,102,241,0.18), transparent 32%), var(--bg); color: var(--text); min-height: 100vh; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; padding: 18px 30px; background: rgba(8,12,24,0.75); backdrop-filter: blur(14px); border-bottom: 1px solid var(--stroke); position: sticky; top: 0; z-index: 10; }
+    .topbar h1 { font-size: 1.3rem; }
+    .btn { padding: 10px 18px; border-radius: 10px; border: 1px solid var(--stroke); background: var(--card); color: var(--text); font-weight: 600; cursor: pointer; transition: .2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn.primary { border-color: rgba(99,102,241,0.5); color: #c7d2fe; }
+    .btn.success { border-color: rgba(34,197,94,0.5); color: #bbf7d0; }
+    .content { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tab { padding: 10px 20px; border-radius: 10px; border: 1px solid var(--stroke); background: transparent; color: var(--text); font-weight: 600; cursor: pointer; transition: .2s; font-family: inherit; }
+    .tab.active { background: rgba(99,102,241,0.16); border-color: rgba(99,102,241,0.3); color: #c7d2fe; }
+    .grid { display: grid; gap: 16px; }
+    .card { background: var(--card); border: 1px solid var(--stroke); border-radius: 16px; padding: 20px; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .pill { padding: 5px 12px; border-radius: 999px; font-weight: 700; font-size: 0.8rem; }
+    .pill.accepted { background: rgba(34,197,94,0.18); color: #34d399; }
+    .pill.token_paid { background: rgba(59,130,246,0.18); color: #93c5fd; }
+    .pill.completed { background: rgba(99,102,241,0.18); color: #a5b4fc; }
+    .pill.declined { background: rgba(239,68,68,0.18); color: #fca5a5; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .info-item .label { color: var(--muted); font-size: 0.8rem; }
+    .info-item .value { font-weight: 600; font-size: 0.9rem; }
+    .card-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty i { font-size: 3rem; margin-bottom: 12px; display: block; }
+    .layout { display:grid; grid-template-columns:250px 1fr; min-height:100vh; }
+    .sidebar { position:sticky; top:0; height:100vh; padding:20px 16px; background:rgba(8,12,24,0.85); border-right:1px solid var(--stroke); backdrop-filter:blur(16px); overflow-y:auto; }
+    .sidebar .logo { font-weight:700; font-size:1.05rem; display:flex; align-items:center; gap:8px; margin-bottom:22px; }
+    .sidebar .logo span { color:var(--muted); font-weight:500; font-size:0.8rem; display:block; }
+    .sidebar .nav { list-style:none; padding:0; margin:0; display:grid; gap:6px; }
+    .sidebar .nav a { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; color:var(--text); border:1px solid transparent; transition:all .25s ease; text-decoration:none; font-size:0.9rem; }
+    .sidebar .nav a:hover { background:rgba(255,255,255,0.05); border-color:var(--stroke); }
+    .sidebar .nav a.active { background:rgba(99,102,241,0.16); border-color:rgba(99,102,241,0.3); color:#c7d2fe; }
+    .sidebar .nav a .dot { width:7px; height:7px; border-radius:50%; background:var(--primary); opacity:0; transition:.2s; }
+    .sidebar .nav a.active .dot { opacity:1; }
+    .sidebar .slogout { margin-top:20px; width:100%; border:1px solid rgba(239,68,68,0.4); background:rgba(239,68,68,0.12); color:#fecdd3; padding:10px; border-radius:10px; font-weight:600; cursor:pointer; transition:.2s; font-family:inherit; font-size:0.9rem; }
+    .sidebar .slogout:hover { background:rgba(239,68,68,0.2); }
+    .toggle-sb { display:none; background:var(--card); border:1px solid var(--stroke); color:var(--text); width:38px; height:38px; border-radius:10px; cursor:pointer; font-size:1.2rem; }
+    @media (max-width:768px) { .layout { grid-template-columns:1fr; } .sidebar { position:fixed; left:-280px; width:250px; transition:transform .3s ease; z-index:30; } .sidebar.show { transform:translateX(280px); } .toggle-sb { display:inline-flex; align-items:center; justify-content:center; } }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">📸 BookMyShoot <span>Photographer</span></div>
+    <ul class="nav">
+      <li><a href="photographer-dashboard.html"><span class="dot"></span><i class="bi bi-grid-3x3-gap"></i> Dashboard</a></li>
+      <li><a href="photographer-requests.html"><span class="dot"></span><i class="bi bi-chat-dots"></i> Requests</a></li>
+      <li><a class="active" href="photographer-sessions.html"><span class="dot"></span><i class="bi bi-calendar-check"></i> Sessions</a></li>
+      <li><a href="photographer-packages.html"><span class="dot"></span><i class="bi bi-box"></i> Packages</a></li>
+      <li><a href="photographer-earnings.html"><span class="dot"></span><i class="bi bi-wallet2"></i> Earnings</a></li>
+      <li><a href="photographer-portfolio.html"><span class="dot"></span><i class="bi bi-images"></i> Portfolio</a></li>
+      <li><a href="photographer-profile.html"><span class="dot"></span><i class="bi bi-person-circle"></i> Profile</a></li>
+    </ul>
+    <button class="slogout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+  </aside>
+  <div class="main-area">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px"><button class="toggle-sb" onclick="document.getElementById('sidebar').classList.toggle('show')"><i class="bi bi-list"></i></button><h1><i class="bi bi-calendar-check"></i> My Sessions</h1></div>
+  </div>
+  <div class="content">
+    <div class="tabs">
+      <button class="tab active" data-filter="active" onclick="setFilter('active',this)">Active</button>
+      <button class="tab" data-filter="completed" onclick="setFilter('completed',this)">Completed</button>
+      <button class="tab" data-filter="all" onclick="setFilter('all',this)">All</button>
+    </div>
+    <div class="grid" id="sessionsGrid">
+      <div class="empty"><i class="bi bi-hourglass-split"></i> Loading sessions...</div>
+    </div>
+  </div>
+  </div><!-- /main-area -->
+</div><!-- /layout -->
+  <script>
+    const API_URL = 'http://localhost:5000/api';
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (!user || !user.photographer_id) { window.location.href = 'login.html'; }
+    function logout() { fetch(`${API_URL}/logout`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:user.id}) }).finally(() => { localStorage.removeItem('user'); window.location.href='index.html'; }); }
+
+    let allBookings = [];
+    let currentFilter = 'active';
+
+    async function loadSessions() {
+      try {
+        const res = await fetch(`${API_URL}/bookings/photographer/${user.photographer_id}`);
+        const data = await res.json();
+        allBookings = data.bookings || [];
+        applyFilter();
+      } catch (err) {
+        document.getElementById('sessionsGrid').innerHTML = '<div class="empty"><i class="bi bi-exclamation-triangle"></i> Failed to load sessions</div>';
+      }
+    }
+
+    function setFilter(filter, el) {
+      currentFilter = filter;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      applyFilter();
+    }
+
+    function applyFilter() {
+      let filtered;
+      if (currentFilter === 'active') {
+        filtered = allBookings.filter(b => ['accepted', 'token_paid'].includes(b.status));
+      } else if (currentFilter === 'completed') {
+        filtered = allBookings.filter(b => b.status === 'completed');
+      } else {
+        filtered = allBookings.filter(b => b.status !== 'pending');
+      }
+      renderSessions(filtered);
+    }
+
+    function renderSessions(sessions) {
+      const grid = document.getElementById('sessionsGrid');
+      if (!sessions.length) {
+        grid.innerHTML = '<div class="empty"><i class="bi bi-calendar-x"></i><br>No sessions found.</div>';
+        return;
+      }
+      grid.innerHTML = sessions.map(s => {
+        const name = s.customer ? `${s.customer.first_name} ${s.customer.last_name}` : `Customer #${s.customer_id}`;
+        const balance = (s.total_price || 0) - (s.token_amount || 0);
+        return `
+        <div class="card">
+          <div class="card-header">
+            <div><div style="font-weight:700;font-size:1.05rem">${name}</div><div style="color:var(--muted);font-size:0.85rem">#${s.id}</div></div>
+            <span class="pill ${s.status}">${s.status}</span>
+          </div>
+          <div class="info-grid">
+            <div class="info-item"><div class="label">Service</div><div class="value">${s.service_type}</div></div>
+            <div class="info-item"><div class="label">Date</div><div class="value">${s.event_date || 'TBD'}</div></div>
+            <div class="info-item"><div class="label">Time</div><div class="value">${s.event_time || 'N/A'}</div></div>
+            <div class="info-item"><div class="label">Location</div><div class="value">${s.location || 'N/A'}</div></div>
+            <div class="info-item"><div class="label">Total</div><div class="value">₹${Number(s.total_price||0).toLocaleString('en-IN')}</div></div>
+            <div class="info-item"><div class="label">Payment</div><div class="value">${s.payment_status === 'paid' ? '✅ Paid' : s.payment_status === 'token_paid' ? '💰 Token Paid' : '⏳ Pending'}</div></div>
+          </div>
+          <div class="card-actions">
+            ${s.status === 'accepted' || s.status === 'token_paid' ? `<button class="btn success" onclick="markCompleted(${s.id})"><i class="bi bi-check-circle"></i> Mark Completed</button>` : ''}
+            ${s.payment_status === 'token_paid' && s.status !== 'completed' ? `<button class="btn" onclick="markPaid(${s.id})"><i class="bi bi-cash"></i> Mark Remaining Paid</button>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    async function markCompleted(id) {
+      const result = await Swal.fire({ title: 'Mark as completed?', icon: 'question', showCancelButton: true, confirmButtonText: 'Complete' });
+      if (!result.isConfirmed) return;
+      try {
+        const res = await fetch(`${API_URL}/bookings/${id}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'completed' }) });
+        if (!res.ok) throw new Error((await res.json()).error);
+        Swal.fire({ icon: 'success', title: 'Completed!', timer: 1200, showConfirmButton: false });
+        await loadSessions();
+      } catch (err) { Swal.fire({ icon: 'error', title: 'Error', text: err.message }); }
+    }
+
+    async function markPaid(id) {
+      const result = await Swal.fire({ title: 'Mark remaining amount as paid?', text: 'This means the customer paid the remaining balance (cash/offline).', icon: 'question', showCancelButton: true, confirmButtonText: 'Mark Paid' });
+      if (!result.isConfirmed) return;
+      try {
+        const res = await fetch(`${API_URL}/bookings/${id}/mark_paid`, { method: 'PUT', headers: { 'Content-Type': 'application/json' } });
+        if (!res.ok) throw new Error((await res.json()).error);
+        Swal.fire({ icon: 'success', title: 'Marked as Paid!', timer: 1200, showConfirmButton: false });
+        await loadSessions();
+      } catch (err) { Swal.fire({ icon: 'error', title: 'Error', text: err.message }); }
+    }
+
+    loadSessions();
+  </script>
+</body>
+</html>

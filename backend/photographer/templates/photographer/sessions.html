@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Accepted Sessions — BookMyShoot{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1>Accepted Sessions</h1>
+        <div class="breadcrumb">Manage photoshoots & track payments</div>
+    </div>
+</div>
+
+<div class="page-content fade-in">
+<div class="card overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Booking Info</th>
+                    <th>Customer</th>
+                    <th>Payment Status</th>
+                    <th>Balance</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if sessions %}
+                {% for s in sessions %}
+                <tr>
+                    <td class="ps-4 text-muted">
+                        <div class="fw-bold text-dark">{{ s.service_type | capitalize }}</div>
+                        <div class="small">📅 {{ s.event_date.strftime('%d %b, %Y') }}</div>
+                    </td>
+                    <td>
+                        <div class="fw-medium text-dark">{{ s.customer.first_name }} {{ s.customer.last_name }}</div>
+                        <div class="text-muted small">📞 {{ s.customer.phone or 'No phone' }}</div>
+                    </td>
+                    <td>
+                        <span
+                            class="badge {{ 'bg-success' if s.payment_status == 'paid' else 'bg-warning' }} bg-opacity-10 {{ 'text-success' if s.payment_status == 'paid' else 'text-warning' }} px-3 py-2 rounded-pill">
+                            {{ 'Fully Paid' if s.payment_status == 'paid' else 'Pending Balance' }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="fw-bold">₹{{ s.remaining_amount }}</div>
+                        <button class="btn btn-link btn-sm p-0 text-primary small"
+                            onclick="updateBalance({{ s.id }}, {{ s.remaining_amount }})">Update</button>
+                    </td>
+                    <td class="text-end pe-4">
+                        <div class="d-flex justify-content-end gap-2">
+                            <form action="{{ url_for('photographer.complete_session', id=s.id) }}" method="POST"
+                                class="d-inline" onsubmit="return confirmComplete(event)">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 fw-600">Mark
+                                    Completed</button>
+                            </form>
+                            <form action="{{ url_for('photographer.cancel_session', id=s.id) }}" method="POST"
+                                class="d-inline" onsubmit="return confirmCancel(event)">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-600">Cancel</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        No active sessions at the moment.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+</div>
+
+<script>
+    function confirmComplete(e) {
+        e.preventDefault();
+        const form = e.target;
+        Swal.fire({
+            title: 'Mark as Completed?',
+            text: 'This will finalize the booking.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#22c55e',
+            confirmButtonText: 'Yes, Complete'
+        }).then(r => { if (r.isConfirmed) form.submit(); });
+        return false;
+    }
+
+    function confirmCancel(e) {
+        e.preventDefault();
+        const form = e.target;
+        Swal.fire({
+            title: 'Cancel Booking?',
+            text: 'Are you sure you want to cancel this booking? This action cannot be undone and will notify the customer.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Yes, Cancel it'
+        }).then(r => { if (r.isConfirmed) form.submit(); });
+        return false;
+    }
+
+    async function updateBalance(id, current) {
+        const { value: balance } = await Swal.fire({
+            title: 'Update Balance Amount',
+            input: 'number',
+            inputLabel: 'Remaining Balance (₹)',
+            inputValue: current,
+            showCancelButton: true,
+            confirmButtonColor: '#6366f1',
+            inputValidator: (value) => {
+                if (!value || value < 0) return 'Enter a valid amount';
+            }
+        });
+
+        if (balance) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `{{ url_for('photographer.update_balance', id=0) }}`.replace('0', id);
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            const balanceInput = document.createElement('input');
+            balanceInput.type = 'hidden';
+            balanceInput.name = 'balance';
+            balanceInput.value = balance;
+            form.appendChild(csrfInput);
+            form.appendChild(balanceInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
+{% endblock %}

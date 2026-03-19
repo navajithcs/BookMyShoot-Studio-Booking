@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revenue Details — BookMyShoot Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    .dash-content { max-width: 100% !important; }
+    .revenue-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-5); }
+    .charts-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: var(--space-5); margin-bottom: var(--space-5); }
+    .service-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-3); }
+    .service-item {
+      padding: var(--space-4); background: var(--surface-secondary);
+      border-radius: var(--radius-lg); text-align: center;
+      border: 1px solid var(--border-primary);
+    }
+    .service-item .svc-name {
+      font-size: var(--text-sm); font-weight: 600; color: var(--text-primary);
+      text-transform: capitalize; margin-bottom: var(--space-1);
+    }
+    .service-item .svc-amount {
+      font-size: var(--text-lg); font-weight: 800; color: var(--brand-600);
+    }
+    .service-item .svc-count {
+      font-size: var(--text-xs); color: var(--text-tertiary); margin-top: 2px;
+    }
+    @media (max-width: 768px) {
+      .revenue-stats { grid-template-columns: repeat(2, 1fr); }
+      .charts-row { grid-template-columns: 1fr; }
+    }
+
+    /* Revenue Tabs */
+    .revenue-tabs { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-5); }
+    .revenue-tab {
+      padding: 10px 20px; border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg); font-size: var(--text-sm);
+      font-weight: 600; color: var(--text-secondary);
+      background: var(--surface-primary); cursor: pointer;
+      transition: all var(--duration-fast); text-decoration: none;
+    }
+    .revenue-tab:hover { border-color: var(--brand-300); color: var(--brand-700); background: var(--brand-50); }
+    .revenue-tab.active { background: var(--brand-600); color: #fff; border-color: var(--brand-600); }
+    [data-theme="dark"] .revenue-tab:hover { background: rgba(99,102,241,.1); color: var(--brand-300); }
+    [data-theme="dark"] .revenue-tab.active { background: var(--brand-500); border-color: var(--brand-500); }
+    .revenue-section { display: none; }
+    .revenue-section.active { display: block; }
+
+    /* Download Bars */
+    .section-download-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px;
+      padding: 14px 20px;
+      background: var(--surface-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+    }
+    .section-download-bar .bar-title {
+      font-size: var(--text-sm); font-weight: 700;
+      color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+    }
+    .section-download-bar .bar-title i { font-size: 1.1rem; color: var(--brand-600); }
+    .download-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dl-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border: none; border-radius: var(--radius-md);
+      font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      transition: all var(--duration-fast); text-decoration: none;
+    }
+    .dl-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .dl-btn-pdf { background: #dc3545; color: #fff; }
+    .dl-btn-pdf:hover { background: #c82333; }
+    .dl-btn-excel { background: #198754; color: #fff; }
+    .dl-btn-excel:hover { background: #157347; }
+    .dl-btn-csv { background: #0d6efd; color: #fff; }
+    .dl-btn-csv:hover { background: #0b5ed7; }
+    .dl-btn-print { background: #6c757d; color: #fff; }
+    .dl-btn-print:hover { background: #5a6268; }
+
+    .download-all-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(99,102,241,0.08) 100%);
+      border: 2px solid var(--success-200);
+      border-radius: var(--radius-xl);
+      margin-bottom: var(--space-5);
+    }
+    .download-all-bar .bar-title { font-size: var(--text-base); font-weight: 800; color: var(--success-700); }
+    [data-theme="dark"] .download-all-bar { border-color: var(--success-800); background: rgba(16,185,129,0.08); }
+    [data-theme="dark"] .download-all-bar .bar-title { color: var(--success-300); }
+
+    /* Customer details in table */
+    .cust-detail { display: flex; flex-direction: column; gap: 2px; }
+    .cust-name { font-weight: 700; color: var(--text-primary); }
+    .cust-email { font-size: 0.75rem; color: var(--text-tertiary); }
+    .cust-phone { font-size: 0.72rem; color: var(--text-tertiary); }
+
+    /* Search/filter */
+    .filter-bar {
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      margin-bottom: var(--space-4);
+    }
+    .filter-bar input, .filter-bar select {
+      padding: 8px 14px; border: 1px solid var(--border-primary);
+      border-radius: var(--radius-md); font-size: var(--text-sm);
+      background: var(--surface-primary); color: var(--text-primary);
+      transition: border-color var(--duration-fast);
+    }
+    .filter-bar input:focus, .filter-bar select:focus {
+      outline: none; border-color: var(--brand-500);
+    }
+    .filter-bar input { min-width: 220px; }
+  </style>
+</head>
+<body>
+  <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <div class="dash-layout">
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-logo">
+          <div class="logo-icon">📸</div>
+          <div class="logo-text">BookMyShoot<span class="logo-sub">Admin Panel</span></div>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Overview</div>
+          <a href="admin-dashboard.html" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Management</div>
+          <a href="admin-users.html" class="sidebar-link"><i class="bi bi-people"></i> Customer Management</a>
+          <a href="admin-photographers.html" class="sidebar-link"><i class="bi bi-camera"></i> Photographer Management</a>
+          <a href="admin-portfolio.html" class="sidebar-link"><i class="bi bi-images"></i> Portfolio</a>
+          <a href="admin-bookings.html" class="sidebar-link"><i class="bi bi-calendar-event"></i> Booking Management</a>
+          <a href="admin-services.html" class="sidebar-link"><i class="bi bi-box-seam"></i> Service & Packages</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Analytics</div>
+          <a href="admin-reports.html" class="sidebar-link"><i class="bi bi-bar-chart-line"></i> Reports</a>
+          <a href="admin-revenue.html" class="sidebar-link active"><i class="bi bi-currency-rupee"></i> Revenue Details</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Support</div>
+          <a href="admin-refunds.html" class="sidebar-link"><i class="bi bi-arrow-return-left"></i> Refund Requests</a>
+          <a href="admin-feedback.html" class="sidebar-link"><i class="bi bi-chat-square-text"></i> Feedback</a>
+          <a href="admin-support.html" class="sidebar-link"><i class="bi bi-headset"></i> Support Tickets</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar" id="sidebarAvatar">A</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+            <div class="sidebar-user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="sidebar-logout" onclick="DashApp.logout()"><i class="bi bi-box-arrow-left"></i> Logout</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+          <div>
+            <div class="topbar-title">Revenue Details</div>
+            <div class="topbar-subtitle">Complete revenue analytics, customer payments & downloadable reports</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="theme-toggle" data-tooltip="Toggle theme">
+            <i class="bi bi-moon-fill icon-moon"></i>
+            <i class="bi bi-sun-fill icon-sun"></i>
+          </button>
+          <button class="topbar-icon-btn" id="notifBtn" data-tooltip="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="badge-count" id="notifBadge" style="display:none;">0</span>
+          </button>
+          <div class="dropdown">
+            <div class="topbar-user" id="userDropdownTrigger">
+              <div class="topbar-user-avatar" id="topbarAvatar">A</div>
+              <span class="topbar-user-name" id="topbarUserName">Admin</span>
+              <i class="bi bi-chevron-down text-sm text-secondary"></i>
+            </div>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="admin-profile.html" class="dropdown-item"><i class="bi bi-person-gear"></i> Profile Settings</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" onclick="DashApp.logout()" style="color:var(--danger-600);"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="dash-content">
+
+        <!-- ═══ Download All Revenue Reports Bar ═══ -->
+        <div class="download-all-bar animate-fadeInUp">
+          <div class="bar-title"><i class="bi bi-download"></i> Download Complete Revenue Report</div>
+          <div class="download-btns">
+            <button class="dl-btn dl-btn-pdf" onclick="downloadFullRevenuePDF()"><i class="bi bi-file-earmark-pdf-fill"></i> Full Revenue PDF</button>
+            <button class="dl-btn dl-btn-excel" onclick="downloadFullRevenueExcel()"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Full Revenue Excel</button>
+          </div>
+        </div>
+
+        <!-- Revenue Summary Stats -->
+        <div class="revenue-stats animate-fadeInUp">
+          <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-cash-stack"></i></div><div class="stat-label">Total Revenue</div><div class="stat-value" id="totalRevenue">₹0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-check-circle"></i></div><div class="stat-label">Fully Paid</div><div class="stat-value" id="totalPaid">₹0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon info"><i class="bi bi-coin"></i></div><div class="stat-label">Token Collected</div><div class="stat-value" id="tokenCollected">₹0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-hourglass-split"></i></div><div class="stat-label">Pending Amount</div><div class="stat-value" id="pendingAmount">₹0</div></div>
+        </div>
+
+        <!-- Revenue Tabs -->
+        <div class="revenue-tabs animate-fadeInUp">
+          <button class="revenue-tab active" onclick="showRevTab('overview')" id="tabOverview"><i class="bi bi-graph-up"></i> Overview & Charts</button>
+          <button class="revenue-tab" onclick="showRevTab('payments')" id="tabPayments"><i class="bi bi-credit-card-2-front"></i> All Payments</button>
+          <button class="revenue-tab" onclick="showRevTab('bookingRevenue')" id="tabBookingRevenue"><i class="bi bi-receipt-cutoff"></i> Booking Revenue</button>
+          <button class="revenue-tab" onclick="showRevTab('customerRevenue')" id="tabCustomerRevenue"><i class="bi bi-people"></i> Revenue by Customer</button>
+        </div>
+
+        <!-- ═══════════════════ Overview Tab ═══════════════════ -->
+        <div id="sectionOverview" class="revenue-section active">
+          <div class="charts-row animate-fadeInUp">
+            <div class="ds-card">
+              <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-graph-up"></i> Monthly Revenue Trend</h3></div>
+              <div class="ds-card-body" style="padding: var(--space-4);"><canvas id="revenueChart" height="280"></canvas></div>
+            </div>
+            <div class="ds-card">
+              <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-pie-chart"></i> Revenue by Service</h3></div>
+              <div class="ds-card-body" style="padding: var(--space-4);"><canvas id="serviceChart" height="280"></canvas></div>
+            </div>
+          </div>
+          <div class="ds-card animate-fadeInUp" style="margin-bottom: var(--space-5);">
+            <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-grid-3x3"></i> Revenue by Service Type</h3></div>
+            <div class="ds-card-body" style="padding: var(--space-4);">
+              <div class="service-breakdown" id="serviceBreakdown"><div class="text-center text-secondary py-5">Loading...</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════ All Payments Tab ═══════════════════ -->
+        <div id="sectionPayments" class="revenue-section">
+          <div class="section-download-bar animate-fadeInUp">
+            <div class="bar-title"><i class="bi bi-credit-card-2-front-fill"></i> Payment Details Report</div>
+            <div class="download-btns">
+              <button class="dl-btn dl-btn-pdf" onclick="downloadReportPDF('payments')"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+              <button class="dl-btn dl-btn-excel" onclick="downloadReportExcel('payments')"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+              <button class="dl-btn dl-btn-csv" onclick="downloadReportCSV('payments')"><i class="bi bi-filetype-csv"></i> CSV</button>
+              <button class="dl-btn dl-btn-print" onclick="printSection('sectionPayments')"><i class="bi bi-printer-fill"></i> Print</button>
+            </div>
+          </div>
+          <div class="filter-bar">
+            <input type="text" id="paymentSearch" placeholder="🔍 Search by customer, service, photographer..." oninput="filterPayments()">
+            <select id="paymentStatusFilter" onchange="filterPayments()">
+              <option value="">All Status</option>
+              <option value="completed">Completed</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
+              <option value="refunded">Refunded</option>
+            </select>
+            <select id="paymentTypeFilter" onchange="filterPayments()">
+              <option value="">All Types</option>
+              <option value="token">Token</option>
+              <option value="remaining">Remaining</option>
+              <option value="full">Full</option>
+            </select>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header">
+              <h3 class="font-semibold text-base m-0"><i class="bi bi-receipt"></i> All Payment Transactions</h3>
+              <span class="badge-v2 badge-primary" id="paymentCount">0</span>
+            </div>
+            <div class="table-responsive">
+              <table class="ds-table" id="paymentsTable">
+                <thead>
+                  <tr>
+                    <th>Payment ID</th>
+                    <th>Customer Details</th>
+                    <th>Photographer</th>
+                    <th>Service / Package</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="paymentsBody">
+                  <tr><td colspan="9" class="text-center text-secondary py-5">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════ Booking Revenue Tab ═══════════════════ -->
+        <div id="sectionBookingRevenue" class="revenue-section">
+          <div class="section-download-bar animate-fadeInUp">
+            <div class="bar-title"><i class="bi bi-receipt-cutoff"></i> Booking Revenue Report</div>
+            <div class="download-btns">
+              <button class="dl-btn dl-btn-pdf" onclick="downloadReportPDF('bookingRevenue')"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+              <button class="dl-btn dl-btn-excel" onclick="downloadReportExcel('bookingRevenue')"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+              <button class="dl-btn dl-btn-csv" onclick="downloadReportCSV('bookingRevenue')"><i class="bi bi-filetype-csv"></i> CSV</button>
+              <button class="dl-btn dl-btn-print" onclick="printSection('sectionBookingRevenue')"><i class="bi bi-printer-fill"></i> Print</button>
+            </div>
+          </div>
+          <div class="filter-bar">
+            <input type="text" id="bookingRevSearch" placeholder="🔍 Search bookings..." oninput="filterBookingRevenue()">
+            <select id="bookingRevStatus" onchange="filterBookingRevenue()">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="accepted">Accepted</option>
+              <option value="completed">Completed</option>
+              <option value="declined">Declined</option>
+            </select>
+            <select id="bookingPayStatus" onchange="filterBookingRevenue()">
+              <option value="">All Payment Status</option>
+              <option value="pending">Unpaid</option>
+              <option value="token_paid">Token Paid</option>
+              <option value="paid">Fully Paid</option>
+            </select>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header">
+              <h3 class="font-semibold text-base m-0"><i class="bi bi-receipt-cutoff"></i> Revenue from Each Booking</h3>
+              <span class="badge-v2 badge-success" id="bookingRevCount">0</span>
+            </div>
+            <div class="table-responsive">
+              <table class="ds-table" id="bookingRevenueTable">
+                <thead>
+                  <tr>
+                    <th>Booking ID</th>
+                    <th>Customer Details</th>
+                    <th>Photographer</th>
+                    <th>Service</th>
+                    <th>Package</th>
+                    <th>Event Date</th>
+                    <th>Total Price</th>
+                    <th>Token Paid</th>
+                    <th>Remaining</th>
+                    <th>Payment Status</th>
+                    <th>Booking Status</th>
+                  </tr>
+                </thead>
+                <tbody id="bookingRevenueBody">
+                  <tr><td colspan="11" class="text-center text-secondary py-5">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════ Customer Revenue Tab ═══════════════════ -->
+        <div id="sectionCustomerRevenue" class="revenue-section">
+          <div class="section-download-bar animate-fadeInUp">
+            <div class="bar-title"><i class="bi bi-people-fill"></i> Revenue by Customer</div>
+            <div class="download-btns">
+              <button class="dl-btn dl-btn-pdf" onclick="downloadReportPDF('customerRevenue')"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+              <button class="dl-btn dl-btn-excel" onclick="downloadReportExcel('customerRevenue')"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+              <button class="dl-btn dl-btn-csv" onclick="downloadReportCSV('customerRevenue')"><i class="bi bi-filetype-csv"></i> CSV</button>
+              <button class="dl-btn dl-btn-print" onclick="printSection('sectionCustomerRevenue')"><i class="bi bi-printer-fill"></i> Print</button>
+            </div>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header">
+              <h3 class="font-semibold text-base m-0"><i class="bi bi-people"></i> Customer-wise Revenue Summary</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="ds-table" id="customerRevenueTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Customer Details</th>
+                    <th>Total Bookings</th>
+                    <th>Total Spent</th>
+                    <th>Token Paid</th>
+                    <th>Remaining Due</th>
+                    <th>Fully Paid</th>
+                    <th>Services Booked</th>
+                  </tr>
+                </thead>
+                <tbody id="customerRevenueBody">
+                  <tr><td colspan="8" class="text-center text-secondary py-5">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <aside class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3 class="font-semibold text-base m-0">Notifications</h3>
+      <button class="btn btn-sm btn-ghost" id="notifClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="notif-panel-body" id="notifList">
+      <div class="empty-state"><div class="empty-state-icon">🔔</div><div class="empty-state-title">No notifications</div></div>
+    </div>
+  </aside>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    const user = DashApp.requireAuth(['admin']);
+    if (user) {
+      const name = user.first_name || 'Admin';
+      const initial = name.charAt(0).toUpperCase();
+      document.getElementById('topbarAvatar').textContent = initial;
+      document.getElementById('topbarUserName').textContent = name;
+      document.getElementById('sidebarAvatar').textContent = initial;
+      document.getElementById('sidebarUserName').textContent = name;
+    }
+    DashApp.init();
+
+    let revenueChart, serviceChart;
+    let revData = {};      // Raw API response
+    let allPayments = [];
+    let allBookings = [];
+    let customerSummary = [];
+
+    /* ═══════════════ TAB SWITCHING ═══════════════ */
+    function showRevTab(tab) {
+      document.querySelectorAll('.revenue-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+      document.querySelectorAll('.revenue-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('section' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+    }
+
+    /* ═══════════════ LOAD DATA ═══════════════ */
+    function loadRevenue() {
+      fetch(`${DashApp.API_URL}/admin/revenue`)
+        .then(r => r.json())
+        .then(data => {
+          revData = data;
+
+          // ── Stats ──
+          document.getElementById('totalRevenue').textContent = DashApp.formatCurrency(data.total_revenue || 0);
+          document.getElementById('totalPaid').textContent = DashApp.formatCurrency(data.total_paid || 0);
+          document.getElementById('tokenCollected').textContent = DashApp.formatCurrency(data.token_collected || 0);
+          document.getElementById('pendingAmount').textContent = DashApp.formatCurrency(data.pending_amount || 0);
+
+          // ── Monthly Chart ──
+          const monthly = data.monthly || [];
+          const labels = monthly.map(m => m.label);
+          const values = monthly.map(m => m.revenue);
+          if (revenueChart) revenueChart.destroy();
+          revenueChart = new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: { labels, datasets: [{ label: 'Revenue (₹)', data: values, borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.1)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#6366f1' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '₹' + v.toLocaleString() } } } }
+          });
+
+          // ── Service Chart ──
+          const services = data.by_service || {};
+          const svcLabels = Object.keys(services);
+          const svcValues = svcLabels.map(k => services[k].revenue);
+          const colors = ['#6366f1','#f59e0b','#10b981','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
+          if (serviceChart) serviceChart.destroy();
+          serviceChart = new Chart(document.getElementById('serviceChart'), {
+            type: 'doughnut',
+            data: { labels: svcLabels.map(s => s.charAt(0).toUpperCase() + s.slice(1)), datasets: [{ data: svcValues, backgroundColor: colors.slice(0, svcLabels.length), borderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 12 } } } }
+          });
+
+          // ── Service Breakdown Cards ──
+          const brkHtml = svcLabels.map(s => `
+            <div class="service-item">
+              <div class="svc-name">${s}</div>
+              <div class="svc-amount">${DashApp.formatCurrency(services[s].revenue)}</div>
+              <div class="svc-count">${services[s].count} booking${services[s].count !== 1 ? 's' : ''}</div>
+            </div>
+          `).join('');
+          document.getElementById('serviceBreakdown').innerHTML = brkHtml || '<div class="text-center text-secondary py-3">No revenue data yet</div>';
+
+          // ── All Payments Table ──
+          allPayments = data.recent_payments || [];
+          renderPayments(allPayments);
+
+          // ── All Bookings Revenue ──
+          allBookings = data.all_bookings || [];
+          renderBookingRevenue(allBookings);
+
+          // ── Customer Revenue Summary ──
+          buildCustomerSummary(allBookings);
+        });
+    }
+
+    /* ═══════════════ RENDER PAYMENTS TABLE ═══════════════ */
+    function renderPayments(payments) {
+      document.getElementById('paymentCount').textContent = payments.length + ' payments';
+      const tbody = document.getElementById('paymentsBody');
+      if (!payments.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-secondary py-5">No payments found</td></tr>';
+        return;
+      }
+      tbody.innerHTML = payments.map(p => {
+        const sBadge = p.status === 'completed' ? 'badge-success' : p.status === 'pending' ? 'badge-warning' : p.status === 'refunded' ? 'badge-info' : 'badge-danger';
+        const tBadge = p.payment_type === 'token' ? 'badge-info' : p.payment_type === 'remaining' ? 'badge-primary' : 'badge-success';
+        return `<tr>
+          <td class="font-medium">#${p.id}</td>
+          <td>
+            <div class="cust-detail">
+              <span class="cust-name">${DashApp.escapeHtml(p.customer_name || 'Unknown')}</span>
+              <span class="cust-email">${DashApp.escapeHtml(p.customer_email || '')}</span>
+              ${p.customer_phone ? '<span class="cust-phone"><i class="bi bi-telephone" style="font-size:0.65rem;"></i> ' + DashApp.escapeHtml(p.customer_phone) + '</span>' : ''}
+            </div>
+          </td>
+          <td class="font-medium">${DashApp.escapeHtml(p.photographer_name || 'Unassigned')}</td>
+          <td>
+            <div style="font-weight:600; text-transform:capitalize;">${DashApp.escapeHtml(p.service_type || '—')}</div>
+            ${p.package_name ? '<div style="font-size:0.73rem; color:var(--text-tertiary);">' + DashApp.escapeHtml(p.package_name) + '</div>' : ''}
+          </td>
+          <td class="font-semibold" style="color:var(--success-600);">${DashApp.formatCurrency(p.amount)}</td>
+          <td><span class="badge-v2 ${tBadge}" style="text-transform:capitalize;">${p.payment_type}</span></td>
+          <td style="text-transform:capitalize;">${p.payment_method || '—'}</td>
+          <td><span class="badge-v2 ${sBadge}" style="text-transform:capitalize;">${p.status}</span></td>
+          <td>${DashApp.formatDate(p.created_at)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function filterPayments() {
+      const q = document.getElementById('paymentSearch').value.toLowerCase();
+      const status = document.getElementById('paymentStatusFilter').value;
+      const type = document.getElementById('paymentTypeFilter').value;
+      const filtered = allPayments.filter(p => {
+        if (status && p.status !== status) return false;
+        if (type && p.payment_type !== type) return false;
+        if (q) {
+          const searchable = [p.customer_name, p.customer_email, p.customer_phone, p.photographer_name, p.service_type, p.package_name, p.payment_method, p.transaction_id].filter(Boolean).join(' ').toLowerCase();
+          if (!searchable.includes(q)) return false;
+        }
+        return true;
+      });
+      renderPayments(filtered);
+    }
+
+    /* ═══════════════ RENDER BOOKING REVENUE TABLE ═══════════════ */
+    function renderBookingRevenue(bookings) {
+      document.getElementById('bookingRevCount').textContent = bookings.length + ' bookings';
+      const tbody = document.getElementById('bookingRevenueBody');
+      if (!bookings.length) {
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center text-secondary py-5">No bookings found</td></tr>';
+        return;
+      }
+      tbody.innerHTML = bookings.map(b => {
+        const psBadge = b.payment_status === 'paid' ? 'badge-success' : b.payment_status === 'token_paid' ? 'badge-primary' : 'badge-warning';
+        const sBadge = { pending:'badge-warning', accepted:'badge-primary', completed:'badge-success', declined:'badge-danger' }[b.status] || 'badge-neutral';
+        return `<tr>
+          <td class="font-medium">#${b.id}</td>
+          <td>
+            <div class="cust-detail">
+              <span class="cust-name">${DashApp.escapeHtml(b.customer_name || 'Unknown')}</span>
+              <span class="cust-email">${DashApp.escapeHtml(b.customer_email || '')}</span>
+              ${b.customer_phone ? '<span class="cust-phone"><i class="bi bi-telephone" style="font-size:0.65rem;"></i> ' + DashApp.escapeHtml(b.customer_phone) + '</span>' : ''}
+            </div>
+          </td>
+          <td class="font-medium">${DashApp.escapeHtml(b.photographer_name || 'Unassigned')}</td>
+          <td style="text-transform:capitalize; font-weight:600;">${DashApp.escapeHtml(b.service_type || '—')}</td>
+          <td>${DashApp.escapeHtml(b.package_name || '—')}</td>
+          <td>${DashApp.formatDate(b.event_date)}</td>
+          <td class="font-semibold" style="color:var(--success-600);">${DashApp.formatCurrency(b.total_price || 0)}</td>
+          <td>${DashApp.formatCurrency(b.token_amount || 0)}</td>
+          <td style="color:var(--warning-600); font-weight:600;">${DashApp.formatCurrency(b.remaining_amount || 0)}</td>
+          <td><span class="badge-v2 ${psBadge}" style="text-transform:capitalize;">${(b.payment_status || 'pending').replace('_', ' ')}</span></td>
+          <td><span class="badge-v2 ${sBadge}" style="text-transform:capitalize;">${b.status}</span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function filterBookingRevenue() {
+      const q = document.getElementById('bookingRevSearch').value.toLowerCase();
+      const status = document.getElementById('bookingRevStatus').value;
+      const payStatus = document.getElementById('bookingPayStatus').value;
+      const filtered = allBookings.filter(b => {
+        if (status && b.status !== status) return false;
+        if (payStatus && b.payment_status !== payStatus) return false;
+        if (q) {
+          const searchable = [b.customer_name, b.customer_email, b.photographer_name, b.service_type, b.package_name, b.location].filter(Boolean).join(' ').toLowerCase();
+          if (!searchable.includes(q)) return false;
+        }
+        return true;
+      });
+      renderBookingRevenue(filtered);
+    }
+
+    /* ═══════════════ BUILD CUSTOMER SUMMARY ═══════════════ */
+    function buildCustomerSummary(bookings) {
+      const custMap = {};
+      bookings.forEach(b => {
+        const key = b.customer_id;
+        if (!custMap[key]) {
+          custMap[key] = {
+            customer_id: key,
+            customer_name: b.customer_name || 'Unknown',
+            customer_email: b.customer_email || '',
+            customer_phone: b.customer_phone || '',
+            total_bookings: 0,
+            total_spent: 0,
+            token_paid: 0,
+            remaining_due: 0,
+            fully_paid: 0,
+            services: new Set()
+          };
+        }
+        const c = custMap[key];
+        c.total_bookings++;
+        c.total_spent += (b.total_price || 0);
+        c.token_paid += (b.token_amount || 0);
+        c.remaining_due += (b.remaining_amount || 0);
+        if (b.payment_status === 'paid') c.fully_paid++;
+        if (b.service_type) c.services.add(b.service_type);
+      });
+
+      customerSummary = Object.values(custMap).sort((a, b) => b.total_spent - a.total_spent);
+
+      const tbody = document.getElementById('customerRevenueBody');
+      if (!customerSummary.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-secondary py-5">No customer data</td></tr>';
+        return;
+      }
+      tbody.innerHTML = customerSummary.map((c, i) => {
+        const serviceList = Array.from(c.services).map(s => `<span class="badge-v2 badge-neutral" style="font-size:0.68rem; margin:1px;">${s}</span>`).join(' ');
+        return `<tr>
+          <td class="font-medium">${i + 1}</td>
+          <td>
+            <div class="cust-detail">
+              <span class="cust-name">${DashApp.escapeHtml(c.customer_name)}</span>
+              <span class="cust-email">${DashApp.escapeHtml(c.customer_email)}</span>
+              ${c.customer_phone ? '<span class="cust-phone"><i class="bi bi-telephone" style="font-size:0.65rem;"></i> ' + DashApp.escapeHtml(c.customer_phone) + '</span>' : ''}
+            </div>
+          </td>
+          <td class="font-semibold">${c.total_bookings}</td>
+          <td class="font-semibold" style="color:var(--success-600);">${DashApp.formatCurrency(c.total_spent)}</td>
+          <td>${DashApp.formatCurrency(c.token_paid)}</td>
+          <td style="color:var(--warning-600); font-weight:600;">${DashApp.formatCurrency(c.remaining_due)}</td>
+          <td>${c.fully_paid}</td>
+          <td>${serviceList}</td>
+        </tr>`;
+      }).join('');
+    }
+
+
+    /* ═══════════════════════════════════════════════════════════════════
+       REPORT CONFIGS — Centralized definitions for PDF / Excel / CSV
+       ═══════════════════════════════════════════════════════════════════ */
+
+    function getReportConfig(type) {
+      const configs = {
+        payments: {
+          title: 'Payment Details Report',
+          head: [['ID', 'Customer', 'Email', 'Phone', 'Photographer', 'Service', 'Package', 'Amount', 'Type', 'Method', 'Status', 'Date']],
+          body: () => allPayments.map(p => [
+            p.id, p.customer_name || 'Unknown', p.customer_email || '', p.customer_phone || '',
+            p.photographer_name || 'Unassigned', p.service_type || '—', p.package_name || '—',
+            'Rs.' + (p.amount || 0).toLocaleString('en-IN'), p.payment_type, p.payment_method || '—', p.status,
+            p.created_at ? new Date(p.created_at).toLocaleDateString('en-IN') : '—'
+          ]),
+          excelCols: ['Payment ID', 'Customer Name', 'Email', 'Phone', 'Photographer', 'Service', 'Package', 'Amount', 'Payment Type', 'Method', 'Status', 'Date'],
+          excelRows: () => allPayments.map(p => ({
+            'Payment ID': p.id, 'Customer Name': p.customer_name || '', 'Email': p.customer_email || '',
+            'Phone': p.customer_phone || '', 'Photographer': p.photographer_name || '', 'Service': p.service_type || '',
+            'Package': p.package_name || '', 'Amount': p.amount || 0, 'Payment Type': p.payment_type,
+            'Method': p.payment_method || '', 'Status': p.status,
+            'Date': p.created_at ? new Date(p.created_at).toLocaleDateString('en-IN') : ''
+          })),
+          csvHeader: 'Payment ID,Customer Name,Email,Phone,Photographer,Service,Package,Amount,Payment Type,Method,Status,Date',
+          csvRows: () => allPayments.map(p =>
+            `${p.id},"${p.customer_name || ''}","${p.customer_email || ''}","${p.customer_phone || ''}","${p.photographer_name || ''}","${p.service_type || ''}","${p.package_name || ''}",${p.amount || 0},"${p.payment_type}","${p.payment_method || ''}","${p.status}","${p.created_at ? new Date(p.created_at).toLocaleDateString('en-IN') : ''}"`
+          )
+        },
+        bookingRevenue: {
+          title: 'Booking Revenue Report',
+          head: [['Booking ID', 'Customer', 'Email', 'Photographer', 'Service', 'Package', 'Event Date', 'Total Price', 'Token Paid', 'Remaining', 'Payment Status', 'Booking Status']],
+          body: () => allBookings.map(b => [
+            b.id, b.customer_name || 'Unknown', b.customer_email || '', b.photographer_name || 'Unassigned',
+            b.service_type || '—', b.package_name || '—',
+            b.event_date ? new Date(b.event_date).toLocaleDateString('en-IN') : '—',
+            'Rs.' + (b.total_price || 0).toLocaleString('en-IN'),
+            'Rs.' + (b.token_amount || 0).toLocaleString('en-IN'),
+            'Rs.' + (b.remaining_amount || 0).toLocaleString('en-IN'),
+            (b.payment_status || 'pending').replace('_', ' '), b.status
+          ]),
+          summary: () => {
+            const totalPrice = allBookings.reduce((s, b) => s + (b.total_price || 0), 0);
+            const totalToken = allBookings.reduce((s, b) => s + (b.token_amount || 0), 0);
+            const totalRemaining = allBookings.reduce((s, b) => s + (b.remaining_amount || 0), 0);
+            const fullyPaid = allBookings.filter(b => b.payment_status === 'paid').length;
+            return [
+              ['Total Revenue', 'Token Collected', 'Remaining Due', 'Fully Paid Bookings'],
+              ['Rs.' + totalPrice.toLocaleString('en-IN'), 'Rs.' + totalToken.toLocaleString('en-IN'), 'Rs.' + totalRemaining.toLocaleString('en-IN'), fullyPaid]
+            ];
+          },
+          excelCols: ['Booking ID', 'Customer Name', 'Email', 'Phone', 'Photographer', 'Service', 'Package', 'Event Date', 'Total Price', 'Token Paid', 'Remaining', 'Payment Status', 'Booking Status'],
+          excelRows: () => allBookings.map(b => ({
+            'Booking ID': b.id, 'Customer Name': b.customer_name || '', 'Email': b.customer_email || '',
+            'Phone': b.customer_phone || '', 'Photographer': b.photographer_name || '',
+            'Service': b.service_type || '', 'Package': b.package_name || '',
+            'Event Date': b.event_date ? new Date(b.event_date).toLocaleDateString('en-IN') : '',
+            'Total Price': b.total_price || 0, 'Token Paid': b.token_amount || 0,
+            'Remaining': b.remaining_amount || 0,
+            'Payment Status': (b.payment_status || 'pending').replace('_', ' '),
+            'Booking Status': b.status
+          })),
+          csvHeader: 'Booking ID,Customer Name,Email,Phone,Photographer,Service,Package,Event Date,Total Price,Token Paid,Remaining,Payment Status,Booking Status',
+          csvRows: () => allBookings.map(b =>
+            `${b.id},"${b.customer_name || ''}","${b.customer_email || ''}","${b.customer_phone || ''}","${b.photographer_name || ''}","${b.service_type || ''}","${b.package_name || ''}","${b.event_date ? new Date(b.event_date).toLocaleDateString('en-IN') : ''}",${b.total_price || 0},${b.token_amount || 0},${b.remaining_amount || 0},"${(b.payment_status || 'pending').replace('_', ' ')}","${b.status}"`
+          )
+        },
+        customerRevenue: {
+          title: 'Customer-wise Revenue Report',
+          head: [['#', 'Customer', 'Email', 'Phone', 'Total Bookings', 'Total Spent', 'Token Paid', 'Remaining Due', 'Fully Paid', 'Services']],
+          body: () => customerSummary.map((c, i) => [
+            i + 1, c.customer_name, c.customer_email, c.customer_phone,
+            c.total_bookings, 'Rs.' + c.total_spent.toLocaleString('en-IN'),
+            'Rs.' + c.token_paid.toLocaleString('en-IN'), 'Rs.' + c.remaining_due.toLocaleString('en-IN'),
+            c.fully_paid, Array.from(c.services).join(', ')
+          ]),
+          summary: () => {
+            const totalSpent = customerSummary.reduce((s, c) => s + c.total_spent, 0);
+            const totalBookings = customerSummary.reduce((s, c) => s + c.total_bookings, 0);
+            return [
+              ['Total Customers', 'Total Bookings', 'Total Revenue'],
+              [customerSummary.length, totalBookings, 'Rs.' + totalSpent.toLocaleString('en-IN')]
+            ];
+          },
+          excelCols: ['#', 'Customer Name', 'Email', 'Phone', 'Total Bookings', 'Total Spent', 'Token Paid', 'Remaining Due', 'Fully Paid', 'Services'],
+          excelRows: () => customerSummary.map((c, i) => ({
+            '#': i + 1, 'Customer Name': c.customer_name, 'Email': c.customer_email,
+            'Phone': c.customer_phone, 'Total Bookings': c.total_bookings,
+            'Total Spent': c.total_spent, 'Token Paid': c.token_paid,
+            'Remaining Due': c.remaining_due, 'Fully Paid': c.fully_paid,
+            'Services': Array.from(c.services).join(', ')
+          })),
+          csvHeader: '#,Customer Name,Email,Phone,Total Bookings,Total Spent,Token Paid,Remaining Due,Fully Paid,Services',
+          csvRows: () => customerSummary.map((c, i) =>
+            `${i + 1},"${c.customer_name}","${c.customer_email}","${c.customer_phone}",${c.total_bookings},${c.total_spent},${c.token_paid},${c.remaining_due},${c.fully_paid},"${Array.from(c.services).join(', ')}"`
+          )
+        }
+      };
+      return configs[type];
+    }
+
+
+    /* ═══════════════════════════════════════════════════════════
+       PDF Generation — Professional layout with autoTable
+       ═══════════════════════════════════════════════════════════ */
+
+    function pdfHeader(doc, title) {
+      const pageW = doc.internal.pageSize.getWidth();
+      doc.setFillColor(16, 185, 129);
+      doc.rect(0, 0, pageW, 32, 'F');
+      doc.setTextColor(255);
+      doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+      doc.text('BookMyShoot', 14, 15);
+      doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+      doc.text('Revenue Report', 14, 23);
+      doc.text('Generated: ' + new Date().toLocaleString('en-IN'), pageW - 14, 23, { align: 'right' });
+      doc.setTextColor(51);
+      doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+      doc.text(title, 14, 44);
+      doc.setDrawColor(16, 185, 129); doc.setLineWidth(0.5);
+      doc.line(14, 47, pageW - 14, 47);
+      return 52;
+    }
+
+    function pdfFooter(doc) {
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        doc.setFontSize(8); doc.setTextColor(150);
+        doc.text('BookMyShoot Revenue Report  |  Page ' + i + ' of ' + pageCount, pageW / 2, pageH - 8, { align: 'center' });
+      }
+    }
+
+    function pdfSummaryStats(doc, startY) {
+      const pageW = doc.internal.pageSize.getWidth();
+      const stats = [
+        { label: 'Total Revenue', value: DashApp.formatCurrency(revData.total_revenue || 0) },
+        { label: 'Fully Paid', value: DashApp.formatCurrency(revData.total_paid || 0) },
+        { label: 'Token Collected', value: DashApp.formatCurrency(revData.token_collected || 0) },
+        { label: 'Pending Amount', value: DashApp.formatCurrency(revData.pending_amount || 0) }
+      ];
+      doc.autoTable({
+        startY, head: [stats.map(s => s.label)], body: [stats.map(s => s.value)],
+        theme: 'grid',
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 9, halign: 'center' },
+        bodyStyles: { fontSize: 11, fontStyle: 'bold', halign: 'center' },
+        margin: { left: 14, right: 14 }
+      });
+      return doc.lastAutoTable.finalY + 8;
+    }
+
+    /* ─── Per-Section PDF ─── */
+    function downloadReportPDF(type) {
+      const cfg = getReportConfig(type);
+      if (!cfg) return;
+      const rows = cfg.body();
+      if (!rows.length) { Swal.fire('Info', 'No data to export. Load the data first.', 'info'); return; }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape', 'mm', 'a4');
+      let startY = pdfHeader(doc, cfg.title);
+
+      if (cfg.summary) {
+        const [labels, values] = cfg.summary();
+        doc.autoTable({
+          startY, head: [labels], body: [values], theme: 'grid',
+          headStyles: { fillColor: [255, 193, 7], textColor: [51, 51, 51], fontStyle: 'bold', fontSize: 9 },
+          bodyStyles: { fontSize: 10, fontStyle: 'bold', halign: 'center' },
+          styles: { halign: 'center' }, margin: { left: 14, right: 14 }
+        });
+        startY = doc.lastAutoTable.finalY + 8;
+      }
+
+      doc.autoTable({
+        startY, head: cfg.head, body: rows, theme: 'striped',
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+        bodyStyles: { fontSize: 7.5 },
+        alternateRowStyles: { fillColor: [240, 253, 244] },
+        styles: { cellPadding: 2.5, lineWidth: 0.1, lineColor: [220, 220, 220], overflow: 'linebreak' },
+        margin: { left: 10, right: 10 },
+        columnStyles: cfg.head[0].length > 10 ? { 0: { cellWidth: 12 } } : {},
+        didDrawPage: (data) => {
+          if (data.pageNumber > 1) {
+            doc.setFillColor(16, 185, 129);
+            doc.rect(0, 0, doc.internal.pageSize.getWidth(), 18, 'F');
+            doc.setTextColor(255); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+            doc.text('BookMyShoot  —  ' + cfg.title, 14, 12);
+            doc.setTextColor(51);
+          }
+        }
+      });
+
+      pdfFooter(doc);
+      doc.save('BookMyShoot_Revenue_' + type + '_' + new Date().toISOString().split('T')[0] + '.pdf');
+      Swal.fire({ icon: 'success', title: 'PDF Downloaded!', text: cfg.title, timer: 2000, showConfirmButton: false });
+    }
+
+    /* ─── Per-Section Excel ─── */
+    function downloadReportExcel(type) {
+      const cfg = getReportConfig(type);
+      if (!cfg) return;
+      const rows = cfg.excelRows();
+      if (!rows.length) { Swal.fire('Info', 'No data to export.', 'info'); return; }
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = cfg.excelCols.map(col => {
+        const maxLen = Math.max(col.length, ...rows.map(r => String(r[col] || '').length));
+        return { wch: Math.min(maxLen + 4, 40) };
+      });
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, cfg.title.substring(0, 31));
+      XLSX.writeFile(wb, 'BookMyShoot_Revenue_' + type + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
+      Swal.fire({ icon: 'success', title: 'Excel Downloaded!', text: cfg.title, timer: 2000, showConfirmButton: false });
+    }
+
+    /* ─── Per-Section CSV ─── */
+    function downloadReportCSV(type) {
+      const cfg = getReportConfig(type);
+      if (!cfg) return;
+      const rows = cfg.csvRows();
+      if (!rows.length) { Swal.fire('Info', 'No data to export.', 'info'); return; }
+      const csv = cfg.csvHeader + '\n' + rows.join('\n');
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url;
+      a.download = 'BookMyShoot_Revenue_' + type + '_' + new Date().toISOString().split('T')[0] + '.csv';
+      a.click(); URL.revokeObjectURL(url);
+      Swal.fire({ icon: 'success', title: 'CSV Downloaded!', text: cfg.title, timer: 2000, showConfirmButton: false });
+    }
+
+    /* ─── Print Section ─── */
+    function printSection(sectionId) {
+      const section = document.getElementById(sectionId);
+      const pw = window.open('', '_blank');
+      pw.document.write(
+        '<html><head><title>Print Revenue Report</title>' +
+        '<link rel="stylesheet" href="css/design-system.css"><link rel="stylesheet" href="css/dashboard.css">' +
+        '<style>body{padding:20px;font-family:Inter,sans-serif;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;font-size:11px;} th{background:#10b981;color:#fff;} .section-download-bar,.filter-bar{display:none;} .cust-detail{display:flex;flex-direction:column;} h1{color:#10b981;}</style>' +
+        '</head><body><h1>BookMyShoot Revenue Report</h1>' +
+        '<p style="color:#888;">Generated: ' + new Date().toLocaleString('en-IN') + '</p>' +
+        section.innerHTML + '</body></html>'
+      );
+      pw.document.close();
+      setTimeout(() => { pw.print(); pw.close(); }, 500);
+    }
+
+
+    /* ═══════════════ FULL REVENUE REPORT (ALL TABS) ═══════════════ */
+
+    function downloadFullRevenuePDF() {
+      if (!allPayments.length && !allBookings.length) { Swal.fire('Info', 'Please wait for data to load.', 'info'); return; }
+      Swal.fire({ title: 'Generating...', text: 'Preparing full revenue report PDF', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape', 'mm', 'a4');
+
+      // ── Page 1: Revenue Summary ──
+      let y = pdfHeader(doc, 'Revenue Summary');
+      y = pdfSummaryStats(doc, y);
+
+      // Service breakdown
+      const services = revData.by_service || {};
+      const svcLabels = Object.keys(services);
+      if (svcLabels.length) {
+        doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(51);
+        doc.text('Revenue by Service Type', 14, y + 2);
+        doc.autoTable({
+          startY: y + 6,
+          head: [['Service Type', 'Revenue', 'Bookings']],
+          body: svcLabels.map(s => [s.charAt(0).toUpperCase() + s.slice(1), 'Rs.' + (services[s].revenue || 0).toLocaleString('en-IN'), services[s].count]),
+          theme: 'striped',
+          headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+          bodyStyles: { fontSize: 9 },
+          margin: { left: 14, right: 14 }
+        });
+      }
+
+      // ── Page 2: All Payments ──
+      const paymentCfg = getReportConfig('payments');
+      const paymentRows = paymentCfg.body();
+      if (paymentRows.length) {
+        doc.addPage();
+        let py = pdfHeader(doc, 'All Payment Transactions');
+        doc.autoTable({
+          startY: py, head: paymentCfg.head, body: paymentRows, theme: 'striped',
+          headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 7.5 },
+          bodyStyles: { fontSize: 7 },
+          alternateRowStyles: { fillColor: [240, 253, 244] },
+          styles: { cellPadding: 2, lineWidth: 0.1, lineColor: [220, 220, 220], overflow: 'linebreak' },
+          margin: { left: 8, right: 8 },
+          didDrawPage: (data) => {
+            if (data.pageNumber > 1) {
+              doc.setFillColor(16, 185, 129);
+              doc.rect(0, 0, doc.internal.pageSize.getWidth(), 18, 'F');
+              doc.setTextColor(255); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+              doc.text('BookMyShoot  —  All Payment Transactions', 14, 12);
+              doc.setTextColor(51);
+            }
+          }
+        });
+      }
+
+      // ── Page 3: Booking Revenue ──
+      const bookCfg = getReportConfig('bookingRevenue');
+      const bookRows = bookCfg.body();
+      if (bookRows.length) {
+        doc.addPage();
+        let by = pdfHeader(doc, 'Booking Revenue Report');
+        if (bookCfg.summary) {
+          const [sl, sv] = bookCfg.summary();
+          doc.autoTable({
+            startY: by, head: [sl], body: [sv], theme: 'grid',
+            headStyles: { fillColor: [255, 193, 7], textColor: [51, 51, 51], fontStyle: 'bold', fontSize: 9 },
+            bodyStyles: { fontSize: 10, fontStyle: 'bold', halign: 'center' }, styles: { halign: 'center' },
+            margin: { left: 14, right: 14 }
+          });
+          by = doc.lastAutoTable.finalY + 6;
+        }
+        doc.autoTable({
+          startY: by, head: bookCfg.head, body: bookRows, theme: 'striped',
+          headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 7.5 },
+          bodyStyles: { fontSize: 7 },
+          alternateRowStyles: { fillColor: [240, 253, 244] },
+          styles: { cellPadding: 2, lineWidth: 0.1, lineColor: [220, 220, 220], overflow: 'linebreak' },
+          margin: { left: 8, right: 8 }
+        });
+      }
+
+      // ── Page 4: Customer Revenue ──
+      const custCfg = getReportConfig('customerRevenue');
+      const custRows = custCfg.body();
+      if (custRows.length) {
+        doc.addPage();
+        let cy = pdfHeader(doc, 'Customer-wise Revenue');
+        if (custCfg.summary) {
+          const [cl, cv] = custCfg.summary();
+          doc.autoTable({
+            startY: cy, head: [cl], body: [cv], theme: 'grid',
+            headStyles: { fillColor: [255, 193, 7], textColor: [51, 51, 51], fontStyle: 'bold', fontSize: 9 },
+            bodyStyles: { fontSize: 10, fontStyle: 'bold', halign: 'center' }, styles: { halign: 'center' },
+            margin: { left: 14, right: 14 }
+          });
+          cy = doc.lastAutoTable.finalY + 6;
+        }
+        doc.autoTable({
+          startY: cy, head: custCfg.head, body: custRows, theme: 'striped',
+          headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 7.5 },
+          bodyStyles: { fontSize: 7 },
+          alternateRowStyles: { fillColor: [240, 253, 244] },
+          styles: { cellPadding: 2, lineWidth: 0.1, lineColor: [220, 220, 220] },
+          margin: { left: 8, right: 8 }
+        });
+      }
+
+      pdfFooter(doc);
+      doc.save('BookMyShoot_Full_Revenue_Report_' + new Date().toISOString().split('T')[0] + '.pdf');
+      Swal.fire({ icon: 'success', title: 'Full Revenue Report Downloaded!', text: 'All sections included.', timer: 2500, showConfirmButton: false });
+    }
+
+    function downloadFullRevenueExcel() {
+      if (!allPayments.length && !allBookings.length) { Swal.fire('Info', 'Please wait for data to load.', 'info'); return; }
+      Swal.fire({ title: 'Generating...', text: 'Preparing full revenue Excel', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      const wb = XLSX.utils.book_new();
+
+      // Summary sheet
+      const summaryData = [
+        { 'Metric': 'Total Revenue', 'Value': revData.total_revenue || 0 },
+        { 'Metric': 'Fully Paid', 'Value': revData.total_paid || 0 },
+        { 'Metric': 'Token Collected', 'Value': revData.token_collected || 0 },
+        { 'Metric': 'Pending Amount', 'Value': revData.pending_amount || 0 },
+        { 'Metric': 'Total Payments', 'Value': revData.total_payments || 0 }
+      ];
+      const services = revData.by_service || {};
+      Object.keys(services).forEach(s => {
+        summaryData.push({ 'Metric': s + ' Revenue', 'Value': services[s].revenue || 0 });
+        summaryData.push({ 'Metric': s + ' Bookings', 'Value': services[s].count || 0 });
+      });
+      const sumWs = XLSX.utils.json_to_sheet(summaryData);
+      sumWs['!cols'] = [{ wch: 25 }, { wch: 18 }];
+      XLSX.utils.book_append_sheet(wb, sumWs, 'Revenue Summary');
+
+      // Per-section sheets
+      const sections = ['payments', 'bookingRevenue', 'customerRevenue'];
+      const sheetNames = ['All Payments', 'Booking Revenue', 'By Customer'];
+      sections.forEach((type, idx) => {
+        const cfg = getReportConfig(type);
+        const rows = cfg.excelRows();
+        const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ 'Info': 'No data' }]);
+        ws['!cols'] = cfg.excelCols.map(col => {
+          const maxLen = Math.max(col.length, ...rows.map(r => String(r[col] || '').length));
+          return { wch: Math.min(maxLen + 4, 40) };
+        });
+        XLSX.utils.book_append_sheet(wb, ws, sheetNames[idx]);
+      });
+
+      XLSX.writeFile(wb, 'BookMyShoot_Full_Revenue_Report_' + new Date().toISOString().split('T')[0] + '.xlsx');
+      Swal.fire({ icon: 'success', title: 'Full Revenue Excel Downloaded!', text: 'All sheets included.', timer: 2500, showConfirmButton: false });
+    }
+
+    // Load data on page load
+    loadRevenue();
+  </script>
+</body>
+</html>

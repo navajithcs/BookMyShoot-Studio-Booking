@@ -1,0 +1,8 @@
+--- USERS ---
+ID: 1, Email: shint0@gmail.com, Type: customer
+ID: 2, Email: photo@example.com, Type: photographer
+ID: 3, Email: toms@gmail.com, Type: customer
+ID: 4, Email: test_customer@example.com, Type: customer
+
+--- PHOTOGRAPHERS ---
+ID: 1, UserID: 2, Specialty: Wedding & Events

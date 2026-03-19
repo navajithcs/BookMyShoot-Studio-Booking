@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customers — BookMyShoot Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .dash-content { max-width: 100% !important; }
+    #userTableBody tr { cursor: pointer; transition: background .15s; }
+    #userTableBody tr:hover { background: var(--brand-50) !important; }
+    [data-theme="dark"] #userTableBody tr:hover { background: rgba(99,102,241,.08) !important; }
+  </style>
+</head>
+<body>
+  <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <div class="dash-layout">
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-logo">
+          <div class="logo-icon">📸</div>
+          <div class="logo-text">BookMyShoot<span class="logo-sub">Admin Panel</span></div>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Overview</div>
+          <a href="admin-dashboard.html" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Management</div>
+          <a href="admin-users.html" class="sidebar-link active"><i class="bi bi-people"></i> Customer Management</a>
+          <a href="admin-photographers.html" class="sidebar-link"><i class="bi bi-camera"></i> Photographer Management</a>
+          <a href="admin-portfolio.html" class="sidebar-link"><i class="bi bi-images"></i> Portfolio</a>
+          <a href="admin-bookings.html" class="sidebar-link"><i class="bi bi-calendar-event"></i> Booking Management</a>
+          <a href="admin-services.html" class="sidebar-link"><i class="bi bi-box-seam"></i> Service & Packages</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Analytics</div>
+          <a href="admin-reports.html" class="sidebar-link"><i class="bi bi-bar-chart-line"></i> Reports</a>
+          <a href="admin-revenue.html" class="sidebar-link"><i class="bi bi-currency-rupee"></i> Revenue Details</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Support</div>
+          <a href="admin-refunds.html" class="sidebar-link"><i class="bi bi-arrow-return-left"></i> Refund Requests</a>
+          <a href="admin-feedback.html" class="sidebar-link"><i class="bi bi-chat-square-text"></i> Feedback</a>
+          <a href="admin-support.html" class="sidebar-link"><i class="bi bi-headset"></i> Support Tickets</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar" id="sidebarAvatar">A</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+            <div class="sidebar-user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="sidebar-logout" onclick="DashApp.logout()"><i class="bi bi-box-arrow-left"></i> Logout</button>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+          <div>
+            <div class="topbar-title">Customer Management</div>
+            <div class="topbar-subtitle">View all registered customers</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="theme-toggle" data-tooltip="Toggle theme">
+            <i class="bi bi-moon-fill icon-moon"></i>
+            <i class="bi bi-sun-fill icon-sun"></i>
+          </button>
+          <button class="topbar-icon-btn" id="notifBtn" data-tooltip="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="badge-count" id="notifBadge" style="display:none;">0</span>
+          </button>
+          <div class="dropdown">
+            <div class="topbar-user" id="userDropdownTrigger">
+              <div class="topbar-user-avatar" id="topbarAvatar">A</div>
+              <span class="topbar-user-name" id="topbarUserName">Admin</span>
+              <i class="bi bi-chevron-down text-sm text-secondary"></i>
+            </div>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="admin-profile.html" class="dropdown-item"><i class="bi bi-person-gear"></i> Profile Settings</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" onclick="DashApp.logout()" style="color:var(--danger-600);"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="dash-content">
+        <!-- Stats -->
+        <div class="stats-grid-v2" style="grid-template-columns: repeat(3, 1fr);">
+          <div class="stat-card-v2 animate-fadeInUp">
+            <div class="stat-icon brand"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-label">Total Customers</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card-v2 animate-fadeInUp" style="animation-delay:.05s">
+            <div class="stat-icon success"><i class="bi bi-person-check"></i></div>
+            <div class="stat-label">Active Customers</div>
+            <div class="stat-value" id="statActive">0</div>
+          </div>
+          <div class="stat-card-v2 animate-fadeInUp" style="animation-delay:.1s">
+            <div class="stat-icon info"><i class="bi bi-calendar-plus"></i></div>
+            <div class="stat-label">New This Month</div>
+            <div class="stat-value" id="statNew">0</div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="ds-card animate-fadeInUp">
+          <div class="ds-card-header">
+            <h3 class="font-semibold text-base m-0"><i class="bi bi-people"></i> All Customers</h3>
+            <div class="search-bar" style="max-width:260px;">
+              <i class="bi bi-search search-icon"></i>
+              <input type="text" id="tableSearch" placeholder="Search customers..." style="font-size:0.8rem;">
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="ds-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Joined</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="userTableBody">
+                <tr><td colspan="6" class="text-center text-secondary py-5">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <aside class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3 class="font-semibold text-base m-0">Notifications</h3>
+      <button class="btn btn-sm btn-ghost" id="notifClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="notif-panel-body" id="notifList">
+      <div class="empty-state"><div class="empty-state-icon">🔔</div><div class="empty-state-title">No notifications</div></div>
+    </div>
+  </aside>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    const user = DashApp.requireAuth(['admin']);
+    if (user) {
+      const name = user.first_name || 'Admin';
+      const initial = name.charAt(0).toUpperCase();
+      document.getElementById('topbarAvatar').textContent = initial;
+      document.getElementById('topbarUserName').textContent = name;
+      document.getElementById('sidebarAvatar').textContent = initial;
+      document.getElementById('sidebarUserName').textContent = name;
+    }
+    DashApp.init();
+
+    let allUsers = [];
+
+    function loadUsers() {
+      DashApp.showLoader(true);
+      fetch(`${DashApp.API_URL}/admin/users?user_type=customer`)
+        .then(r => r.json())
+        .then(data => {
+          allUsers = data.users || [];
+          document.getElementById('statTotal').textContent = allUsers.length;
+          const now = new Date();
+          const thisMonth = allUsers.filter(u => {
+            const d = new Date(u.created_at);
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+          });
+          document.getElementById('statNew').textContent = thisMonth.length;
+          document.getElementById('statActive').textContent = allUsers.filter(u => u.is_active !== false).length;
+          renderUsers(allUsers);
+        })
+        .catch(err => {
+          console.error(err);
+          DashApp.showToast('Error', 'Could not load customers', 'danger');
+        })
+        .finally(() => DashApp.showLoader(false));
+    }
+
+    function custId(id) { return '#CUST-' + String(id).padStart(4, '0'); }
+
+    function renderUsers(users) {
+      const tbody = document.getElementById('userTableBody');
+      if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-secondary py-5">No customers found</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users.map(u => {
+        const isActive = u.is_active !== false;
+        const statusBadge = isActive
+          ? '<span class="badge-v2 badge-success">Active</span>'
+          : '<span class="badge-v2 badge-danger" style="background:rgba(239,68,68,0.1);color:#dc2626;">Disabled</span>';
+        // Only show toggle button for photographers, not customers
+        const isPhotographer = u.user_type === 'photographer';
+        const toggleBtn = isPhotographer ? (isActive
+          ? `<button class="btn btn-sm" style="padding:6px 14px;font-size:0.8rem;background:#dc2626;color:#fff;border:none;border-radius:8px;cursor:pointer;" title="Disable" onclick="event.stopPropagation();toggleUser(${u.id}, true)"><i class="bi bi-toggle-on"></i> Disable</button>`
+          : `<button class="btn btn-sm" style="padding:6px 14px;font-size:0.8rem;background:#16a34a;color:#fff;border:none;border-radius:8px;cursor:pointer;" title="Enable" onclick="event.stopPropagation();toggleUser(${u.id}, false)"><i class="bi bi-toggle-off"></i> Enable</button>`) : '-';
+        return `
+        <tr onclick="viewCustomerBookings(${u.id}, '${DashApp.escapeHtml(u.first_name + ' ' + u.last_name)}')" title="Click to view bookings" style="${!isActive ? 'opacity:0.6;' : ''}">
+          <td class="font-medium" style="color:var(--brand-600);font-weight:700;">${custId(u.id)}</td>
+          <td class="font-semibold">${DashApp.escapeHtml(u.first_name + ' ' + u.last_name)}</td>
+          <td>${DashApp.escapeHtml(u.email)}</td>
+          <td>${u.phone || '—'}</td>
+          <td>${DashApp.formatDate(u.created_at)}</td>
+          <td>${statusBadge}</td>
+          <td>${toggleBtn}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function toggleUser(userId, currentlyActive) {
+      const action = currentlyActive ? 'Disable' : 'Enable';
+      Swal.fire({
+        title: `${action} this customer?`,
+        text: currentlyActive
+          ? 'This customer will not be able to log in until re-enabled.'
+          : 'This customer will be able to log in and use the platform again.',
+        icon: currentlyActive ? 'warning' : 'question',
+        showCancelButton: true,
+        confirmButtonText: action,
+        confirmButtonColor: currentlyActive ? '#dc2626' : '#16a34a'
+      }).then(r => {
+        if (r.isConfirmed) {
+          fetch(`${DashApp.API_URL}/admin/users/${userId}/toggle`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' }
+          })
+            .then(r => r.json())
+            .then(d => {
+              if (d.error) { Swal.fire('Error', d.error, 'error'); return; }
+              DashApp.showToast('Updated', `Customer ${action.toLowerCase()}d successfully`, 'success');
+              loadUsers();
+            })
+            .catch(() => Swal.fire('Error', 'Failed to update user status', 'error'));
+        }
+      });
+    }
+
+    function viewCustomerBookings(userId, customerName) {
+      Swal.fire({
+        title: `<i class="bi bi-calendar-check" style="color:var(--brand-500);margin-right:6px;"></i> Bookings for ${customerName}`,
+        html: '<div style="text-align:center;padding:20px;"><div class="spinner" style="width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:#6366f1;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto;"></div><p style="margin-top:10px;color:#6b7280;">Loading bookings...</p></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>',
+        showConfirmButton: false,
+        showCloseButton: true,
+        width: '700px',
+        didOpen: () => {
+          fetch(`${DashApp.API_URL}/admin/bookings`)
+            .then(r => r.json())
+            .then(data => {
+              const bookings = (data.bookings || []).filter(b => b.customer_id === userId);
+              if (!bookings.length) {
+                Swal.update({
+                  html: `<div style="text-align:center;padding:30px;"><i class="bi bi-calendar-x" style="font-size:3rem;color:#d1d5db;"></i><p style="margin-top:12px;color:#6b7280;font-size:0.95rem;">No bookings found for <strong>${customerName}</strong></p></div>`,
+                  showConfirmButton: true,
+                  confirmButtonText: 'Close'
+                });
+                return;
+              }
+              const statusColors = { pending:'#f59e0b', accepted:'#6366f1', completed:'#10b981', declined:'#ef4444', cancelled:'#6b7280' };
+              const rows = bookings.map(b => {
+                const sColor = statusColors[b.status] || '#6b7280';
+                const date = b.event_date ? new Date(b.event_date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
+                return `<tr>
+                  <td style="padding:10px 12px;font-weight:600;color:#6366f1;">#BMS-${String(b.id).padStart(4,'0')}</td>
+                  <td style="padding:10px 12px;">${b.service_type || '—'}</td>
+                  <td style="padding:10px 12px;">${date}</td>
+                  <td style="padding:10px 12px;font-weight:600;">₹${Math.round(b.total_price || 0).toLocaleString('en-IN')}</td>
+                  <td style="padding:10px 12px;"><span style="background:${sColor}15;color:${sColor};padding:4px 12px;border-radius:20px;font-size:0.78rem;font-weight:700;">${(b.status||'').toUpperCase()}</span></td>
+                  <td style="padding:10px 12px;"><span style="background:${b.payment_status==='token_paid'||b.payment_status==='paid'?'#d1fae5':'#fef3c7'};color:${b.payment_status==='token_paid'||b.payment_status==='paid'?'#065f46':'#92400e'};padding:4px 12px;border-radius:20px;font-size:0.78rem;font-weight:700;">${(b.payment_status||'unpaid').toUpperCase()}</span></td>
+                </tr>`;
+              }).join('');
+              Swal.update({
+                html: `<div style="text-align:left;">
+                  <p style="color:#6b7280;font-size:0.85rem;margin-bottom:12px;">Customer ID: <strong style="color:#6366f1;">${custId(userId)}</strong> &bull; Total Bookings: <strong>${bookings.length}</strong></p>
+                  <div style="max-height:400px;overflow-y:auto;border-radius:10px;border:1px solid #e5e7eb;">
+                    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                      <thead><tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb;">
+                        <th style="padding:10px 12px;text-align:left;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Booking</th>
+                        <th style="padding:10px 12px;text-align:left;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Service</th>
+                        <th style="padding:10px 12px;text-align:left;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Date</th>
+                        <th style="padding:10px 12px;text-align:left;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Amount</th>
+                        <th style="padding:10px 12px;text-align:left;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Status</th>
+                        <th style="padding:10px 12px;text-align:left;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Payment</th>
+                      </tr></thead>
+                      <tbody>${rows}</tbody>
+                    </table>
+                  </div>
+                </div>`,
+                showConfirmButton: true,
+                confirmButtonText: 'Close'
+              });
+            })
+            .catch(() => {
+              Swal.update({
+                html: '<div style="text-align:center;padding:20px;"><i class="bi bi-exclamation-triangle" style="font-size:2rem;color:#ef4444;"></i><p style="margin-top:8px;color:#6b7280;">Failed to load bookings</p></div>',
+                showConfirmButton: true,
+                confirmButtonText: 'Close'
+              });
+            });
+        }
+      });
+    }
+
+    document.getElementById('tableSearch')?.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      if (!q) { renderUsers(allUsers); return; }
+      renderUsers(allUsers.filter(u =>
+        (u.first_name + ' ' + u.last_name).toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        (u.phone || '').includes(q)
+      ));
+    });
+
+    loadUsers();
+  </script>
+</body>
+</html>

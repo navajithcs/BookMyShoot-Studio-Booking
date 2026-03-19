@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Incoming Requests — BookMyShoot{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1>Incoming Requests</h1>
+        <div class="breadcrumb">New photoshoot requests waiting for your approval</div>
+    </div>
+</div>
+
+<div class="page-content fade-in">
+<div class="row g-4">
+    {% if bookings %}
+    {% for b in bookings %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card p-4 h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill">New Request</span>
+                <span class="text-muted small">#{{ b.id }}</span>
+            </div>
+
+            <h5 class="fw-bold mb-1">{{ b.customer.first_name }} {{ b.customer.last_name }}</h5>
+            <div class="text-primary fw-bold small mb-3">{{ b.service_type | capitalize }}</div>
+
+            <div class="mb-4">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="text-muted">📅</span>
+                    <span class="small fw-medium">{{ b.event_date.strftime('%d %B, %Y') }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="text-muted">🕒</span>
+                    <span class="small fw-medium">{{ b.event_time or 'TBD' }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted">📍</span>
+                    <span class="small fw-medium">{{ b.location or 'Not specified' }}</span>
+                </div>
+            </div>
+
+            {% if b.notes %}
+            <div class="bg-light p-3 rounded-3 mb-4 flex-grow-1">
+                <p class="small text-muted mb-0 italic">"{{ b.notes }}"</p>
+            </div>
+            {% endif %}
+
+            <div class="d-flex gap-2 mt-auto">
+                <button class="btn btn-success w-100 fw-bold rounded-3 action-btn"
+                    data-url="{{ url_for('photographer.accept_request', id=b.id) }}" data-action="Accept"
+                    data-text="Do you want to accept this photoshoot?">Accept</button>
+                <button class="btn btn-outline-danger w-100 fw-bold rounded-3 action-btn"
+                    data-url="{{ url_for('photographer.decline_request', id=b.id) }}" data-action="Decline"
+                    data-text="Are you sure you want to decline this request?">Decline</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <div class="card py-5">
+            <i class="fs-1 d-block mb-3">📥</i>
+            <h4 class="text-muted">No pending requests at the moment.</h4>
+        </div>
+    </div>
+    {% endif %}
+</div>
+</div>
+
+<script>
+    document.querySelectorAll('.action-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const url = this.getAttribute('data-url');
+            const action = this.getAttribute('data-action');
+            const text = this.getAttribute('data-text');
+
+            Swal.fire({
+                title: action + ' Request?',
+                text: text,
+                icon: action === 'Accept' ? 'question' : 'warning',
+                showCancelButton: true,
+                confirmButtonColor: action === 'Accept' ? '#28a745' : '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, ' + action,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdrop: `rgba(0,0,0,0.4)`
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrf_token';
+                    csrfInput.value = '{{ csrf_token() }}';
+                    form.appendChild(csrfInput);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

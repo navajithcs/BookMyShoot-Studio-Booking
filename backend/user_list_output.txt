@@ -1,0 +1,77 @@
+--- RELOADING APP ---
+
+======================================================================
+ALL REGISTERED USERS
+======================================================================
+ID: 2
+  Email:    photo@example.com
+  Type:     photographer
+  Name:     John Doe
+  Phone:    9876543210
+  Active:   True
+----------------------------------------
+ID: 6
+  Email:    alice.photo@example.com
+  Type:     photographer
+  Name:     Alice Smith
+  Phone:    9876543211
+  Active:   True
+----------------------------------------
+ID: 7
+  Email:    bob.photo@example.com
+  Type:     photographer
+  Name:     Bob Johnson
+  Phone:    9876543212
+  Active:   True
+----------------------------------------
+ID: 8
+  Email:    carol.photo@example.com
+  Type:     photographer
+  Name:     Carol Williams
+  Phone:    9876543213
+  Active:   True
+----------------------------------------
+ID: 9
+  Email:    raj.patel@example.com
+  Type:     customer
+  Name:     Raj Patel
+  Phone:    9876543201
+  Active:   True
+----------------------------------------
+ID: 10
+  Email:    priya.sharma@example.com
+  Type:     customer
+  Name:     Priya Sharma
+  Phone:    9876543202
+  Active:   True
+----------------------------------------
+ID: 11
+  Email:    amit.kumar@example.com
+  Type:     customer
+  Name:     Amit Kumar
+  Phone:    9876543203
+  Active:   True
+----------------------------------------
+ID: 12
+  Email:    sneha.gupta@example.com
+  Type:     customer
+  Name:     Sneha Gupta
+  Phone:    9876543204
+  Active:   True
+----------------------------------------
+ID: 13
+  Email:    vikram.singh@example.com
+  Type:     customer
+  Name:     Vikram Singh
+  Phone:    9876543205
+  Active:   True
+----------------------------------------
+ID: 14
+  Email:    new_admin@bookmyshoot.com
+  Type:     admin
+  Name:     New Admin
+  Phone:    9999999999
+  Active:   True
+----------------------------------------
+
+Total users: 10

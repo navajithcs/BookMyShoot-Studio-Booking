@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio — BookMyShoot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root{--primary:#6366f1;--success:#22c55e;--danger:#ef4444;--bg:#0b1224;--text:#e5e7eb;--muted:#9ca3af;--card:rgba(255,255,255,0.08);--stroke:rgba(255,255,255,0.14);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Poppins',sans-serif;background:radial-gradient(circle at 20% 20%,rgba(99,102,241,0.18),transparent 32%),var(--bg);color:var(--text);min-height:100vh;}
+    .topbar{display:flex;justify-content:space-between;align-items:center;padding:18px 30px;background:rgba(8,12,24,0.75);backdrop-filter:blur(14px);border-bottom:1px solid var(--stroke);position:sticky;top:0;z-index:10;}
+    .topbar h1{font-size:1.3rem;}
+    .btn{padding:10px 18px;border-radius:10px;border:1px solid var(--stroke);background:var(--card);color:var(--text);font-weight:600;cursor:pointer;transition:.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:0.85rem;}
+    .btn:hover{transform:translateY(-2px);}
+    .btn.primary{border-color:rgba(99,102,241,0.5);color:#c7d2fe;}
+    .btn.success{border-color:rgba(34,197,94,0.5);color:#bbf7d0;}
+    .content{max-width:1100px;margin:30px auto;padding:0 20px;}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+    .toolbar .count{color:var(--muted);font-size:0.9rem;}
+
+    /* Album / Category filter tabs */
+    .album-tabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;align-items:center;}
+    .album-tabs .tab{padding:8px 16px;border-radius:20px;border:1px solid var(--stroke);background:var(--card);color:var(--muted);cursor:pointer;transition:.2s;font-size:0.82rem;font-family:inherit;font-weight:500;}
+    .album-tabs .tab:hover{border-color:var(--primary);color:var(--text);}
+    .album-tabs .tab.active{background:rgba(99,102,241,0.18);border-color:rgba(99,102,241,0.5);color:#c7d2fe;font-weight:600;}
+    .album-tabs .tab .badge{background:rgba(99,102,241,0.3);color:#c7d2fe;padding:1px 7px;border-radius:10px;font-size:0.72rem;margin-left:4px;}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+    .thumb{position:relative;border-radius:14px;border:1px solid var(--stroke);background:var(--card);overflow:hidden;aspect-ratio:4/3;}
+    .thumb img{width:100%;height:100%;object-fit:cover;transition:.3s;}
+    .thumb:hover img{transform:scale(1.05);filter:brightness(0.85);}
+    .thumb .overlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;transition:.3s;}
+    .thumb:hover .overlay{opacity:1;}
+    .thumb .caption{position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:linear-gradient(transparent,rgba(0,0,0,0.7));font-size:0.85rem;font-weight:500;}
+    .thumb .category-badge{position:absolute;top:10px;left:10px;background:rgba(99,102,241,0.85);color:#fff;padding:3px 10px;border-radius:8px;font-size:0.72rem;font-weight:600;backdrop-filter:blur(6px);}
+    .empty{text-align:center;padding:60px 20px;color:var(--muted);}
+    .empty i{font-size:3rem;display:block;margin-bottom:12px;}
+    .upload-zone{border:2px dashed var(--stroke);border-radius:14px;padding:40px;text-align:center;cursor:pointer;transition:.2s;color:var(--muted);}
+    .upload-zone:hover{border-color:var(--primary);color:var(--text);}
+    .upload-zone i{font-size:2.5rem;display:block;margin-bottom:10px;}
+    .layout{display:grid;grid-template-columns:250px 1fr;min-height:100vh;}
+    .sidebar{position:sticky;top:0;height:100vh;padding:20px 16px;background:rgba(8,12,24,0.85);border-right:1px solid var(--stroke);backdrop-filter:blur(16px);overflow-y:auto;}
+    .sidebar .logo{font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:8px;margin-bottom:22px;}
+    .sidebar .logo span{color:var(--muted);font-weight:500;font-size:0.8rem;display:block;}
+    .sidebar .nav{list-style:none;padding:0;margin:0;display:grid;gap:6px;}
+    .sidebar .nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text);border:1px solid transparent;transition:all .25s ease;text-decoration:none;font-size:0.9rem;}
+    .sidebar .nav a:hover{background:rgba(255,255,255,0.05);border-color:var(--stroke);}
+    .sidebar .nav a.active{background:rgba(99,102,241,0.16);border-color:rgba(99,102,241,0.3);color:#c7d2fe;}
+    .sidebar .nav a .dot{width:7px;height:7px;border-radius:50%;background:var(--primary);opacity:0;transition:.2s;}
+    .sidebar .nav a.active .dot{opacity:1;}
+    .sidebar .slogout{margin-top:20px;width:100%;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.12);color:#fecdd3;padding:10px;border-radius:10px;font-weight:600;cursor:pointer;transition:.2s;font-family:inherit;font-size:0.9rem;}
+    .sidebar .slogout:hover{background:rgba(239,68,68,0.2);}
+    .toggle-sb{display:none;background:var(--card);border:1px solid var(--stroke);color:var(--text);width:38px;height:38px;border-radius:10px;cursor:pointer;font-size:1.2rem;}
+
+    /* Upload modal styles */
+    .upload-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:50;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+    .upload-modal-overlay.show{display:flex;}
+    .upload-modal{background:#151b30;border:1px solid var(--stroke);border-radius:18px;padding:30px;width:90%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+    .upload-modal h2{font-size:1.15rem;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+    .upload-modal label{display:block;font-size:0.85rem;color:var(--muted);margin-bottom:6px;font-weight:500;}
+    .upload-modal .field{margin-bottom:16px;}
+    .upload-modal input[type="text"],
+    .upload-modal select{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--stroke);background:var(--card);color:var(--text);font-family:inherit;font-size:0.9rem;outline:none;transition:.2s;}
+    .upload-modal input[type="text"]:focus,
+    .upload-modal select:focus{border-color:var(--primary);}
+    .upload-modal select option{background:#151b30;color:var(--text);}
+    .upload-modal .preview-area{border:2px dashed var(--stroke);border-radius:12px;padding:30px;text-align:center;cursor:pointer;transition:.2s;color:var(--muted);margin-bottom:16px;position:relative;overflow:hidden;min-height:140px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;}
+    .upload-modal .preview-area:hover{border-color:var(--primary);color:var(--text);}
+    .upload-modal .preview-area img{max-width:100%;max-height:200px;border-radius:8px;object-fit:contain;}
+    .upload-modal .preview-area .placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;}
+    .upload-modal .preview-area .placeholder i{font-size:2rem;}
+    .upload-modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;}
+
+    @media(max-width:768px){.layout{grid-template-columns:1fr;}.sidebar{position:fixed;left:-280px;width:250px;transition:transform .3s ease;z-index:30;}.sidebar.show{transform:translateX(280px);}.toggle-sb{display:inline-flex;align-items:center;justify-content:center;}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">📸 BookMyShoot <span>Photographer</span></div>
+    <ul class="nav">
+      <li><a href="photographer-dashboard.html"><span class="dot"></span><i class="bi bi-grid-3x3-gap"></i> Dashboard</a></li>
+      <li><a href="photographer-requests.html"><span class="dot"></span><i class="bi bi-chat-dots"></i> Requests</a></li>
+      <li><a href="photographer-sessions.html"><span class="dot"></span><i class="bi bi-calendar-check"></i> Sessions</a></li>
+      <li><a href="photographer-packages.html"><span class="dot"></span><i class="bi bi-box"></i> Packages</a></li>
+      <li><a href="photographer-earnings.html"><span class="dot"></span><i class="bi bi-wallet2"></i> Earnings</a></li>
+      <li><a class="active" href="photographer-portfolio.html"><span class="dot"></span><i class="bi bi-images"></i> Portfolio</a></li>
+      <li><a href="photographer-profile.html"><span class="dot"></span><i class="bi bi-person-circle"></i> Profile</a></li>
+    </ul>
+    <button class="slogout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+  </aside>
+  <div class="main-area">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px"><button class="toggle-sb" onclick="document.getElementById('sidebar').classList.toggle('show')"><i class="bi bi-list"></i></button><h1><i class="bi bi-images"></i> Portfolio Manager</h1></div>
+  </div>
+  <div class="content">
+    <div class="toolbar">
+      <span class="count" id="photoCount">0 photos</span>
+      <button class="btn success" onclick="openUploadModal()"><i class="bi bi-plus-circle"></i> Upload Photo</button>
+    </div>
+
+    <!-- Album filter tabs -->
+    <div class="album-tabs" id="albumTabs"></div>
+
+    <div class="upload-zone" id="uploadZone" onclick="openUploadModal()" style="display:none;">
+      <i class="bi bi-cloud-arrow-up"></i>
+      <div>Click to upload your first photo</div>
+      <div style="font-size:0.8rem;margin-top:6px;">JPG, PNG up to 10 MB</div>
+    </div>
+
+    <div class="grid" id="portfolioGrid"></div>
+  </div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="upload-modal-overlay" id="uploadOverlay">
+  <div class="upload-modal">
+    <h2><i class="bi bi-cloud-arrow-up"></i> Upload Portfolio Image</h2>
+    <div class="preview-area" id="previewArea" onclick="document.getElementById('fileInput').click()">
+      <div class="placeholder" id="previewPlaceholder">
+        <i class="bi bi-image"></i>
+        <div>Click to select an image</div>
+        <div style="font-size:0.75rem;">JPG, PNG up to 10 MB</div>
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="previewImage(event)">
+    <div class="field">
+      <label for="categorySelect"><i class="bi bi-folder"></i> Select Category / Album</label>
+      <select id="categorySelect">
+        <option value="General">General</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="captionInput"><i class="bi bi-chat-left-text"></i> Caption (optional)</label>
+      <input type="text" id="captionInput" placeholder="e.g. Wedding shoot at sunset">
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="closeUploadModal()">Cancel</button>
+      <button class="btn success" id="uploadBtn" onclick="uploadPhoto()" disabled><i class="bi bi-upload"></i> Upload</button>
+    </div>
+  </div>
+</div>
+
+  <script>
+    const API = 'http://localhost:5000/api';
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (!user || !user.photographer_id) { window.location.href = 'login.html'; }
+    function logout() { fetch(`${API}/logout`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:user.id}) }).finally(() => { localStorage.removeItem('user'); window.location.href='index.html'; }); }
+    const pid = user.photographer_id;
+
+    let allItems = [];
+    let activeFilter = 'All';
+    let selectedFile = null;
+
+    // Load categories into dropdown
+    async function loadCategories() {
+      try {
+        const res = await fetch(`${API}/portfolio/categories`);
+        const data = await res.json();
+        const select = document.getElementById('categorySelect');
+        select.innerHTML = '';
+        (data.categories || []).forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat;
+          opt.textContent = cat;
+          select.appendChild(opt);
+        });
+      } catch {
+        // fallback categories
+        const fallback = ['Wedding','Portrait','Event','Nature','Fashion','Product','Architecture','Street','Food','Other'];
+        const select = document.getElementById('categorySelect');
+        select.innerHTML = fallback.map(c => `<option value="${c}">${c}</option>`).join('');
+      }
+    }
+
+    // Build album filter tabs
+    function buildAlbumTabs(items) {
+      const counts = {};
+      items.forEach(p => {
+        const cat = p.category || 'General';
+        counts[cat] = (counts[cat] || 0) + 1;
+      });
+      const tabs = document.getElementById('albumTabs');
+      let html = `<button class="tab ${activeFilter === 'All' ? 'active' : ''}" onclick="filterByAlbum('All')">All <span class="badge">${items.length}</span></button>`;
+      Object.keys(counts).sort().forEach(cat => {
+        html += `<button class="tab ${activeFilter === cat ? 'active' : ''}" onclick="filterByAlbum('${cat}')">${cat} <span class="badge">${counts[cat]}</span></button>`;
+      });
+      tabs.innerHTML = html;
+    }
+
+    function filterByAlbum(cat) {
+      activeFilter = cat;
+      renderPortfolio();
+    }
+
+    function renderPortfolio() {
+      const filtered = activeFilter === 'All' ? allItems : allItems.filter(p => (p.category || 'General') === activeFilter);
+      document.getElementById('photoCount').textContent = filtered.length + ' photo' + (filtered.length !== 1 ? 's' : '') + (activeFilter !== 'All' ? ` in ${activeFilter}` : '');
+
+      buildAlbumTabs(allItems);
+
+      if (!allItems.length) {
+        document.getElementById('uploadZone').style.display = 'block';
+        document.getElementById('portfolioGrid').innerHTML = '';
+        return;
+      }
+      document.getElementById('uploadZone').style.display = 'none';
+
+      if (!filtered.length) {
+        document.getElementById('portfolioGrid').innerHTML = `<div class="empty" style="grid-column:1/-1;"><i class="bi bi-folder2-open"></i><div>No photos in "${activeFilter}" album</div></div>`;
+        return;
+      }
+
+      document.getElementById('portfolioGrid').innerHTML = filtered.map(p => {
+        const safeCaption = (p.caption || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        return `
+        <div class="thumb">
+          <img src="http://localhost:5000${p.image_url}" alt="${safeCaption}">
+          <span class="category-badge">${p.category || 'General'}</span>
+          <div class="caption">${p.caption ? safeCaption : ''}</div>
+          <div class="overlay">
+            <button class="btn" onclick="viewImage('http://localhost:5000${p.image_url}')"><i class="bi bi-eye"></i> View</button>
+            <button class="btn" style="border-color:rgba(239,68,68,0.5);color:#fca5a5;" onclick="deletePhoto(${p.id})"><i class="bi bi-trash"></i> Delete</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    async function loadPortfolio() {
+      try {
+        const res = await fetch(`${API}/photographers/${pid}/portfolio`);
+        const data = await res.json();
+        allItems = data.portfolio || [];
+        renderPortfolio();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Upload modal
+    function openUploadModal() {
+      selectedFile = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('captionInput').value = '';
+      document.getElementById('categorySelect').selectedIndex = 0;
+      document.getElementById('uploadBtn').disabled = true;
+      document.getElementById('previewPlaceholder').style.display = 'flex';
+      const existing = document.getElementById('previewImg');
+      if (existing) existing.remove();
+      document.getElementById('uploadOverlay').classList.add('show');
+    }
+
+    function closeUploadModal() {
+      document.getElementById('uploadOverlay').classList.remove('show');
+    }
+
+    function previewImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      selectedFile = file;
+      document.getElementById('uploadBtn').disabled = false;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('previewPlaceholder').style.display = 'none';
+        const existing = document.getElementById('previewImg');
+        if (existing) existing.remove();
+        const img = document.createElement('img');
+        img.id = 'previewImg';
+        img.src = e.target.result;
+        document.getElementById('previewArea').appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function uploadPhoto() {
+      if (!selectedFile) return;
+
+      const caption = document.getElementById('captionInput').value.trim();
+      const category = document.getElementById('categorySelect').value;
+
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+      formData.append('photographer_id', pid);
+      formData.append('caption', caption);
+      formData.append('category', category);
+
+      try {
+        closeUploadModal();
+        Swal.fire({ title: 'Uploading...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        const res = await fetch(`${API}/portfolio`, { method: 'POST', body: formData });
+        const data = await res.json();
+        Swal.close();
+        if (!res.ok) throw new Error(data.error || 'Upload failed');
+        Swal.fire({ icon: 'success', title: 'Uploaded!', text: `Added to "${category}" album`, timer: 1500, showConfirmButton: false });
+        loadPortfolio();
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'Upload Failed', text: err.message });
+      }
+    }
+
+    function viewImage(url) {
+      Swal.fire({ imageUrl: url, imageHeight: 400, showConfirmButton: false, background: '#1a1a2e' });
+    }
+
+    async function deletePhoto(id) {
+      const result = await Swal.fire({ title: 'Delete this photo?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Delete', confirmButtonColor: '#ef4444' });
+      if (!result.isConfirmed) return;
+      try {
+        const res = await fetch(`${API}/portfolio/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Delete failed');
+        Swal.fire({ icon: 'success', title: 'Deleted', timer: 1100, showConfirmButton: false });
+        loadPortfolio();
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'Error', text: err.message });
+      }
+    }
+
+    // Close modal on outside click
+    document.getElementById('uploadOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeUploadModal();
+    });
+
+    // Init
+    loadCategories();
+    loadPortfolio();
+  </script>
+</body>
+</html>

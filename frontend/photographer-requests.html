@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incoming Requests — BookMyShoot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root { --primary: #6366f1; --success: #22c55e; --danger: #ef4444; --warn: #f59e0b; --bg: #0b1224; --text: #e5e7eb; --muted: #9ca3af; --card: rgba(255,255,255,0.08); --stroke: rgba(255,255,255,0.14); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Poppins', sans-serif; background: radial-gradient(circle at 20% 20%, rgba(99,102,241,0.18), transparent 32%), var(--bg); color: var(--text); min-height: 100vh; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; padding: 18px 30px; background: rgba(8,12,24,0.75); backdrop-filter: blur(14px); border-bottom: 1px solid var(--stroke); position: sticky; top: 0; z-index: 10; }
+    .topbar h1 { font-size: 1.3rem; }
+    .btn { padding: 10px 18px; border-radius: 10px; border: 1px solid var(--stroke); background: var(--card); color: var(--text); font-weight: 600; cursor: pointer; transition: .2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .btn.primary { border-color: rgba(99,102,241,0.5); color: #c7d2fe; }
+    .content { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+    .grid { display: grid; gap: 16px; }
+    .card { background: var(--card); border: 1px solid var(--stroke); border-radius: 16px; padding: 20px; transition: transform .2s; }
+    .card:hover { transform: translateY(-3px); }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-weight: 700; font-size: 0.8rem; }
+    .pill.pending { background: rgba(245,158,11,0.18); color: #fbbf24; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .info-item .label { color: var(--muted); font-size: 0.8rem; }
+    .info-item .value { font-weight: 600; font-size: 0.9rem; }
+    .card-actions { display: flex; gap: 10px; }
+    .btn-accept { padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(34,197,94,0.5); background: rgba(34,197,94,0.12); color: #bbf7d0; font-weight: 600; cursor: pointer; transition: .2s; flex: 1; font-family: inherit; }
+    .btn-decline { padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.5); background: rgba(239,68,68,0.12); color: #fecdd3; font-weight: 600; cursor: pointer; transition: .2s; flex: 1; font-family: inherit; }
+    .btn-accept:hover, .btn-decline:hover { transform: translateY(-2px); }
+    .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty i { font-size: 3rem; margin-bottom: 12px; display: block; }
+    .layout { display:grid; grid-template-columns:250px 1fr; min-height:100vh; }
+    .sidebar { position:sticky; top:0; height:100vh; padding:20px 16px; background:rgba(8,12,24,0.85); border-right:1px solid var(--stroke); backdrop-filter:blur(16px); overflow-y:auto; }
+    .sidebar .logo { font-weight:700; font-size:1.05rem; display:flex; align-items:center; gap:8px; margin-bottom:22px; }
+    .sidebar .logo span { color:var(--muted); font-weight:500; font-size:0.8rem; display:block; }
+    .sidebar .nav { list-style:none; padding:0; margin:0; display:grid; gap:6px; }
+    .sidebar .nav a { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; color:var(--text); border:1px solid transparent; transition:all .25s ease; text-decoration:none; font-size:0.9rem; }
+    .sidebar .nav a:hover { background:rgba(255,255,255,0.05); border-color:var(--stroke); }
+    .sidebar .nav a.active { background:rgba(99,102,241,0.16); border-color:rgba(99,102,241,0.3); color:#c7d2fe; }
+    .sidebar .nav a .dot { width:7px; height:7px; border-radius:50%; background:var(--primary); opacity:0; transition:.2s; }
+    .sidebar .nav a.active .dot { opacity:1; }
+    .sidebar .slogout { margin-top:20px; width:100%; border:1px solid rgba(239,68,68,0.4); background:rgba(239,68,68,0.12); color:#fecdd3; padding:10px; border-radius:10px; font-weight:600; cursor:pointer; transition:.2s; font-family:inherit; font-size:0.9rem; }
+    .sidebar .slogout:hover { background:rgba(239,68,68,0.2); }
+    .toggle-sb { display:none; background:var(--card); border:1px solid var(--stroke); color:var(--text); width:38px; height:38px; border-radius:10px; cursor:pointer; font-size:1.2rem; }
+    @media (max-width:768px) { .layout { grid-template-columns:1fr; } .sidebar { position:fixed; left:-280px; width:250px; transition:transform .3s ease; z-index:30; } .sidebar.show { transform:translateX(280px); } .toggle-sb { display:inline-flex; align-items:center; justify-content:center; } }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">📸 BookMyShoot <span>Photographer</span></div>
+    <ul class="nav">
+      <li><a href="photographer-dashboard.html"><span class="dot"></span><i class="bi bi-grid-3x3-gap"></i> Dashboard</a></li>
+      <li><a class="active" href="photographer-requests.html"><span class="dot"></span><i class="bi bi-chat-dots"></i> Requests</a></li>
+      <li><a href="photographer-sessions.html"><span class="dot"></span><i class="bi bi-calendar-check"></i> Sessions</a></li>
+      <li><a href="photographer-packages.html"><span class="dot"></span><i class="bi bi-box"></i> Packages</a></li>
+      <li><a href="photographer-earnings.html"><span class="dot"></span><i class="bi bi-wallet2"></i> Earnings</a></li>
+      <li><a href="photographer-portfolio.html"><span class="dot"></span><i class="bi bi-images"></i> Portfolio</a></li>
+      <li><a href="photographer-profile.html"><span class="dot"></span><i class="bi bi-person-circle"></i> Profile</a></li>
+    </ul>
+    <button class="slogout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+  </aside>
+  <div class="main-area">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px"><button class="toggle-sb" onclick="document.getElementById('sidebar').classList.toggle('show')"><i class="bi bi-list"></i></button><h1><i class="bi bi-chat-dots"></i> Incoming Requests</h1></div>
+  </div>
+  <div class="content">
+    <div class="grid" id="requestsGrid">
+      <div class="empty"><i class="bi bi-hourglass-split"></i> Loading requests...</div>
+    </div>
+  </div>
+  </div><!-- /main-area -->
+</div><!-- /layout -->
+  <script>
+    const API_URL = 'http://localhost:5000/api';
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (!user || !user.photographer_id) { window.location.href = 'login.html'; }
+    function logout() { fetch(`${API_URL}/logout`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:user.id}) }).finally(() => { localStorage.removeItem('user'); window.location.href='index.html'; }); }
+
+    async function loadRequests() {
+      const pid = user.photographer_id;
+      try {
+        const [openRes, directRes] = await Promise.all([
+          fetch(`${API_URL}/bookings/requests/photographer/${pid}`).then(r => r.json()).catch(() => ({ bookings: [] })),
+          fetch(`${API_URL}/bookings/photographer/${pid}`).then(r => r.json()).catch(() => ({ bookings: [] }))
+        ]);
+        const openPending = (openRes.bookings || []).filter(b => b.status === 'pending');
+        const directPending = (directRes.bookings || []).filter(b => b.status === 'pending');
+        const combined = [...directPending];
+        openPending.forEach(r => { if (!combined.find(c => c.id === r.id)) combined.push(r); });
+        renderRequests(combined);
+      } catch (err) {
+        document.getElementById('requestsGrid').innerHTML = '<div class="empty"><i class="bi bi-exclamation-triangle"></i> Failed to load requests</div>';
+      }
+    }
+
+    function renderRequests(requests) {
+      const grid = document.getElementById('requestsGrid');
+      if (!requests.length) {
+        grid.innerHTML = '<div class="empty"><i class="bi bi-inbox"></i><br>No pending requests right now.<br><small>New booking requests will appear here.</small></div>';
+        return;
+      }
+      grid.innerHTML = requests.map(r => {
+        const name = r.customer ? `${r.customer.first_name} ${r.customer.last_name}` : `Customer #${r.customer_id}`;
+        const isOpen = !r.photographer_id;
+        return `
+        <div class="card">
+          <div class="card-header">
+            <div><div style="font-weight:700;font-size:1.05rem">${name}</div><div style="color:var(--muted);font-size:0.85rem">${isOpen ? '📢 Open Request' : '📩 Direct Request'}</div></div>
+            <span class="pill pending">Pending</span>
+          </div>
+          <div class="info-grid">
+            <div class="info-item"><div class="label">Service</div><div class="value">${r.service_type || 'Photoshoot'}</div></div>
+            <div class="info-item"><div class="label">Package</div><div class="value" style="color:#c7d2fe">${r.package_name || 'Standard'}</div></div>
+            <div class="info-item"><div class="label">Date</div><div class="value">${r.event_date || 'TBD'}</div></div>
+            <div class="info-item"><div class="label">Time</div><div class="value">${r.event_time || 'Not specified'}</div></div>
+            <div class="info-item"><div class="label">Amount</div><div class="value">₹${Number(r.total_price||0).toLocaleString('en-IN')}</div></div>
+            <div class="info-item"><div class="label">Location</div><div class="value">${r.location || 'Not specified'}</div></div>
+            <div class="info-item"><div class="label">Email</div><div class="value">${r.customer?.email || 'N/A'}</div></div>
+            <div class="info-item"><div class="label">Phone</div><div class="value">${r.customer?.phone || 'N/A'}</div></div>
+          </div>
+          ${r.notes ? `<div style="color:var(--muted);font-size:0.85rem;margin-bottom:12px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px"><strong>Notes:</strong> ${r.notes}</div>` : ''}
+          <div class="card-actions">
+            <button class="btn-accept" onclick="handleRequest(${r.id},'accept')"><i class="bi bi-check-lg"></i> Accept</button>
+            <button class="btn-decline" onclick="handleRequest(${r.id},'decline')"><i class="bi bi-x-lg"></i> Decline</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    async function handleRequest(id, action) {
+      const verb = action === 'accept' ? 'Accept' : 'Decline';
+      const result = await Swal.fire({ title: `${verb} this booking?`, icon: 'question', showCancelButton: true, confirmButtonText: verb });
+      if (!result.isConfirmed) return;
+      try {
+        let res;
+        if (action === 'accept') {
+          res = await fetch(`${API_URL}/bookings/${id}/accept`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ photographer_id: user.photographer_id }) });
+        } else {
+          res = await fetch(`${API_URL}/bookings/${id}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'declined', photographer_id: user.photographer_id }) });
+        }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `Failed to ${action}`);
+        Swal.fire({ icon: 'success', title: `${verb}ed!`, timer: 1500, showConfirmButton: false });
+        await loadRequests();
+      } catch (err) { Swal.fire({ icon: 'error', title: 'Error', text: err.message }); }
+    }
+
+    loadRequests();
+  </script>
+</body>
+</html>

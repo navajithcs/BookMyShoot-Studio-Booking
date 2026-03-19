@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revenue Details — BookMyShoot Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .dash-content { max-width: 100% !important; }
+    .revenue-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-5); }
+    .charts-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: var(--space-5); margin-bottom: var(--space-5); }
+    .service-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-3); }
+    .service-item {
+      padding: var(--space-4); background: var(--surface-secondary);
+      border-radius: var(--radius-lg); text-align: center;
+      border: 1px solid var(--border-primary);
+    }
+    .service-item .svc-name {
+      font-size: var(--text-sm); font-weight: 600; color: var(--text-primary);
+      text-transform: capitalize; margin-bottom: var(--space-1);
+    }
+    .service-item .svc-amount {
+      font-size: var(--text-lg); font-weight: 800; color: var(--brand-600);
+    }
+    .service-item .svc-count {
+      font-size: var(--text-xs); color: var(--text-tertiary); margin-top: 2px;
+    }
+    @media (max-width: 768px) {
+      .revenue-stats { grid-template-columns: repeat(2, 1fr); }
+      .charts-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <div class="dash-layout">
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-logo">
+          <div class="logo-icon">📸</div>
+          <div class="logo-text">BookMyShoot<span class="logo-sub">Admin Panel</span></div>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Overview</div>
+          <a href="admin-dashboard.html" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Management</div>
+          <a href="admin-users.html" class="sidebar-link"><i class="bi bi-people"></i> Customer Management</a>
+          <a href="admin-photographers.html" class="sidebar-link"><i class="bi bi-camera"></i> Photographer Management</a>
+          <a href="admin-portfolio.html" class="sidebar-link"><i class="bi bi-images"></i> Portfolio</a>
+          <a href="admin-bookings.html" class="sidebar-link"><i class="bi bi-calendar-event"></i> Booking Management</a>
+          <a href="admin-services.html" class="sidebar-link"><i class="bi bi-box-seam"></i> Service & Packages</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Analytics</div>
+          <a href="admin-reports.html" class="sidebar-link"><i class="bi bi-bar-chart-line"></i> Reports</a>
+          <a href="admin-revenue.html" class="sidebar-link active"><i class="bi bi-currency-rupee"></i> Revenue Details</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar" id="sidebarAvatar">A</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+            <div class="sidebar-user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="sidebar-logout" onclick="DashApp.logout()"><i class="bi bi-box-arrow-left"></i> Logout</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+          <div>
+            <div class="topbar-title">Revenue Details</div>
+            <div class="topbar-subtitle">Platform-wide revenue analytics & payment history</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="theme-toggle" data-tooltip="Toggle theme">
+            <i class="bi bi-moon-fill icon-moon"></i>
+            <i class="bi bi-sun-fill icon-sun"></i>
+          </button>
+          <button class="topbar-icon-btn" id="notifBtn" data-tooltip="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="badge-count" id="notifBadge" style="display:none;">0</span>
+          </button>
+          <div class="dropdown">
+            <div class="topbar-user" id="userDropdownTrigger">
+              <div class="topbar-user-avatar" id="topbarAvatar">A</div>
+              <span class="topbar-user-name" id="topbarUserName">Admin</span>
+              <i class="bi bi-chevron-down text-sm text-secondary"></i>
+            </div>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="admin-dashboard.html" class="dropdown-item"><i class="bi bi-person"></i> Profile</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" onclick="DashApp.logout()" style="color:var(--danger-600);"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="dash-content">
+        <!-- Revenue Stats -->
+        <div class="revenue-stats animate-fadeInUp">
+          <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-cash-stack"></i></div><div class="stat-label">Total Revenue</div><div class="stat-value" id="totalRevenue">₹0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-check-circle"></i></div><div class="stat-label">Fully Paid</div><div class="stat-value" id="totalPaid">₹0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon info"><i class="bi bi-coin"></i></div><div class="stat-label">Token Collected</div><div class="stat-value" id="tokenCollected">₹0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-hourglass-split"></i></div><div class="stat-label">Pending Amount</div><div class="stat-value" id="pendingAmount">₹0</div></div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-row animate-fadeInUp">
+          <div class="ds-card">
+            <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-graph-up"></i> Monthly Revenue Trend</h3></div>
+            <div class="ds-card-body" style="padding: var(--space-4);">
+              <canvas id="revenueChart" height="280"></canvas>
+            </div>
+          </div>
+          <div class="ds-card">
+            <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-pie-chart"></i> Revenue by Service</h3></div>
+            <div class="ds-card-body" style="padding: var(--space-4);">
+              <canvas id="serviceChart" height="280"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service Breakdown -->
+        <div class="ds-card animate-fadeInUp" style="margin-bottom: var(--space-5);">
+          <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-grid-3x3"></i> Revenue by Service Type</h3></div>
+          <div class="ds-card-body" style="padding: var(--space-4);">
+            <div class="service-breakdown" id="serviceBreakdown">
+              <div class="text-center text-secondary py-5">Loading...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Payments Table -->
+        <div class="ds-card animate-fadeInUp">
+          <div class="ds-card-header">
+            <h3 class="font-semibold text-base m-0"><i class="bi bi-receipt"></i> Recent Payments</h3>
+            <span class="badge-v2 badge-primary" id="paymentCount">0</span>
+          </div>
+          <div class="table-responsive">
+            <table class="ds-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Booking</th>
+                  <th>Amount</th>
+                  <th>Type</th>
+                  <th>Method</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="paymentsBody">
+                <tr><td colspan="7" class="text-center text-secondary py-5">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <aside class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3 class="font-semibold text-base m-0">Notifications</h3>
+      <button class="btn btn-sm btn-ghost" id="notifClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="notif-panel-body" id="notifList">
+      <div class="empty-state"><div class="empty-state-icon">🔔</div><div class="empty-state-title">No notifications</div></div>
+    </div>
+  </aside>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    const user = DashApp.requireAuth(['admin']);
+    if (user) {
+      const name = user.first_name || 'Admin';
+      const initial = name.charAt(0).toUpperCase();
+      document.getElementById('topbarAvatar').textContent = initial;
+      document.getElementById('topbarUserName').textContent = name;
+      document.getElementById('sidebarAvatar').textContent = initial;
+      document.getElementById('sidebarUserName').textContent = name;
+    }
+    DashApp.init();
+
+    let revenueChart, serviceChart;
+
+    function loadRevenue() {
+      fetch(`${DashApp.API_URL}/admin/revenue`)
+        .then(r => r.json())
+        .then(data => {
+          // Stats
+          document.getElementById('totalRevenue').textContent = DashApp.formatCurrency(data.total_revenue || 0);
+          document.getElementById('totalPaid').textContent = DashApp.formatCurrency(data.total_paid || 0);
+          document.getElementById('tokenCollected').textContent = DashApp.formatCurrency(data.token_collected || 0);
+          document.getElementById('pendingAmount').textContent = DashApp.formatCurrency(data.pending_amount || 0);
+
+          // Monthly chart
+          const monthly = data.monthly || [];
+          const labels = monthly.map(m => m.label);
+          const values = monthly.map(m => m.revenue);
+
+          if (revenueChart) revenueChart.destroy();
+          revenueChart = new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [{
+                label: 'Revenue (₹)',
+                data: values,
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99,102,241,0.1)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#6366f1'
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: { beginAtZero: true, ticks: { callback: v => '₹' + v.toLocaleString() } }
+              }
+            }
+          });
+
+          // Service chart
+          const services = data.by_service || {};
+          const svcLabels = Object.keys(services);
+          const svcValues = svcLabels.map(k => services[k].revenue);
+          const colors = ['#6366f1','#f59e0b','#10b981','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
+
+          if (serviceChart) serviceChart.destroy();
+          serviceChart = new Chart(document.getElementById('serviceChart'), {
+            type: 'doughnut',
+            data: {
+              labels: svcLabels.map(s => s.charAt(0).toUpperCase() + s.slice(1)),
+              datasets: [{
+                data: svcValues,
+                backgroundColor: colors.slice(0, svcLabels.length),
+                borderWidth: 2
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'bottom', labels: { padding: 12 } }
+              }
+            }
+          });
+
+          // Service breakdown cards
+          const brkHtml = svcLabels.map((s, i) => `
+            <div class="service-item">
+              <div class="svc-name">${s}</div>
+              <div class="svc-amount">${DashApp.formatCurrency(services[s].revenue)}</div>
+              <div class="svc-count">${services[s].count} booking${services[s].count !== 1 ? 's' : ''}</div>
+            </div>
+          `).join('');
+          document.getElementById('serviceBreakdown').innerHTML = brkHtml || '<div class="text-center text-secondary py-3">No revenue data yet</div>';
+
+          // Payments table
+          const payments = data.recent_payments || [];
+          document.getElementById('paymentCount').textContent = payments.length + ' recent';
+          const tbody = document.getElementById('paymentsBody');
+          if (payments.length) {
+            tbody.innerHTML = payments.map(p => {
+              const sBadge = p.status === 'completed' ? 'badge-success' : p.status === 'pending' ? 'badge-warning' : 'badge-danger';
+              const tBadge = p.payment_type === 'token' ? 'badge-info' : p.payment_type === 'remaining' ? 'badge-primary' : 'badge-success';
+              return `<tr>
+                <td class="font-medium">#${p.id}</td>
+                <td>Booking #${p.booking_id}</td>
+                <td class="font-semibold">${DashApp.formatCurrency(p.amount)}</td>
+                <td><span class="badge-v2 ${tBadge}" style="text-transform:capitalize;">${p.payment_type}</span></td>
+                <td style="text-transform:capitalize;">${p.payment_method || '—'}</td>
+                <td><span class="badge-v2 ${sBadge}" style="text-transform:capitalize;">${p.status}</span></td>
+                <td>${DashApp.formatDate(p.created_at)}</td>
+              </tr>`;
+            }).join('');
+          } else {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-secondary py-5">No payments found</td></tr>';
+          }
+        });
+    }
+
+    loadRevenue();
+  </script>
+</body>
+</html>

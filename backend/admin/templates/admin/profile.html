@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Admin Profile — BookMyShoot{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header-gradient {
+        height: 180px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        border-radius: 24px 24px 0 0;
+        position: relative;
+    }
+
+    .profile-avatar-wrapper {
+        position: absolute;
+        bottom: -50px;
+        left: 40px;
+        z-index: 5;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 30px;
+        border: 6px solid white;
+        object-fit: cover;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .upload-btn-overlay {
+        position: absolute;
+        bottom: -5px;
+        right: -5px;
+        background: white;
+        color: var(--primary);
+        width: 35px;
+        height: 35px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s;
+        border: none;
+    }
+
+    .upload-btn-overlay:hover {
+        transform: scale(1.1);
+        background: var(--primary);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1>Admin Profile</h1>
+        <div class="breadcrumb">Security & account settings</div>
+    </div>
+</div>
+
+<div class="page-content fade-in">
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card overflow-hidden mb-4">
+            <div class="profile-header-gradient">
+                <div class="profile-avatar-wrapper">
+                    <img id="avatarPreview"
+                        src="{{ url_for('uploaded_profile_file', filename=current_user.profile_image.split('/')[-1]) if current_user.profile_image else 'https://via.placeholder.com/120' }}"
+                        class="profile-avatar" alt="Admin Profile">
+
+                    <button type="button" class="upload-btn-overlay"
+                        onclick="document.getElementById('profile_image').click();">
+                        <i class="fs-6">📸</i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-5 pt-4">
+                <div style="margin-left: 140px; margin-top: -10px;" class="mb-5">
+                    <h2 class="fw-bold mb-1">{{ current_user.first_name }} {{ current_user.last_name }}</h2>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">System Administrator</span>
+                        <span class="text-muted small">• Joined {{ current_user.created_at.strftime('%B %Y') }}</span>
+                    </div>
+                </div>
+
+                <div class="row g-5">
+                    <!-- General Settings -->
+                    <div class="col-md-7">
+                        <h4 class="fw-bold mb-4">General Settings</h4>
+                        <form action="{{ url_for('admin.profile') }}" method="POST" enctype="multipart/form-data">
+                            {{ profile_form.csrf_token }}
+                            <input type="file" name="profile_image" id="profile_image" hidden
+                                onchange="this.form.submit();">
+                            <input type="hidden" name="submit_profile" value="1">
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-muted text-uppercase"
+                                        style="letter-spacing: 0.05em;">First Name</label>
+                                    {{ profile_form.first_name(class="form-control form-control-lg",
+                                    style="border-radius: 12px;") }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-muted text-uppercase"
+                                        style="letter-spacing: 0.05em;">Last Name</label>
+                                    {{ profile_form.last_name(class="form-control form-control-lg",
+                                    style="border-radius: 12px;") }}
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold small text-muted text-uppercase"
+                                        style="letter-spacing: 0.05em;">Email Address</label>
+                                    {{ profile_form.email(class="form-control form-control-lg", style="border-radius:
+                                    12px;") }}
+                                </div>
+                                <div class="col-12 mt-4">
+                                    <button type="submit" class="btn btn-primary px-5 py-3 fw-bold shadow-sm"
+                                        style="border-radius: 12px;">Save Profile Changes</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div class="col-md-5">
+                        <div class="bg-light p-4 rounded-4 border border-light-subtle">
+                            <h4 class="fw-bold mb-4">Security</h4>
+                            <form action="{{ url_for('admin.change_password') }}" method="POST">
+                                {{ password_form.csrf_token }}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-muted text-uppercase"
+                                        style="letter-spacing: 0.05em;">Current Password</label>
+                                    {{ password_form.old_password(class="form-control", style="border-radius: 10px;",
+                                    placeholder="••••••••") }}
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-muted text-uppercase"
+                                        style="letter-spacing: 0.05em;">New Password</label>
+                                    {{ password_form.new_password(class="form-control", style="border-radius: 10px;",
+                                    placeholder="••••••••") }}
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold small text-muted text-uppercase"
+                                        style="letter-spacing: 0.05em;">Confirm New Password</label>
+                                    {{ password_form.confirm_password(class="form-control", style="border-radius:
+                                    10px;", placeholder="••••••••") }}
+                                </div>
+                                <button type="submit" class="btn btn-dark w-100 py-3 fw-bold"
+                                    style="border-radius: 12px;">Update Password</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

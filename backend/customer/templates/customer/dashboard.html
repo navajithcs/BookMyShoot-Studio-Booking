@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — BookMyShoot{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1>Dashboard</h1>
+        <div class="breadcrumb">Welcome, {{ current_user.first_name }} 👋</div>
+    </div>
+    <div class="topbar-actions">
+        <a href="{{ url_for('customer.search') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="bi bi-search me-1"></i> Find Photographer</a>
+    </div>
+</div>
+
+<div class="page-content fade-in">
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Active Bookings</h3>
+                    <div class="value">{{ active_count }}</div>
+                </div>
+                <div class="stat-icon purple"><i class="bi bi-camera"></i></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Pending Requests</h3>
+                    <div class="value">{{ pending_count }}</div>
+                </div>
+                <div class="stat-icon orange"><i class="bi bi-hourglass-split"></i></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Completed Sessions</h3>
+                    <div class="value">{{ completed_count }}</div>
+                </div>
+                <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-4">
+        <h3 class="h6 fw-bold mb-3">Explore by Category</h3>
+        <div class="row g-3">
+            {% if categories %}
+            {% for cat in categories %}
+            <div class="col-md-6 col-lg-3">
+                <a href="{{ url_for('customer.search', category=cat.name) }}" class="d-block p-3 rounded-3 text-center" style="background:#f8fafc;border:1px solid var(--card-border);transition:all .2s;" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,.06)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+                    <div class="stat-icon purple mx-auto mb-2" style="width:40px;height:40px;font-size:1rem;"><i class="bi bi-camera-reels"></i></div>
+                    <div class="fw-600 small">{{ cat.name }}</div>
+                    <div class="text-muted" style="font-size:.75rem;">{{ cat.description[:40] + '...' if cat.description and cat.description|length > 40 else cat.description or 'Browse photographers' }}</div>
+                </a>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="col-12 text-center text-muted py-4">No categories available.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

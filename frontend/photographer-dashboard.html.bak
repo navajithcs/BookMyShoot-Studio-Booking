@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photographer Dashboard — BookMyShoot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: radial-gradient(circle at 20% 20%, rgba(99,102,241,0.18), transparent 32%), #0b1224;
+      --panel: rgba(255, 255, 255, 0.05);
+      --card: rgba(255, 255, 255, 0.08);
+      --stroke: rgba(255, 255, 255, 0.14);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --primary: #6366f1;
+      --primary-strong: #4f46e5;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --radius: 16px;
+      --shadow: 0 16px 60px rgba(0,0,0,0.45);
+    }
+
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+    a { color: inherit; text-decoration: none; }
+
+    .page-loader { position: fixed; inset:0; display:grid; place-items:center; background:rgba(0,0,0,0.35); backdrop-filter:blur(6px); z-index:999; opacity:0; pointer-events:none; transition:opacity .3s; }
+    .page-loader.show { opacity:1; pointer-events:all; }
+    .spinner { width:64px; height:64px; border-radius:50%; border:6px solid rgba(255,255,255,0.15); border-top-color:var(--primary); animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg);} }
+
+    .layout { display:grid; grid-template-columns: 270px 1fr; min-height:100vh; }
+
+    /* Sidebar */
+    .sidebar { position:sticky; top:0; height:100vh; padding:22px 18px; background:rgba(8,12,24,0.7); border-right:1px solid var(--stroke); backdrop-filter:blur(16px); box-shadow: var(--shadow); }
+    .logo { font-weight:700; font-size:1.1rem; display:flex; align-items:center; gap:10px; margin-bottom:24px; }
+    .logo span { color:var(--muted); font-weight:500; font-size:0.85rem; display:block; }
+    .nav { list-style:none; padding:0; margin:0; display:grid; gap:8px; }
+    .nav a { display:flex; align-items:center; gap:12px; padding:12px 12px; border-radius:12px; color:var(--text); border:1px solid transparent; transition: all .25s ease; position:relative; overflow:hidden; }
+    .nav a:hover { background:rgba(255,255,255,0.05); border-color:var(--stroke); }
+    .nav a.active { background:rgba(99,102,241,0.16); border-color: rgba(99,102,241,0.3); color:#c7d2fe; box-shadow:0 10px 30px rgba(99,102,241,0.25); }
+    .nav a .dot { width:8px; height:8px; border-radius:50%; background:var(--primary); opacity:0; transition:.2s; }
+    .nav a.active .dot { opacity:1; }
+    .logout { margin-top:24px; width:100%; border:1px solid rgba(239,68,68,0.4); background:rgba(239,68,68,0.12); color:#fecdd3; padding:12px; border-radius:12px; font-weight:600; cursor:pointer; transition:.2s; }
+    .logout:hover { background:rgba(239,68,68,0.2); }
+
+    /* Topbar */
+    .topbar { position:sticky; top:0; z-index:20; display:flex; justify-content:space-between; align-items:center; padding:14px 24px; background:rgba(8,12,24,0.75); backdrop-filter:blur(14px); border-bottom:1px solid var(--stroke); }
+    .welcome h1 { margin:0; font-size:1.2rem; font-weight:700; }
+    .welcome p { margin:4px 0 0; color:var(--muted); font-size:0.95rem; }
+    .actions { display:flex; align-items:center; gap:12px; }
+    .icon-btn { width:42px; height:42px; border-radius:12px; border:1px solid var(--stroke); background:var(--card); display:grid; place-items:center; color:var(--text); cursor:pointer; transition:.2s; position:relative; overflow:hidden; }
+    .icon-btn:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(0,0,0,0.35); }
+    .badge { position:absolute; top:6px; right:6px; background:var(--danger); color:#fff; font-size:0.65rem; padding:3px 6px; border-radius:999px; font-weight:700; animation:badgeBounce 1s ease infinite alternate; }
+    @keyframes badgeBounce { from { transform:translateY(0);} to { transform:translateY(-2px);} }
+    .profile { display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px 10px; border-radius:12px; transition:.2s; }
+    .profile:hover { background:rgba(255,255,255,0.05); }
+    .avatar { width:40px; height:40px; border-radius:12px; background:rgba(99,102,241,0.2); color:#c7d2fe; display:grid; place-items:center; font-weight:700; }
+
+    /* Content */
+    .content { padding:24px 26px 42px; }
+    .grid { display:grid; gap:16px; }
+    .metrics { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .card { background:var(--card); border:1px solid var(--stroke); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; transition:transform .2s ease, box-shadow .2s ease; position:relative; overflow:hidden; }
+    .card:hover { transform:translateY(-4px); box-shadow:0 18px 60px rgba(0,0,0,0.5); }
+    .metric-title { color:var(--muted); font-size:0.9rem; letter-spacing:0.3px; }
+    .metric-value { font-size:1.9rem; font-weight:700; margin-top:4px; }
+    .metric-icon { width:42px; height:42px; border-radius:12px; display:grid; place-items:center; color:#fff; position:absolute; top:14px; right:14px; opacity:0.9; }
+    .metric-icon.primary { background:rgba(99,102,241,0.35); }
+    .metric-icon.success { background:rgba(34,197,94,0.35); }
+    .metric-icon.warn { background:rgba(245,158,11,0.35); }
+    .metric-icon.danger { background:rgba(239,68,68,0.35); }
+
+    .panel { background:var(--panel); border:1px solid var(--stroke); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); margin-top:18px; }
+    .panel-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .panel-head h3 { margin:0; font-size:1.05rem; font-weight:700; }
+    .link { color:#c7d2fe; font-weight:600; font-size:0.9rem; }
+
+    .request-card { display:grid; gap:8px; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-weight:700; font-size:0.8rem; }
+    .pill.pending { background:rgba(245,158,11,0.18); color:#fbbf24; }
+    .pill.accepted { background:rgba(34,197,94,0.18); color:#34d399; }
+    .pill.completed { background:rgba(99,102,241,0.18); color:#a5b4fc; }
+    .pill.token { background:rgba(59,130,246,0.18); color:#93c5fd; }
+
+    .btn-soft { border:1px solid var(--stroke); background:rgba(255,255,255,0.06); color:var(--text); border-radius:10px; padding:10px 12px; font-weight:600; cursor:pointer; transition:.2s; position:relative; overflow:hidden; }
+    .btn-soft.primary { border-color:rgba(99,102,241,0.5); color:#c7d2fe; }
+    .btn-soft.success { border-color:rgba(34,197,94,0.5); color:#bbf7d0; }
+    .btn-soft.danger { border-color:rgba(239,68,68,0.5); color:#fecdd3; }
+    .btn-soft:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(0,0,0,0.4); }
+
+    .table { color:var(--text); }
+    .table thead { background:rgba(255,255,255,0.05); }
+    .table td, .table th { border-color:var(--stroke); }
+
+    .portfolio-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); }
+    .thumb { position:relative; overflow:hidden; border-radius:14px; border:1px solid var(--stroke); background:rgba(255,255,255,0.05); aspect-ratio:4/3; display:grid; place-items:center; color:var(--muted); }
+    .thumb:hover img { transform:scale(1.08); filter:brightness(0.85); }
+    .thumb img { width:100%; height:100%; object-fit:cover; transition:.4s; }
+    .thumb .overlay { position:absolute; inset:0; background:linear-gradient(135deg, rgba(99,102,241,0.2), rgba(99,102,241,0.05)); opacity:0; transition:.3s; display:flex; gap:8px; align-items:center; justify-content:center; }
+    .thumb:hover .overlay { opacity:1; }
+
+    .chart-card { padding:16px; }
+    canvas { width:100%; height:260px; }
+
+    @media (max-width: 992px) {
+      .layout { grid-template-columns:1fr; }
+      .sidebar { position:fixed; left:-300px; width:260px; transition:transform .3s ease; z-index:30; }
+      .sidebar.show { transform:translateX(300px); }
+      .topbar { position:sticky; top:0; }
+    }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:translateY(0);} }
+  </style>
+</head>
+<body>
+  <div class="page-loader" id="loader"><div class="spinner"></div></div>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="logo">📸 BookMyShoot <span>Photographer</span></div>
+      <ul class="nav">
+        <li><a class="active" href="#"><span class="dot"></span><i class="bi bi-grid-3x3-gap"></i> Dashboard</a></li>
+        <li><a href="photographer-requests.html"><span class="dot"></span><i class="bi bi-chat-dots"></i> Incoming Requests</a></li>
+        <li><a href="photographer-sessions.html"><span class="dot"></span><i class="bi bi-calendar-check"></i> Accepted Sessions</a></li>
+        <li><a href="photographer-packages.html"><span class="dot"></span><i class="bi bi-box"></i> Manage Packages</a></li>
+        <li><a href="photographer-earnings.html"><span class="dot"></span><i class="bi bi-wallet2"></i> Earnings</a></li>
+        <li><a href="photographer-portfolio.html"><span class="dot"></span><i class="bi bi-images"></i> Portfolio</a></li>
+        <li><a href="photographer-profile.html"><span class="dot"></span><i class="bi bi-person-circle"></i> Profile</a></li>
+      </ul>
+      <button class="logout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="welcome">
+          <h1>Welcome back, <span id="photographerName">Photographer</span></h1>
+          <p>Stay on top of requests, sessions, and earnings.</p>
+        </div>
+        <div class="actions">
+          <button class="icon-btn" id="toggleSidebar"><i class="bi bi-list"></i></button>
+          <button class="icon-btn notif-bell"><i class="bi bi-bell"></i><span class="badge" id="notifBadge">3</span></button>
+          <div class="profile" onclick="goTo('photographer-profile.html')">
+            <div class="avatar" id="profileAvatar">P</div>
+            <div>
+              <div id="profileName">Profile</div>
+              <small style="color:var(--muted);">Photographer</small>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="grid metrics">
+          <div class="card animate__animated animate__fadeInUp">
+            <div class="metric-title">Total Requests</div>
+            <div class="metric-value counter" data-target="42" id="totalRequests">0</div>
+            <div class="metric-icon primary"><i class="bi bi-chat-dots"></i></div>
+          </div>
+          <div class="card animate__animated animate__fadeInUp" style="animation-delay:.05s;">
+            <div class="metric-title">Accepted Bookings</div>
+            <div class="metric-value counter" data-target="18" id="acceptedBookings">0</div>
+            <div class="metric-icon success"><i class="bi bi-check2-circle"></i></div>
+          </div>
+          <div class="card animate__animated animate__fadeInUp" style="animation-delay:.1s;">
+            <div class="metric-title">Completed Events</div>
+            <div class="metric-value counter" data-target="12" id="completedEvents">0</div>
+            <div class="metric-icon primary"><i class="bi bi-flag"></i></div>
+          </div>
+          <div class="card animate__animated animate__fadeInUp" style="animation-delay:.15s;">
+            <div class="metric-title">Cancelled</div>
+            <div class="metric-value counter" data-target="3" id="cancelled">0</div>
+            <div class="metric-icon danger"><i class="bi bi-x-octagon"></i></div>
+          </div>
+          <div class="card animate__animated animate__fadeInUp" style="animation-delay:.2s;">
+            <div class="metric-title">Total Earnings</div>
+            <div class="metric-value" id="totalEarnings">₹0</div>
+            <div class="metric-icon primary"><i class="bi bi-wallet2"></i></div>
+          </div>
+          <div class="card animate__animated animate__fadeInUp" style="animation-delay:.25s;">
+            <div class="metric-title">Monthly Earnings</div>
+            <div class="metric-value" id="monthlyEarnings">₹0</div>
+            <div class="metric-icon warn"><i class="bi bi-calendar-event"></i></div>
+          </div>
+          <div class="card animate__animated animate__fadeInUp" style="animation-delay:.3s;">
+            <div class="metric-title">Upcoming Events</div>
+            <div class="metric-value" id="upcomingEvents">0</div>
+            <div class="metric-icon success"><i class="bi bi-calendar3"></i></div>
+          </div>
+        </section>
+
+        <section class="grid" style="grid-template-columns: 1.5fr 1fr; gap:16px; margin-top:20px;">
+          <div class="panel animate__animated animate__fadeInUp">
+            <div class="panel-head">
+              <h3>Incoming Requests</h3>
+              <a class="link" href="photographer-requests.html">View all</a>
+            </div>
+            <div class="grid" id="requestsGrid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px;"></div>
+          </div>
+          <div class="panel animate__animated animate__fadeInUp" style="animation-delay:.05s;">
+            <div class="panel-head">
+              <h3>Earnings Trend</h3>
+              <a class="link" href="photographer-earnings.html">Details</a>
+            </div>
+            <div class="chart-card">
+              <canvas id="earningsChart" height="220"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel animate__animated animate__fadeInUp" style="margin-top:18px;">
+          <div class="panel-head">
+            <h3>Accepted Sessions</h3>
+            <a class="link" href="photographer-sessions.html">Manage</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle mb-0" id="sessionsTable">
+              <thead><tr><th>Customer</th><th>Service</th><th>Date</th><th>Balance</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+              <tbody id="sessionTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel animate__animated animate__fadeInUp" style="margin-top:18px;">
+          <div class="panel-head"><h3>Portfolio Manager</h3><a class="link" href="photographer-portfolio.html">Open</a></div>
+          <div class="portfolio-grid" id="portfolioGrid"></div>
+          <div class="mt-3 d-flex gap-2 flex-wrap">
+            <button class="btn-soft primary" onclick="openUploadModal()"><i class="bi bi-upload"></i> Upload</button>
+            <button class="btn-soft" onclick="goTo('photographer-portfolio.html')"><i class="bi bi-collection"></i> Full manager</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:5000/api';
+    const loader = document.getElementById('loader');
+    let pendingRequests = [];
+    let acceptedSessions = [];
+    let portfolioItems = [];
+    let user = null;
+
+    function goTo(path){ window.location.href = path; }
+    function showLoader(show){ loader.classList.toggle('show', show); }
+
+    function logout(){
+      Swal.fire({title:'Logout?', icon:'question', showCancelButton:true, confirmButtonText:'Yes'}).then(r=>{
+        if(r.isConfirmed){ localStorage.removeItem('user'); window.location.href='login.html'; }
+      });
+    }
+
+    // ── Fetch real data from API ──
+    async function loadDashboardData(){
+      if(!user || !user.photographer_id){
+        console.error('No photographer_id found in user data');
+        return;
+      }
+      const pid = user.photographer_id;
+
+      try {
+        const [requestsRes, bookingsRes, portfolioRes] = await Promise.all([
+          fetch(`${API_URL}/bookings/requests/photographer/${pid}`).then(r => r.json()).catch(() => ({bookings:[]})),
+          fetch(`${API_URL}/bookings/photographer/${pid}`).then(r => r.json()).catch(() => ({bookings:[]})),
+          fetch(`${API_URL}/photographers/${pid}/portfolio`).then(r => r.json()).catch(() => ({portfolio:[]}))
+        ]);
+
+        // Pending requests (open bookings without photographer, matching specialty)
+        pendingRequests = (requestsRes.bookings || []).filter(b => b.status === 'pending');
+
+        // All bookings assigned to this photographer
+        const allBookings = bookingsRes.bookings || [];
+        acceptedSessions = allBookings.filter(b => b.status === 'accepted' || b.status === 'token_paid');
+        const completedBookings = allBookings.filter(b => b.status === 'completed');
+        const declinedBookings = allBookings.filter(b => b.status === 'declined');
+        const upcomingBookings = allBookings.filter(b => {
+          if(b.status === 'completed' || b.status === 'declined') return false;
+          if(!b.event_date) return false;
+          return new Date(b.event_date) >= new Date();
+        });
+
+        // Portfolio
+        portfolioItems = portfolioRes.portfolio || [];
+
+        // Update stat counters
+        document.getElementById('totalRequests').textContent = pendingRequests.length + allBookings.length;
+        document.getElementById('totalRequests').dataset.target = pendingRequests.length + allBookings.length;
+        document.getElementById('acceptedBookings').textContent = acceptedSessions.length;
+        document.getElementById('acceptedBookings').dataset.target = acceptedSessions.length;
+        document.getElementById('completedEvents').textContent = completedBookings.length;
+        document.getElementById('completedEvents').dataset.target = completedBookings.length;
+        document.getElementById('cancelled').textContent = declinedBookings.length;
+        document.getElementById('cancelled').dataset.target = declinedBookings.length;
+        document.getElementById('upcomingEvents').textContent = upcomingBookings.length;
+        document.getElementById('notifBadge').textContent = pendingRequests.length;
+
+        // Calculate earnings from completed bookings
+        let totalEarnings = 0;
+        let monthlyEarnings = 0;
+        const now = new Date();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+        allBookings.forEach(b => {
+          if(b.status === 'completed' || b.status === 'token_paid' || b.status === 'paid'){
+            const price = b.total_price || b.price || 0;
+            totalEarnings += price;
+            if(b.event_date){
+              const d = new Date(b.event_date);
+              if(d.getMonth() === thisMonth && d.getFullYear() === thisYear){
+                monthlyEarnings += price;
+              }
+            }
+          }
+        });
+        document.getElementById('totalEarnings').textContent = '₹' + totalEarnings.toLocaleString('en-IN');
+        document.getElementById('monthlyEarnings').textContent = '₹' + monthlyEarnings.toLocaleString('en-IN');
+
+        // Render sections
+        renderRequests();
+        renderSessions();
+        renderPortfolio();
+        renderCharts(allBookings);
+
+      } catch(err){
+        console.error('Error loading dashboard data:', err);
+        Swal.fire({icon:'error', title:'Load Error', text:'Could not load dashboard data. Is the backend running?', timer:3000});
+      }
+    }
+
+    // ── Render incoming requests ──
+    function renderRequests(){
+      const grid = document.getElementById('requestsGrid');
+      if(!pendingRequests.length){
+        grid.innerHTML = '<div class="muted" style="padding:20px; text-align:center;">No pending requests right now.</div>';
+        return;
+      }
+      grid.innerHTML = pendingRequests.map((r, i) => {
+        const customerName = r.customer ? `${r.customer.first_name} ${r.customer.last_name}` : `Customer #${r.customer_id}`;
+        const eventDate = r.event_date || 'TBD';
+        const price = r.total_price || r.price || 0;
+        const service = r.service_type || 'Photoshoot';
+        return `
+        <div class="card request-card animate__animated animate__fadeInUp" data-id="${r.id}" style="animation-delay:${i * 0.05}s;">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fw-bold">${customerName}</div>
+              <div class="text-muted" style="color:var(--muted);">${eventDate} · ${service}</div>
+            </div>
+            <span class="pill pending">Pending</span>
+          </div>
+          <div class="fw-bold" style="margin-top:6px;">₹${Number(price).toLocaleString('en-IN')}</div>
+          ${r.notes ? `<div class="text-muted" style="color:var(--muted); font-size:0.85rem; margin-top:4px;">"${r.notes}"</div>` : ''}
+          <div class="d-grid gap-2 mt-2">
+            <button class="btn-soft success" onclick="handleRequest(${r.id}, 'accept')">Accept</button>
+            <button class="btn-soft danger" onclick="handleRequest(${r.id}, 'decline')">Decline</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── Accept / Decline via API ──
+    function handleRequest(id, action){
+      const verb = action === 'accept' ? 'Accept' : 'Decline';
+      Swal.fire({title:`${verb} this booking?`, icon:'question', showCancelButton:true, confirmButtonText:verb}).then(async (result) => {
+        if(!result.isConfirmed) return;
+
+        try {
+          showLoader(true);
+          if(action === 'accept'){
+            // Use the accept endpoint
+            const res = await fetch(`${API_URL}/bookings/${id}/accept`, {
+              method: 'PUT',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ photographer_id: user.photographer_id })
+            });
+            const data = await res.json();
+            if(!res.ok) throw new Error(data.error || 'Failed to accept');
+          } else {
+            // Decline - update status
+            const res = await fetch(`${API_URL}/bookings/${id}/status`, {
+              method: 'PUT',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ status: 'declined', photographer_id: user.photographer_id })
+            });
+            const data = await res.json();
+            if(!res.ok) throw new Error(data.error || 'Failed to decline');
+          }
+
+          Swal.fire({icon:'success', title:`${verb}ed!`, timer:1400, showConfirmButton:false});
+          // Reload data
+          await loadDashboardData();
+        } catch(err){
+          console.error(`${verb} error:`, err);
+          Swal.fire({icon:'error', title:'Error', text: err.message || `Failed to ${action} booking`});
+        } finally {
+          showLoader(false);
+        }
+      });
+    }
+
+    // ── Render accepted sessions ──
+    function renderSessions(){
+      const body = document.getElementById('sessionTableBody');
+      if(!acceptedSessions.length){
+        body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No active sessions</td></tr>';
+        return;
+      }
+      body.innerHTML = acceptedSessions.map((s, i) => {
+        const customerName = s.customer ? `${s.customer.first_name} ${s.customer.last_name}` : `Customer #${s.customer_id}`;
+        const service = s.service_type || 'Photoshoot';
+        const eventDate = s.event_date || 'TBD';
+        const price = s.total_price || s.price || 0;
+        const tokenPaid = s.token_amount || Math.round(price * 0.2);
+        const balance = price - tokenPaid;
+        const statusClass = s.status === 'token_paid' ? 'accepted' : s.status === 'completed' ? 'completed' : 'pending';
+        return `
+        <tr class="animate__animated animate__fadeInUp" style="animation-delay:${i * 0.03}s;">
+          <td>${customerName}</td>
+          <td>${service}</td>
+          <td>${eventDate}</td>
+          <td>₹${Number(s.status === 'token_paid' ? balance : price).toLocaleString('en-IN')}</td>
+          <td><span class="pill ${statusClass}">${s.status}</span></td>
+          <td class="text-end">
+            <div class="d-flex gap-2 justify-content-end">
+              <button class="btn-soft primary btn-sm" onclick="markCompleted(${s.id})">Mark completed</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ── Mark session complete via API ──
+    function markCompleted(id){
+      Swal.fire({title:'Mark as completed?', icon:'question', showCancelButton:true, confirmButtonText:'Complete'}).then(async (result) => {
+        if(!result.isConfirmed) return;
+        try {
+          showLoader(true);
+          const res = await fetch(`${API_URL}/bookings/${id}/status`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ status: 'completed' })
+          });
+          const data = await res.json();
+          if(!res.ok) throw new Error(data.error || 'Failed to update');
+          Swal.fire({icon:'success', title:'Completed!', timer:1200, showConfirmButton:false});
+          await loadDashboardData();
+        } catch(err){
+          Swal.fire({icon:'error', title:'Error', text: err.message});
+        } finally {
+          showLoader(false);
+        }
+      });
+    }
+
+    // ── Render portfolio ──
+    function renderPortfolio(){
+      const grid = document.getElementById('portfolioGrid');
+      if(!portfolioItems.length){
+        grid.innerHTML = '<div class="muted" style="padding:20px; text-align:center;">No portfolio items yet. Upload some photos!</div>';
+        return;
+      }
+      grid.innerHTML = portfolioItems.map((p, i) => `
+        <div class="thumb animate__animated animate__fadeInUp" style="animation-delay:${i*0.04}s;">
+          <img src="http://localhost:5000${p.image_url}" alt="${p.caption || 'Portfolio'}">
+          <div class="overlay">
+            <button class="btn-soft" onclick="viewImage('http://localhost:5000${p.image_url}')">View</button>
+            <button class="btn-soft danger" onclick="deletePortfolioItem(${p.id})">Delete</button>
+          </div>
+        </div>`).join('');
+    }
+
+    function viewImage(url){ Swal.fire({imageUrl:url, imageHeight:400, showConfirmButton:false}); }
+
+    function deletePortfolioItem(id){
+      Swal.fire({title:'Delete photo?', icon:'warning', showCancelButton:true, confirmButtonText:'Delete'}).then(async (result) => {
+        if(!result.isConfirmed) return;
+        try {
+          const res = await fetch(`${API_URL}/portfolio/${id}`, {
+            method: 'DELETE',
+            headers: {'Content-Type': 'application/json'}
+          });
+          if(!res.ok) throw new Error('Delete failed');
+          Swal.fire({icon:'success', title:'Deleted', timer:1100, showConfirmButton:false});
+          await loadDashboardData();
+        } catch(err){
+          Swal.fire({icon:'error', title:'Error', text: err.message});
+        }
+      });
+    }
+
+    function openUploadModal(){ 
+      Swal.fire({
+        title:'Upload Photo',
+        text:'Go to the Portfolio Manager to upload new photos.',
+        icon:'info',
+        confirmButtonText:'Open Portfolio',
+        showCancelButton:true
+      }).then(r => {
+        if(r.isConfirmed) goTo('photographer-portfolio.html');
+      });
+    }
+
+    // ── Earnings chart with real data ──
+    function renderCharts(allBookings){
+      const canvas = document.getElementById('earningsChart');
+      if(!canvas || typeof Chart === 'undefined') return;
+      const ctx = canvas.getContext('2d');
+
+      // Group earnings by month from real bookings
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const earningsByMonth = new Array(12).fill(0);
+      (allBookings || []).forEach(b => {
+        if(b.status === 'completed' || b.status === 'token_paid' || b.status === 'paid'){
+          const d = b.event_date ? new Date(b.event_date) : null;
+          if(d && d.getFullYear() === new Date().getFullYear()){
+            earningsByMonth[d.getMonth()] += (b.total_price || b.price || 0);
+          }
+        }
+      });
+
+      // Show last 6 months
+      const now = new Date();
+      const labels = [];
+      const data = [];
+      for(let i = 5; i >= 0; i--){
+        const mIdx = (now.getMonth() - i + 12) % 12;
+        labels.push(months[mIdx]);
+        data.push(earningsByMonth[mIdx]);
+      }
+
+      new Chart(ctx, {
+        type:'line',
+        data:{ labels, datasets:[{ label:'Earnings (₹)', data, borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,0.15)', fill:true, tension:0.4, pointRadius:0 }] },
+        options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, grid:{color:'rgba(255,255,255,0.06)'}}, x:{grid:{display:false}}}, responsive:true, maintainAspectRatio:false }
+      });
+    }
+
+    // ── Auth & Init ──
+    function initAuth(){
+      user = JSON.parse(localStorage.getItem('user') || 'null');
+      if(!user){
+        Swal.fire({icon:'warning', title:'Login Required', text:'Please login to access the dashboard.'}).then(() => {
+          window.location.href = 'login.html';
+        });
+        return false;
+      }
+      if(!user.photographer_id){
+        Swal.fire({icon:'error', title:'Access Denied', text:'This dashboard is for photographers only.'}).then(() => {
+          window.location.href = 'index.html';
+        });
+        return false;
+      }
+      document.getElementById('photographerName').textContent = user.first_name || 'Photographer';
+      document.getElementById('profileName').textContent = user.first_name || 'Profile';
+      document.getElementById('profileAvatar').textContent = (user.first_name || 'P').charAt(0).toUpperCase();
+      return true;
+    }
+
+    function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('show'); }
+    function safeHideLoader(){ showLoader(false); }
+
+    function setupNavLinks(){
+      document.querySelectorAll('.nav a').forEach(link => {
+        link.addEventListener('click', (evt) => {
+          const target = link.getAttribute('href');
+          if(!target || target === '#') return;
+          evt.preventDefault();
+          showLoader(true);
+          window.location.href = target;
+        });
+      });
+    }
+
+    async function init(){
+      showLoader(true);
+      const toggleBtn = document.getElementById('toggleSidebar');
+      if(toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+      setupNavLinks();
+
+      try {
+        await loadDashboardData();
+      } catch(err){
+        console.error('Dashboard init error:', err);
+      } finally {
+        setTimeout(safeHideLoader, 300);
+        setTimeout(safeHideLoader, 3000); // fail-safe
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if(initAuth()) init();
+      else setTimeout(safeHideLoader, 500);
+    });
+  </script>
+</body>
+</html>

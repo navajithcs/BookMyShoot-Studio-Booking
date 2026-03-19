@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile — BookMyShoot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root{--primary:#6366f1;--success:#22c55e;--danger:#ef4444;--bg:#0b1224;--text:#e5e7eb;--muted:#9ca3af;--card:rgba(255,255,255,0.08);--stroke:rgba(255,255,255,0.14);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Poppins',sans-serif;background:radial-gradient(circle at 20% 20%,rgba(99,102,241,0.18),transparent 32%),var(--bg);color:var(--text);min-height:100vh;}
+    .topbar{display:flex;justify-content:space-between;align-items:center;padding:18px 30px;background:rgba(8,12,24,0.75);backdrop-filter:blur(14px);border-bottom:1px solid var(--stroke);position:sticky;top:0;z-index:10;}
+    .topbar h1{font-size:1.3rem;}
+    .btn{padding:10px 18px;border-radius:10px;border:1px solid var(--stroke);background:var(--card);color:var(--text);font-weight:600;cursor:pointer;transition:.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-family:inherit;}
+    .btn:hover{transform:translateY(-2px);}
+    .btn.primary{border-color:rgba(99,102,241,0.5);color:#c7d2fe;}
+    .btn.success{border-color:rgba(34,197,94,0.5);color:#bbf7d0;}
+    .content{max-width:800px;margin:30px auto;padding:0 20px;}
+    .card{background:var(--card);border:1px solid var(--stroke);border-radius:16px;padding:24px;margin-bottom:20px;}
+    .card h2{font-size:1.1rem;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+    .form-group{margin-bottom:14px;}
+    .form-group label{display:block;color:var(--muted);font-size:0.85rem;margin-bottom:6px;font-weight:500;}
+    .form-group input,.form-group textarea,.form-group select{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--stroke);background:rgba(255,255,255,0.05);color:var(--text);font-family:inherit;font-size:0.95rem;transition:.2s;}
+    .form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,0.15);}
+    .form-group textarea{resize:vertical;min-height:80px;}
+    .form-group select{cursor:pointer;}
+    .form-group select option{background:#1a1a2e;color:#e5e7eb;}
+    .toggle-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;}
+    .toggle{position:relative;width:48px;height:26px;cursor:pointer;}
+    .toggle input{opacity:0;width:0;height:0;}
+    .toggle .slider{position:absolute;inset:0;background:rgba(255,255,255,0.15);border-radius:999px;transition:.3s;}
+    .toggle .slider::before{content:'';position:absolute;width:20px;height:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+    .toggle input:checked+.slider{background:var(--success);}
+    .toggle input:checked+.slider::before{transform:translateX(22px);}
+    .alert{padding:12px 16px;border-radius:10px;margin-bottom:14px;font-size:0.9rem;display:none;}
+    .alert.success{background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);color:#86efac;}
+    .alert.error{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;}
+    @media(max-width:600px){.form-row{grid-template-columns:1fr;}}
+    .layout{display:grid;grid-template-columns:250px 1fr;min-height:100vh;}
+    .sidebar{position:sticky;top:0;height:100vh;padding:20px 16px;background:rgba(8,12,24,0.85);border-right:1px solid var(--stroke);backdrop-filter:blur(16px);overflow-y:auto;}
+    .sidebar .logo{font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:8px;margin-bottom:22px;}
+    .sidebar .logo span{color:var(--muted);font-weight:500;font-size:0.8rem;display:block;}
+    .sidebar .nav{list-style:none;padding:0;margin:0;display:grid;gap:6px;}
+    .sidebar .nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text);border:1px solid transparent;transition:all .25s ease;text-decoration:none;font-size:0.9rem;}
+    .sidebar .nav a:hover{background:rgba(255,255,255,0.05);border-color:var(--stroke);}
+    .sidebar .nav a.active{background:rgba(99,102,241,0.16);border-color:rgba(99,102,241,0.3);color:#c7d2fe;}
+    .sidebar .nav a .dot{width:7px;height:7px;border-radius:50%;background:var(--primary);opacity:0;transition:.2s;}
+    .sidebar .nav a.active .dot{opacity:1;}
+    .sidebar .slogout{margin-top:20px;width:100%;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.12);color:#fecdd3;padding:10px;border-radius:10px;font-weight:600;cursor:pointer;transition:.2s;font-family:inherit;font-size:0.9rem;}
+    .sidebar .slogout:hover{background:rgba(239,68,68,0.2);}
+    .toggle-sb{display:none;background:var(--card);border:1px solid var(--stroke);color:var(--text);width:38px;height:38px;border-radius:10px;cursor:pointer;font-size:1.2rem;}
+    @media(max-width:768px){.layout{grid-template-columns:1fr;}.sidebar{position:fixed;left:-280px;width:250px;transition:transform .3s ease;z-index:30;}.sidebar.show{transform:translateX(280px);}.toggle-sb{display:inline-flex;align-items:center;justify-content:center;}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">📸 BookMyShoot <span>Photographer</span></div>
+    <ul class="nav">
+      <li><a href="photographer-dashboard.html"><span class="dot"></span><i class="bi bi-grid-3x3-gap"></i> Dashboard</a></li>
+      <li><a href="photographer-requests.html"><span class="dot"></span><i class="bi bi-chat-dots"></i> Requests</a></li>
+      <li><a href="photographer-sessions.html"><span class="dot"></span><i class="bi bi-calendar-check"></i> Sessions</a></li>
+      <li><a href="photographer-packages.html"><span class="dot"></span><i class="bi bi-box"></i> Packages</a></li>
+      <li><a href="photographer-earnings.html"><span class="dot"></span><i class="bi bi-wallet2"></i> Earnings</a></li>
+      <li><a href="photographer-portfolio.html"><span class="dot"></span><i class="bi bi-images"></i> Portfolio</a></li>
+      <li><a class="active" href="photographer-profile.html"><span class="dot"></span><i class="bi bi-person-circle"></i> Profile</a></li>
+    </ul>
+    <button class="slogout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+  </aside>
+  <div class="main-area">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px"><button class="toggle-sb" onclick="document.getElementById('sidebar').classList.toggle('show')"><i class="bi bi-list"></i></button><h1><i class="bi bi-person-circle"></i> My Profile</h1></div>
+  </div>
+  <div class="content">
+    <!-- Personal Info -->
+    <div class="card">
+      <h2><i class="bi bi-person"></i> Personal Information</h2>
+      <div class="alert" id="personalAlert"></div>
+      <form id="personalForm">
+        <div class="form-row">
+          <div class="form-group"><label>First Name</label><input type="text" id="firstName" required></div>
+          <div class="form-group"><label>Last Name</label><input type="text" id="lastName" required></div>
+        </div>
+        <div class="form-group"><label>Email</label><input type="email" id="email" disabled></div>
+        <div class="form-group"><label>Phone</label><input type="tel" id="phone"></div>
+        <button type="submit" class="btn success"><i class="bi bi-check-lg"></i> Save Personal Info</button>
+      </form>
+    </div>
+
+    <!-- Photographer Profile -->
+    <div class="card">
+      <h2><i class="bi bi-camera"></i> Photographer Profile</h2>
+      <div class="alert" id="photographerAlert"></div>
+      <form id="photographerForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Specialty</label>
+            <select id="specialty">
+              <option value="General">General</option>
+              <option value="Wedding">Wedding</option>
+              <option value="Portrait">Portrait</option>
+              <option value="Event">Event</option>
+              <option value="Engagement">Engagement</option>
+              <option value="Baby Shower">Baby Shower</option>
+              <option value="Birthday">Birthday</option>
+              <option value="Studio">Studio</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Hourly Rate (₹)</label><input type="number" id="hourlyRate" min="0" step="100"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Experience</label><input type="text" id="experience" placeholder="e.g. 5+ years"></div>
+          <div class="form-group"><label>Location</label><input type="text" id="location" placeholder="e.g. Kochi, Kerala"></div>
+        </div>
+        <div class="form-group"><label>Bio</label><textarea id="bio" placeholder="Tell clients about yourself..."></textarea></div>
+        <div class="toggle-row">
+          <span>Available for bookings</span>
+          <label class="toggle"><input type="checkbox" id="isAvailable" checked><span class="slider"></span></label>
+        </div>
+        <button type="submit" class="btn success"><i class="bi bi-check-lg"></i> Save Photographer Profile</button>
+      </form>
+    </div>
+
+    <!-- Change Password -->
+    <div class="card">
+      <h2><i class="bi bi-shield-lock"></i> Change Password</h2>
+      <div class="alert" id="passwordAlert"></div>
+      <form id="passwordForm">
+        <div class="form-group"><label>Current Password</label><input type="password" id="currentPassword" required></div>
+        <div class="form-row">
+          <div class="form-group"><label>New Password</label><input type="password" id="newPassword" required></div>
+          <div class="form-group"><label>Confirm New Password</label><input type="password" id="confirmPassword" required></div>
+        </div>
+        <button type="submit" class="btn primary"><i class="bi bi-key"></i> Update Password</button>
+      </form>
+    </div>
+  </div>
+  </div><!-- /main-area -->
+</div><!-- /layout -->
+
+  <script src="js/validate.js"></script>
+  <script>
+    const API = 'http://localhost:5000/api';
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (!user || !user.photographer_id) { window.location.href = 'login.html'; }
+    function logout() { fetch(`${API}/logout`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:user.id}) }).finally(() => { localStorage.removeItem('user'); window.location.href='index.html'; }); }
+    const pid = user.photographer_id;
+
+    function showAlert(id, type, msg) {
+      const el = document.getElementById(id);
+      el.className = 'alert ' + type;
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 5000);
+    }
+
+    // Load personal info from localStorage + fresh fetch
+    async function loadProfile() {
+      // User info
+      document.getElementById('firstName').value = user.first_name || '';
+      document.getElementById('lastName').value = user.last_name || '';
+      document.getElementById('email').value = user.email || '';
+      document.getElementById('phone').value = user.phone || '';
+
+      // Photographer info from API
+      try {
+        const res = await fetch(`${API}/photographers/${pid}`);
+        const data = await res.json();
+        const p = data.photographer;
+        if (p) {
+          document.getElementById('specialty').value = p.specialty || 'General';
+          document.getElementById('hourlyRate').value = p.hourly_rate || 0;
+          document.getElementById('experience').value = p.experience || '';
+          document.getElementById('location').value = p.location || '';
+          document.getElementById('bio').value = p.bio || '';
+          document.getElementById('isAvailable').checked = p.is_available !== false;
+        }
+      } catch (err) {
+        console.error('Error loading photographer profile:', err);
+      }
+    }
+
+    // Save personal info — with validation
+    document.getElementById('personalForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var fnErr = BMSValidate.validateName(document.getElementById('firstName').value, 'First name');
+      var lnErr = BMSValidate.validateName(document.getElementById('lastName').value, 'Last name');
+      var phErr = BMSValidate.validatePhone(document.getElementById('phone').value);
+      var firstErr = fnErr || lnErr || phErr;
+      if (firstErr) { showAlert('personalAlert', 'error', firstErr); return; }
+      try {
+        const res = await fetch(`${API}/user/update-profile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.id,
+            first_name: document.getElementById('firstName').value,
+            last_name: document.getElementById('lastName').value,
+            phone: document.getElementById('phone').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        // Update localStorage preserving photographer_id
+        const updatedUser = { ...data.user, photographer_id: user.photographer_id };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        showAlert('personalAlert', 'success', 'Personal info updated!');
+      } catch (err) {
+        showAlert('personalAlert', 'error', err.message);
+      }
+    });
+
+    // Save photographer profile
+    document.getElementById('photographerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      try {
+        const res = await fetch(`${API}/photographers/${pid}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            specialty: document.getElementById('specialty').value,
+            hourly_rate: document.getElementById('hourlyRate').value,
+            experience: document.getElementById('experience').value,
+            location: document.getElementById('location').value,
+            bio: document.getElementById('bio').value,
+            is_available: document.getElementById('isAvailable').checked
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        showAlert('photographerAlert', 'success', 'Photographer profile updated!');
+      } catch (err) {
+        showAlert('photographerAlert', 'error', err.message);
+      }
+    });
+
+    // Change password — with strong password validation
+    document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const newPass = document.getElementById('newPassword').value;
+      const confirm = document.getElementById('confirmPassword').value;
+      var pwErr = BMSValidate.validatePassword(newPass);
+      if (pwErr) { showAlert('passwordAlert', 'error', pwErr); return; }
+      var matchErr = BMSValidate.validatePasswordMatch(newPass, confirm);
+      if (matchErr) { showAlert('passwordAlert', 'error', matchErr); return; }
+      try {
+        const res = await fetch(`${API}/user/change-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.id,
+            current_password: document.getElementById('currentPassword').value,
+            new_password: newPass
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        showAlert('passwordAlert', 'success', 'Password updated!');
+        document.getElementById('passwordForm').reset();
+      } catch (err) {
+        showAlert('passwordAlert', 'error', err.message);
+      }
+    });
+
+    loadProfile();
+  </script>
+</body>
+</html>

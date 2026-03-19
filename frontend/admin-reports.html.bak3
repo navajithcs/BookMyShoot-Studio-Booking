@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports — BookMyShoot Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    .dash-content { max-width: 100% !important; }
+    .report-tabs {
+      display: flex; gap: var(--space-2); flex-wrap: wrap;
+      margin-bottom: var(--space-5);
+    }
+    .report-tab {
+      padding: 10px 20px; border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg); font-size: var(--text-sm);
+      font-weight: 600; color: var(--text-secondary);
+      background: var(--surface-primary); cursor: pointer;
+      transition: all var(--duration-fast); text-decoration: none;
+    }
+    .report-tab:hover {
+      border-color: var(--brand-300); color: var(--brand-700);
+      background: var(--brand-50);
+    }
+    .report-tab.active {
+      background: var(--brand-600); color: #fff;
+      border-color: var(--brand-600);
+    }
+    [data-theme="dark"] .report-tab:hover { background: rgba(99,102,241,.1); color: var(--brand-300); }
+    [data-theme="dark"] .report-tab.active { background: var(--brand-500); border-color: var(--brand-500); }
+    .report-section { display: none; }
+    .report-section.active { display: block; }
+    .report-stats {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4); margin-bottom: var(--space-5);
+    }
+    @media (max-width: 768px) {
+      .report-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* ─── Per-Section Download Bar ─── */
+    .section-download-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px;
+      padding: 14px 20px;
+      background: var(--surface-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+    }
+    .section-download-bar .bar-title {
+      font-size: var(--text-sm); font-weight: 700;
+      color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+    }
+    .section-download-bar .bar-title i { font-size: 1.1rem; color: var(--brand-600); }
+    .download-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dl-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border: none; border-radius: var(--radius-md);
+      font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      transition: all var(--duration-fast); text-decoration: none;
+    }
+    .dl-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .dl-btn-pdf { background: #dc3545; color: #fff; }
+    .dl-btn-pdf:hover { background: #c82333; }
+    .dl-btn-excel { background: #198754; color: #fff; }
+    .dl-btn-excel:hover { background: #157347; }
+    .dl-btn-csv { background: #0d6efd; color: #fff; }
+    .dl-btn-csv:hover { background: #0b5ed7; }
+    .dl-btn-print { background: #6c757d; color: #fff; }
+    .dl-btn-print:hover { background: #5a6268; }
+
+    /* Download All Bar */
+    .download-all-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, rgba(102,126,234,0.08) 0%, rgba(118,75,162,0.08) 100%);
+      border: 2px solid var(--brand-200);
+      border-radius: var(--radius-xl);
+      margin-bottom: var(--space-5);
+    }
+    .download-all-bar .bar-title { font-size: var(--text-base); font-weight: 800; color: var(--brand-700); }
+    [data-theme="dark"] .download-all-bar { border-color: var(--brand-800); background: rgba(99,102,241,0.08); }
+    [data-theme="dark"] .download-all-bar .bar-title { color: var(--brand-300); }
+  </style>
+</head>
+<body>
+  <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <div class="dash-layout">
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-logo">
+          <div class="logo-icon">📸</div>
+          <div class="logo-text">BookMyShoot<span class="logo-sub">Admin Panel</span></div>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Overview</div>
+          <a href="admin-dashboard.html" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Management</div>
+          <a href="admin-users.html" class="sidebar-link"><i class="bi bi-people"></i> Customer Management</a>
+          <a href="admin-photographers.html" class="sidebar-link"><i class="bi bi-camera"></i> Photographer Management</a>
+          <a href="admin-portfolio.html" class="sidebar-link"><i class="bi bi-images"></i> Portfolio</a>
+          <a href="admin-bookings.html" class="sidebar-link"><i class="bi bi-calendar-event"></i> Booking Management</a>
+          <a href="admin-services.html" class="sidebar-link"><i class="bi bi-box-seam"></i> Service & Packages</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Analytics</div>
+          <a href="admin-reports.html" class="sidebar-link active"><i class="bi bi-bar-chart-line"></i> Reports</a>
+          <a href="admin-revenue.html" class="sidebar-link"><i class="bi bi-currency-rupee"></i> Revenue Details</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar" id="sidebarAvatar">A</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+            <div class="sidebar-user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="sidebar-logout" onclick="DashApp.logout()"><i class="bi bi-box-arrow-left"></i> Logout</button>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+          <div>
+            <div class="topbar-title">Reports & Analytics</div>
+            <div class="topbar-subtitle">View and export platform reports</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="theme-toggle" data-tooltip="Toggle theme">
+            <i class="bi bi-moon-fill icon-moon"></i>
+            <i class="bi bi-sun-fill icon-sun"></i>
+          </button>
+          <button class="topbar-icon-btn" id="notifBtn" data-tooltip="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="badge-count" id="notifBadge" style="display:none;">0</span>
+          </button>
+          <div class="dropdown">
+            <div class="topbar-user" id="userDropdownTrigger">
+              <div class="topbar-user-avatar" id="topbarAvatar">A</div>
+              <span class="topbar-user-name" id="topbarUserName">Admin</span>
+              <i class="bi bi-chevron-down text-sm text-secondary"></i>
+            </div>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="admin-profile.html" class="dropdown-item"><i class="bi bi-person-gear"></i> Profile Settings</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" onclick="DashApp.logout()" style="color:var(--danger-600);"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="dash-content">
+
+        <!-- ═══ Download All Reports Bar ═══ -->
+        <div class="download-all-bar animate-fadeInUp">
+          <div class="bar-title"><i class="bi bi-download"></i> Download All Reports at Once</div>
+          <div class="download-btns">
+            <button class="dl-btn dl-btn-pdf" onclick="downloadAllPDF()"><i class="bi bi-file-earmark-pdf-fill"></i> All Reports PDF</button>
+            <button class="dl-btn dl-btn-excel" onclick="downloadAllExcel()"><i class="bi bi-file-earmark-spreadsheet-fill"></i> All Reports Excel</button>
+          </div>
+        </div>
+
+        <!-- Report Tabs -->
+        <div class="report-tabs animate-fadeInUp">
+          <button class="report-tab active" onclick="showReport('users')" id="tabUsers"><i class="bi bi-people"></i> User Details</button>
+          <button class="report-tab" onclick="showReport('sales')" id="tabSales"><i class="bi bi-cash-stack"></i> Sales Report</button>
+          <button class="report-tab" onclick="showReport('bookings')" id="tabBookings"><i class="bi bi-calendar-check"></i> Session Report</button>
+          <button class="report-tab" onclick="showReport('photographers')" id="tabPhotographers"><i class="bi bi-camera"></i> Photographer Report</button>
+          <button class="report-tab" onclick="showReport('activity')" id="tabActivity"><i class="bi bi-clock-history"></i> Login/Logout Activity</button>
+        </div>
+
+        <!-- ═══════════════════ Users Report ═══════════════════ -->
+        <div id="reportUsers" class="report-section active">
+          <div class="section-download-bar animate-fadeInUp">
+            <div class="bar-title"><i class="bi bi-people-fill"></i> User Details Report</div>
+            <div class="download-btns">
+              <button class="dl-btn dl-btn-pdf" onclick="downloadReportPDF('users')"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+              <button class="dl-btn dl-btn-excel" onclick="downloadReportExcel('users')"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+              <button class="dl-btn dl-btn-csv" onclick="downloadReportCSV('users')"><i class="bi bi-filetype-csv"></i> CSV</button>
+              <button class="dl-btn dl-btn-print" onclick="printSection('reportUsers')"><i class="bi bi-printer-fill"></i> Print</button>
+            </div>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header">
+              <h3 class="font-semibold text-base m-0"><i class="bi bi-people"></i> All Users Login Details</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="ds-table" id="usersTable">
+                <thead>
+                  <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Joined Date</th></tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <tr><td colspan="6" class="text-center text-secondary py-5">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════ Sales Report ═══════════════════ -->
+        <div id="reportSales" class="report-section">
+          <div class="section-download-bar animate-fadeInUp">
+            <div class="bar-title"><i class="bi bi-cash-stack"></i> Sales Report</div>
+            <div class="download-btns">
+              <button class="dl-btn dl-btn-pdf" onclick="downloadReportPDF('sales')"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+              <button class="dl-btn dl-btn-excel" onclick="downloadReportExcel('sales')"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+              <button class="dl-btn dl-btn-csv" onclick="downloadReportCSV('sales')"><i class="bi bi-filetype-csv"></i> CSV</button>
+              <button class="dl-btn dl-btn-print" onclick="printSection('reportSales')"><i class="bi bi-printer-fill"></i> Print</button>
+            </div>
+          </div>
+          <div class="report-stats animate-fadeInUp">
+            <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-cash-stack"></i></div><div class="stat-label">Total Revenue</div><div class="stat-value" id="salesRevenue">₹0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-check-circle"></i></div><div class="stat-label">Completed Payments</div><div class="stat-value" id="salesCompleted">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-hourglass-split"></i></div><div class="stat-label">Pending Payments</div><div class="stat-value" id="salesPending">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon info"><i class="bi bi-receipt"></i></div><div class="stat-label">Total Bookings</div><div class="stat-value" id="salesTotalBookings">0</div></div>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-cash-stack"></i> Sales Details</h3></div>
+            <div class="table-responsive">
+              <table class="ds-table" id="salesTable">
+                <thead><tr><th>Booking ID</th><th>Customer</th><th>Service</th><th>Amount</th><th>Payment Status</th><th>Date</th></tr></thead>
+                <tbody id="salesTableBody"><tr><td colspan="6" class="text-center text-secondary py-5">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════ Bookings Report ═══════════════════ -->
+        <div id="reportBookings" class="report-section">
+          <div class="section-download-bar animate-fadeInUp">
+            <div class="bar-title"><i class="bi bi-calendar-check-fill"></i> Session / Booking Report</div>
+            <div class="download-btns">
+              <button class="dl-btn dl-btn-pdf" onclick="downloadReportPDF('bookings')"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+              <button class="dl-btn dl-btn-excel" onclick="downloadReportExcel('bookings')"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+              <button class="dl-btn dl-btn-csv" onclick="downloadReportCSV('bookings')"><i class="bi bi-filetype-csv"></i> CSV</button>
+              <button class="dl-btn dl-btn-print" onclick="printSection('reportBookings')"><i class="bi bi-printer-fill"></i> Print</button>
+            </div>
+          </div>
+          <div class="report-stats animate-fadeInUp">
+            <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-hourglass-split"></i></div><div class="stat-label">Pending</div><div class="stat-value" id="bookPending">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-check-circle"></i></div><div class="stat-label">Accepted</div><div class="stat-value" id="bookAccepted">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-check-all"></i></div><div class="stat-label">Completed</div><div class="stat-value" id="bookCompleted">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon danger"><i class="bi bi-x-circle"></i></div><div class="stat-label">Declined</div><div class="stat-value" id="bookDeclined">0</div></div>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-calendar-check"></i> Session/Booking Details</h3></div>
+            <div class="table-responsive">
+              <table class="ds-table" id="bookingsTable">
+                <thead><tr><th>ID</th><th>Customer</th><th>Photographer</th><th>Service</th><th>Date</th><th>Status</th></tr></thead>
+                <tbody id="bookingsTableBody"><tr><td colspan="6" class="text-center text-secondary py-5">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════ Photographers Report ═══════════════════ -->
+        <div id="reportPhotographers" class="report-section">
+          <div class="section-download-bar animate-fadeInUp">
+            <div class="bar-title"><i class="bi bi-camera-fill"></i> Photographer Performance Report</div>
+            <div class="download-btns">
+              <button class="dl-btn dl-btn-pdf" onclick="downloadReportPDF('photographers')"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+              <button class="dl-btn dl-btn-excel" onclick="downloadReportExcel('photographers')"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+              <button class="dl-btn dl-btn-csv" onclick="downloadReportCSV('photographers')"><i class="bi bi-filetype-csv"></i> CSV</button>
+              <button class="dl-btn dl-btn-print" onclick="printSection('reportPhotographers')"><i class="bi bi-printer-fill"></i> Print</button>
+            </div>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-camera"></i> Photographer Performance</h3></div>
+            <div class="table-responsive">
+              <table class="ds-table" id="photographersTable">
+                <thead><tr><th>ID</th><th>Name</th><th>Specialty</th><th>Hourly Rate</th><th>Total Jobs</th><th>Total Earnings</th><th>Status</th></tr></thead>
+                <tbody id="photographersTableBody"><tr><td colspan="7" class="text-center text-secondary py-5">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════ Activity Report ═══════════════════ -->
+        <div id="reportActivity" class="report-section">
+          <div class="section-download-bar animate-fadeInUp">
+            <div class="bar-title"><i class="bi bi-clock-history"></i> Login / Logout Activity Report</div>
+            <div class="download-btns">
+              <button class="dl-btn dl-btn-pdf" onclick="downloadReportPDF('activity')"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+              <button class="dl-btn dl-btn-excel" onclick="downloadReportExcel('activity')"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+              <button class="dl-btn dl-btn-csv" onclick="downloadReportCSV('activity')"><i class="bi bi-filetype-csv"></i> CSV</button>
+              <button class="dl-btn dl-btn-print" onclick="printSection('reportActivity')"><i class="bi bi-printer-fill"></i> Print</button>
+            </div>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-clock-history"></i> Login/Logout Activity</h3></div>
+            <div class="table-responsive">
+              <table class="ds-table" id="activityTable">
+                <thead><tr><th>#</th><th>User</th><th>Role</th><th>Login Time</th><th>Logout Time</th><th>Duration</th></tr></thead>
+                <tbody id="activityTableBody"><tr><td colspan="6" class="text-center text-secondary py-5">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <aside class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3 class="font-semibold text-base m-0">Notifications</h3>
+      <button class="btn btn-sm btn-ghost" id="notifClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="notif-panel-body" id="notifList">
+      <div class="empty-state"><div class="empty-state-icon">🔔</div><div class="empty-state-title">No notifications</div></div>
+    </div>
+  </aside>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    const user = DashApp.requireAuth(['admin']);
+    if (user) {
+      const name = user.first_name || 'Admin';
+      const initial = name.charAt(0).toUpperCase();
+      document.getElementById('topbarAvatar').textContent = initial;
+      document.getElementById('topbarUserName').textContent = name;
+      document.getElementById('sidebarAvatar').textContent = initial;
+      document.getElementById('sidebarUserName').textContent = name;
+    }
+    DashApp.init();
+
+    let currentReport = 'users';
+    let reportData = {};
+
+    function showReport(type) {
+      currentReport = type;
+      document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
+      document.querySelectorAll('.report-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('report' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
+
+      if (type === 'users') loadUsersReport();
+      else if (type === 'sales') loadSalesReport();
+      else if (type === 'bookings') loadBookingsReport();
+      else if (type === 'photographers') loadPhotographersReport();
+      else if (type === 'activity') loadActivityReport();
+    }
+
+    /* ═══════════════════ DATA LOADERS ═══════════════════ */
+
+    function loadUsersReport() {
+      fetch(`${DashApp.API_URL}/admin/users`)
+        .then(r => r.json())
+        .then(data => {
+          reportData.users = data.users;
+          const tbody = document.getElementById('usersTableBody');
+          tbody.innerHTML = data.users.map(u => {
+            const typeBadge = u.user_type === 'admin' ? 'badge-danger' : u.user_type === 'photographer' ? 'badge-primary' : 'badge-success';
+            return `<tr>
+              <td class="font-medium">#${u.id}</td>
+              <td class="font-semibold">${DashApp.escapeHtml(u.first_name + ' ' + u.last_name)}</td>
+              <td>${DashApp.escapeHtml(u.email)}</td>
+              <td>${u.phone || '—'}</td>
+              <td><span class="badge-v2 ${typeBadge}">${u.user_type}</span></td>
+              <td>${DashApp.formatDate(u.created_at)}</td>
+            </tr>`;
+          }).join('');
+        });
+    }
+
+    function loadSalesReport() {
+      fetch(`${DashApp.API_URL}/admin/stats`)
+        .then(r => r.json())
+        .then(data => {
+          reportData.sales = data;
+          document.getElementById('salesRevenue').textContent = DashApp.formatCurrency(data.revenue.total || 0);
+          document.getElementById('salesCompleted').textContent = data.bookings.completed || 0;
+          document.getElementById('salesPending').textContent = (data.bookings.pending + data.bookings.accepted) || 0;
+          document.getElementById('salesTotalBookings').textContent = (data.bookings.completed + data.bookings.pending + data.bookings.accepted) || 0;
+
+          const tbody = document.getElementById('salesTableBody');
+          const bookings = data.recent_activity || [];
+          if (bookings.length) {
+            tbody.innerHTML = bookings.map(b => {
+              const pBadge = b.payment_status === 'paid' ? 'badge-success' : b.payment_status === 'token_paid' ? 'badge-primary' : 'badge-warning';
+              return `<tr>
+                <td class="font-medium">#${b.id}</td>
+                <td>Customer #${b.customer_id}</td>
+                <td>${DashApp.escapeHtml(b.service_type)}</td>
+                <td class="font-semibold">${DashApp.formatCurrency(b.total_price)}</td>
+                <td><span class="badge-v2 ${pBadge}">${b.payment_status}</span></td>
+                <td>${DashApp.formatDate(b.event_date)}</td>
+              </tr>`;
+            }).join('');
+          } else {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-5">No sales data</td></tr>';
+          }
+        });
+    }
+
+    function loadBookingsReport() {
+      fetch(`${DashApp.API_URL}/admin/stats`)
+        .then(r => r.json())
+        .then(data => {
+          reportData.bookings = data;
+          const bookings = data.recent_activity || [];
+          document.getElementById('bookPending').textContent = bookings.filter(b => b.status === 'pending').length;
+          document.getElementById('bookAccepted').textContent = bookings.filter(b => b.status === 'accepted').length;
+          document.getElementById('bookCompleted').textContent = bookings.filter(b => b.status === 'completed').length;
+          document.getElementById('bookDeclined').textContent = bookings.filter(b => b.status === 'declined').length;
+
+          const tbody = document.getElementById('bookingsTableBody');
+          tbody.innerHTML = bookings.map(b => {
+            const sBadge = { pending:'badge-warning', accepted:'badge-primary', completed:'badge-success', declined:'badge-danger', token_paid:'badge-info' }[b.status] || 'badge-neutral';
+            return `<tr>
+              <td class="font-medium">#${b.id}</td>
+              <td>Customer #${b.customer_id}</td>
+              <td>${b.photographer_id ? 'Assigned' : 'Unassigned'}</td>
+              <td>${DashApp.escapeHtml(b.service_type)}</td>
+              <td>${DashApp.formatDate(b.event_date)}</td>
+              <td><span class="badge-v2 ${sBadge}">${b.status}</span></td>
+            </tr>`;
+          }).join('');
+        });
+    }
+
+    function loadPhotographersReport() {
+      fetch(`${DashApp.API_URL}/admin/photographers`)
+        .then(r => r.json())
+        .then(data => {
+          reportData.photographers = data.photographers;
+          const tbody = document.getElementById('photographersTableBody');
+          tbody.innerHTML = data.photographers.map(p => {
+            const name = p.user ? DashApp.escapeHtml(p.user.first_name + ' ' + p.user.last_name) : 'N/A';
+            const statusBadge = p.is_available ? '<span class="badge-v2 badge-success">Available</span>' : '<span class="badge-v2 badge-warning">Unavailable</span>';
+            return `<tr>
+              <td class="font-medium">#${p.id}</td>
+              <td class="font-semibold">${name}</td>
+              <td>${DashApp.escapeHtml(p.specialty)}</td>
+              <td>${DashApp.formatCurrency(p.hourly_rate)}/hr</td>
+              <td>${p.portfolio ? p.portfolio.length : 0}</td>
+              <td class="font-semibold">${DashApp.formatCurrency(p.total_earnings || 0)}</td>
+              <td>${statusBadge}</td>
+            </tr>`;
+          }).join('');
+        });
+    }
+
+    function loadActivityReport() {
+      fetch(`${DashApp.API_URL}/admin/logs`)
+        .then(r => r.json())
+        .then(data => {
+          reportData.activity = data.logs;
+          const tbody = document.getElementById('activityTableBody');
+          if (data.logs && data.logs.length) {
+            const authLogs = data.logs
+              .filter(l => l.action === 'login' || l.action === 'logout')
+              .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+            const userSessions = {};
+            authLogs.forEach(log => {
+              const key = log.user_email || 'System';
+              if (!userSessions[key]) userSessions[key] = { pending: null, sessions: [], details: log.details || '' };
+              if (log.action === 'login') {
+                if (userSessions[key].pending) {
+                  userSessions[key].sessions.push({ login: userSessions[key].pending, logout: null });
+                }
+                userSessions[key].pending = log;
+              } else if (log.action === 'logout') {
+                userSessions[key].sessions.push({ login: userSessions[key].pending, logout: log });
+                userSessions[key].pending = null;
+              }
+            });
+            Object.values(userSessions).forEach(u => {
+              if (u.pending) { u.sessions.push({ login: u.pending, logout: null }); u.pending = null; }
+            });
+
+            const rows = [];
+            Object.entries(userSessions).forEach(([email, u]) => {
+              u.sessions.forEach(s => {
+                const loginTime = s.login ? new Date(s.login.timestamp) : null;
+                const logoutTime = s.logout ? new Date(s.logout.timestamp) : null;
+                rows.push({ email, details: u.details, loginTime, logoutTime, loginLog: s.login, logoutLog: s.logout });
+              });
+            });
+            rows.sort((a, b) => (b.loginTime || b.logoutTime || 0) - (a.loginTime || a.logoutTime || 0));
+
+            reportData.activityRows = rows;
+
+            function extractRole(details) {
+              if (!details) return '—';
+              const m = details.match(/\b(admin|photographer|customer)\b/i);
+              return m ? m[1].charAt(0).toUpperCase() + m[1].slice(1) : '—';
+            }
+            function roleBadge(role) {
+              if (role === 'Admin') return 'badge-danger';
+              if (role === 'Photographer') return 'badge-primary';
+              if (role === 'Customer') return 'badge-success';
+              return 'badge-neutral';
+            }
+            function calcDuration(login, logout) {
+              if (!login || !logout) return '—';
+              const diff = Math.floor((logout - login) / 1000);
+              if (diff < 60) return `${diff}s`;
+              if (diff < 3600) return `${Math.floor(diff / 60)}m ${diff % 60}s`;
+              const h = Math.floor(diff / 3600); const m = Math.floor((diff % 3600) / 60);
+              return `${h}h ${m}m`;
+            }
+            function fmtTime(dt) {
+              if (!dt) return '<span style="color:var(--text-tertiary);">—</span>';
+              return dt.toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+            }
+
+            tbody.innerHTML = rows.map((r, i) => {
+              const role = extractRole(r.loginLog?.details || r.logoutLog?.details);
+              const dur = calcDuration(r.loginTime, r.logoutTime);
+              return `<tr>
+                <td class="font-medium">${i + 1}</td>
+                <td class="font-semibold">${DashApp.escapeHtml(r.email)}</td>
+                <td><span class="badge-v2 ${roleBadge(role)}">${role}</span></td>
+                <td>${r.loginTime ? '<i class="bi bi-box-arrow-in-right" style="color:var(--success-600);margin-right:4px;"></i>' + fmtTime(r.loginTime) : fmtTime(null)}</td>
+                <td>${r.logoutTime ? '<i class="bi bi-box-arrow-left" style="color:var(--warning-600);margin-right:4px;"></i>' + fmtTime(r.logoutTime) : (r.loginTime ? '<span class="badge-v2 badge-success" style="font-size:0.7rem;">Active Now</span>' : fmtTime(null))}</td>
+                <td>${dur}</td>
+              </tr>`;
+            }).join('');
+          } else {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-5">No activity logs</td></tr>';
+          }
+        });
+    }
+
+
+    /* ═══════════════════════════════════════════════════════════════════
+       REPORT CONFIG — Centralized column/row definitions for each report
+       ═══════════════════════════════════════════════════════════════════ */
+
+    function getReportConfig(type) {
+      const configs = {
+        users: {
+          title: 'User Details Report',
+          head: [['ID', 'Name', 'Email', 'Phone', 'Type', 'Joined Date']],
+          body: () => (reportData.users || []).map(u => [
+            u.id, u.first_name + ' ' + u.last_name, u.email, u.phone || '—', u.user_type, new Date(u.created_at).toLocaleDateString('en-IN')
+          ]),
+          excelCols: ['ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Type', 'Joined Date'],
+          excelRows: () => (reportData.users || []).map(u => ({
+            'ID': u.id, 'First Name': u.first_name, 'Last Name': u.last_name, 'Email': u.email,
+            'Phone': u.phone || '', 'Type': u.user_type, 'Joined Date': new Date(u.created_at).toLocaleDateString('en-IN')
+          })),
+          csvHeader: 'ID,First Name,Last Name,Email,Phone,Type,Joined Date',
+          csvRows: () => (reportData.users || []).map(u =>
+            `${u.id},"${u.first_name}","${u.last_name}","${u.email}","${u.phone || ''}","${u.user_type}","${new Date(u.created_at).toLocaleDateString('en-IN')}"`
+          )
+        },
+        sales: {
+          title: 'Sales Report',
+          head: [['Booking ID', 'Customer', 'Service', 'Amount', 'Payment Status', 'Event Date']],
+          body: () => ((reportData.sales?.recent_activity) || []).map(b => [
+            b.id, 'Customer #' + b.customer_id, b.service_type, 'Rs.' + (b.total_price || 0).toLocaleString('en-IN'), b.payment_status, b.event_date || '—'
+          ]),
+          summary: () => {
+            const s = reportData.sales || {};
+            return [
+              ['Total Revenue', 'Completed', 'Pending', 'Total Bookings'],
+              ['Rs.' + ((s.revenue?.total) || 0).toLocaleString('en-IN'), s.bookings?.completed || 0, (s.bookings?.pending || 0) + (s.bookings?.accepted || 0), (s.bookings?.completed || 0) + (s.bookings?.pending || 0) + (s.bookings?.accepted || 0)]
+            ];
+          },
+          excelCols: ['Booking ID', 'Customer', 'Service', 'Amount', 'Payment Status', 'Event Date'],
+          excelRows: () => ((reportData.sales?.recent_activity) || []).map(b => ({
+            'Booking ID': b.id, 'Customer': 'Customer #' + b.customer_id, 'Service': b.service_type,
+            'Amount': b.total_price || 0, 'Payment Status': b.payment_status, 'Event Date': b.event_date || ''
+          })),
+          csvHeader: 'Booking ID,Customer,Service,Amount,Payment Status,Event Date',
+          csvRows: () => ((reportData.sales?.recent_activity) || []).map(b =>
+            `${b.id},"Customer #${b.customer_id}","${b.service_type}",${b.total_price || 0},"${b.payment_status}","${b.event_date || ''}"`
+          )
+        },
+        bookings: {
+          title: 'Session / Booking Report',
+          head: [['ID', 'Customer', 'Photographer', 'Service', 'Event Date', 'Status']],
+          body: () => ((reportData.bookings?.recent_activity) || []).map(b => [
+            b.id, 'Customer #' + b.customer_id, b.photographer_id ? 'Assigned' : 'Unassigned', b.service_type, b.event_date || '—', b.status
+          ]),
+          summary: () => {
+            const bookings = (reportData.bookings?.recent_activity) || [];
+            return [
+              ['Pending', 'Accepted', 'Completed', 'Declined'],
+              [bookings.filter(b => b.status === 'pending').length, bookings.filter(b => b.status === 'accepted').length, bookings.filter(b => b.status === 'completed').length, bookings.filter(b => b.status === 'declined').length]
+            ];
+          },
+          excelCols: ['ID', 'Customer', 'Photographer', 'Service', 'Event Date', 'Status'],
+          excelRows: () => ((reportData.bookings?.recent_activity) || []).map(b => ({
+            'ID': b.id, 'Customer': 'Customer #' + b.customer_id, 'Photographer': b.photographer_id ? 'Assigned' : 'Unassigned',
+            'Service': b.service_type, 'Event Date': b.event_date || '', 'Status': b.status
+          })),
+          csvHeader: 'ID,Customer,Photographer,Service,Event Date,Status',
+          csvRows: () => ((reportData.bookings?.recent_activity) || []).map(b =>
+            `${b.id},"Customer #${b.customer_id}","${b.photographer_id ? 'Assigned' : 'Unassigned'}","${b.service_type}","${b.event_date || ''}","${b.status}"`
+          )
+        },
+        photographers: {
+          title: 'Photographer Performance Report',
+          head: [['ID', 'Name', 'Specialty', 'Hourly Rate', 'Portfolio Items', 'Total Earnings', 'Status']],
+          body: () => (reportData.photographers || []).map(p => [
+            p.id, p.user ? p.user.first_name + ' ' + p.user.last_name : 'N/A', p.specialty,
+            'Rs.' + (p.hourly_rate || 0).toLocaleString('en-IN'), p.portfolio ? p.portfolio.length : 0,
+            'Rs.' + (p.total_earnings || 0).toLocaleString('en-IN'), p.is_available ? 'Available' : 'Unavailable'
+          ]),
+          excelCols: ['ID', 'Name', 'Specialty', 'Hourly Rate', 'Portfolio Items', 'Total Earnings', 'Status'],
+          excelRows: () => (reportData.photographers || []).map(p => ({
+            'ID': p.id, 'Name': p.user ? p.user.first_name + ' ' + p.user.last_name : 'N/A',
+            'Specialty': p.specialty, 'Hourly Rate': p.hourly_rate || 0, 'Portfolio Items': p.portfolio ? p.portfolio.length : 0,
+            'Total Earnings': p.total_earnings || 0, 'Status': p.is_available ? 'Available' : 'Unavailable'
+          })),
+          csvHeader: 'ID,Name,Specialty,Hourly Rate,Portfolio Items,Total Earnings,Status',
+          csvRows: () => (reportData.photographers || []).map(p =>
+            `${p.id},"${p.user ? p.user.first_name + ' ' + p.user.last_name : 'N/A'}","${p.specialty}",${p.hourly_rate || 0},${p.portfolio ? p.portfolio.length : 0},${p.total_earnings || 0},"${p.is_available ? 'Available' : 'Unavailable'}"`
+          )
+        },
+        activity: {
+          title: 'Login / Logout Activity Report',
+          head: [['#', 'User Email', 'Role', 'Login Time', 'Logout Time', 'Duration']],
+          body: () => (reportData.activityRows || []).map((r, i) => {
+            const role = (() => { const m = (r.loginLog?.details || r.logoutLog?.details || '').match(/\b(admin|photographer|customer)\b/i); return m ? m[1].charAt(0).toUpperCase() + m[1].slice(1) : '—'; })();
+            const loginStr = r.loginTime ? r.loginTime.toLocaleString('en-IN') : '—';
+            const logoutStr = r.logoutTime ? r.logoutTime.toLocaleString('en-IN') : (r.loginTime ? 'Active Now' : '—');
+            const dur = r.loginTime && r.logoutTime ? (() => { const d = Math.floor((r.logoutTime - r.loginTime) / 1000); if (d < 60) return d + 's'; if (d < 3600) return Math.floor(d / 60) + 'm ' + (d % 60) + 's'; return Math.floor(d / 3600) + 'h ' + Math.floor((d % 3600) / 60) + 'm'; })() : '—';
+            return [i + 1, r.email, role, loginStr, logoutStr, dur];
+          }),
+          excelCols: ['#', 'User Email', 'Role', 'Login Time', 'Logout Time', 'Duration'],
+          excelRows: () => (reportData.activityRows || []).map((r, i) => {
+            const role = (() => { const m = (r.loginLog?.details || r.logoutLog?.details || '').match(/\b(admin|photographer|customer)\b/i); return m ? m[1].charAt(0).toUpperCase() + m[1].slice(1) : '—'; })();
+            const loginStr = r.loginTime ? r.loginTime.toLocaleString('en-IN') : '—';
+            const logoutStr = r.logoutTime ? r.logoutTime.toLocaleString('en-IN') : (r.loginTime ? 'Active Now' : '—');
+            const dur = r.loginTime && r.logoutTime ? Math.floor((r.logoutTime - r.loginTime) / 60000) + ' min' : '—';
+            return { '#': i + 1, 'User Email': r.email, 'Role': role, 'Login Time': loginStr, 'Logout Time': logoutStr, 'Duration': dur };
+          }),
+          csvHeader: '#,User Email,Role,Login Time,Logout Time,Duration',
+          csvRows: () => (reportData.activityRows || []).map((r, i) => {
+            const role = (() => { const m = (r.loginLog?.details || r.logoutLog?.details || '').match(/\b(admin|photographer|customer)\b/i); return m ? m[1].charAt(0).toUpperCase() + m[1].slice(1) : '—'; })();
+            const loginStr = r.loginTime ? r.loginTime.toLocaleString('en-IN') : '—';
+            const logoutStr = r.logoutTime ? r.logoutTime.toLocaleString('en-IN') : (r.loginTime ? 'Active Now' : '—');
+            const dur = r.loginTime && r.logoutTime ? Math.floor((r.logoutTime - r.loginTime) / 60000) + ' min' : '—';
+            return `${i + 1},"${r.email}","${role}","${loginStr}","${logoutStr}","${dur}"`;
+          })
+        }
+      };
+      return configs[type];
+    }
+
+
+    /* ═══════════════════════════════════════════════════════════
+       PDF — Professional table layout using jsPDF + autoTable
+       ═══════════════════════════════════════════════════════════ */
+
+    function pdfHeader(doc, title) {
+      const pageW = doc.internal.pageSize.getWidth();
+      // Brand header bar
+      doc.setFillColor(102, 126, 234);
+      doc.rect(0, 0, pageW, 32, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+      doc.text('BookMyShoot', 14, 15);
+      doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+      doc.text('Admin Reports', 14, 23);
+      doc.text('Generated: ' + new Date().toLocaleString('en-IN'), pageW - 14, 23, { align: 'right' });
+      // Report title
+      doc.setTextColor(51, 51, 51);
+      doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+      doc.text(title, 14, 44);
+      doc.setDrawColor(102, 126, 234); doc.setLineWidth(0.5);
+      doc.line(14, 47, pageW - 14, 47);
+      return 52;
+    }
+
+    function pdfFooter(doc) {
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        doc.setFontSize(8); doc.setTextColor(150);
+        doc.text('BookMyShoot Report  |  Page ' + i + ' of ' + pageCount, pageW / 2, pageH - 8, { align: 'center' });
+      }
+    }
+
+    /* ─── Individual Report PDF ─── */
+    function downloadReportPDF(type) {
+      const cfg = getReportConfig(type);
+      if (!cfg) return;
+      const rows = cfg.body();
+      if (!rows.length) { Swal.fire('Info', 'No data available. Please view the report first.', 'info'); return; }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape', 'mm', 'a4');
+      let startY = pdfHeader(doc, cfg.title);
+
+      // Summary stats if available
+      if (cfg.summary) {
+        const [labels, values] = cfg.summary();
+        doc.autoTable({
+          startY, head: [labels], body: [values], theme: 'grid',
+          headStyles: { fillColor: [255, 193, 7], textColor: [51, 51, 51], fontStyle: 'bold', fontSize: 9 },
+          bodyStyles: { fontSize: 10, fontStyle: 'bold', halign: 'center' },
+          styles: { halign: 'center' }, margin: { left: 14, right: 14 }
+        });
+        startY = doc.lastAutoTable.finalY + 8;
+      }
+
+      doc.autoTable({
+        startY, head: cfg.head, body: rows, theme: 'striped',
+        headStyles: { fillColor: [102, 126, 234], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        bodyStyles: { fontSize: 8.5 },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
+        styles: { cellPadding: 3, lineWidth: 0.1, lineColor: [220, 220, 220] },
+        margin: { left: 14, right: 14 },
+        didDrawPage: (data) => {
+          if (data.pageNumber > 1) {
+            doc.setFillColor(102, 126, 234);
+            doc.rect(0, 0, doc.internal.pageSize.getWidth(), 18, 'F');
+            doc.setTextColor(255); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+            doc.text('BookMyShoot  —  ' + cfg.title, 14, 12);
+            doc.setTextColor(51);
+          }
+        }
+      });
+
+      pdfFooter(doc);
+      doc.save('BookMyShoot_' + type + '_report_' + new Date().toISOString().split('T')[0] + '.pdf');
+      Swal.fire({ icon: 'success', title: 'PDF Downloaded!', text: cfg.title + ' has been saved.', timer: 2000, showConfirmButton: false });
+    }
+
+    /* ─── Individual Report Excel ─── */
+    function downloadReportExcel(type) {
+      const cfg = getReportConfig(type);
+      if (!cfg) return;
+      const rows = cfg.excelRows();
+      if (!rows.length) { Swal.fire('Info', 'No data available. Please view the report first.', 'info'); return; }
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const colWidths = cfg.excelCols.map((col) => {
+        const maxLen = Math.max(col.length, ...rows.map(r => String(r[col] || '').length));
+        return { wch: Math.min(maxLen + 4, 40) };
+      });
+      ws['!cols'] = colWidths;
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, cfg.title.substring(0, 31));
+      XLSX.writeFile(wb, 'BookMyShoot_' + type + '_report_' + new Date().toISOString().split('T')[0] + '.xlsx');
+      Swal.fire({ icon: 'success', title: 'Excel Downloaded!', text: cfg.title + ' has been saved.', timer: 2000, showConfirmButton: false });
+    }
+
+    /* ─── Individual Report CSV ─── */
+    function downloadReportCSV(type) {
+      const cfg = getReportConfig(type);
+      if (!cfg) return;
+      const rows = cfg.csvRows();
+      if (!rows.length) { Swal.fire('Info', 'No data available. Please view the report first.', 'info'); return; }
+
+      const csvContent = cfg.csvHeader + '\n' + rows.join('\n');
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'BookMyShoot_' + type + '_report_' + new Date().toISOString().split('T')[0] + '.csv';
+      a.click();
+      window.URL.revokeObjectURL(url);
+      Swal.fire({ icon: 'success', title: 'CSV Downloaded!', text: cfg.title + ' has been saved.', timer: 2000, showConfirmButton: false });
+    }
+
+    /* ─── Print a specific section ─── */
+    function printSection(sectionId) {
+      const section = document.getElementById(sectionId);
+      const printWin = window.open('', '_blank');
+      printWin.document.write(
+        '<html><head><title>Print Report</title>' +
+        '<link rel="stylesheet" href="css/design-system.css">' +
+        '<link rel="stylesheet" href="css/dashboard.css">' +
+        '<style>body{padding:20px;font-family:Inter,sans-serif;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:12px;} th{background:#667eea;color:#fff;} .stat-card-v2{display:inline-block;padding:10px 20px;margin:5px;border:1px solid #ddd;border-radius:8px;} .section-download-bar{display:none;} h1{color:#667eea;}</style>' +
+        '</head><body>' +
+        '<h1>BookMyShoot Report</h1>' +
+        '<p style="color:#888;">Generated: ' + new Date().toLocaleString('en-IN') + '</p>' +
+        section.innerHTML +
+        '</body></html>'
+      );
+      printWin.document.close();
+      setTimeout(function() { printWin.print(); printWin.close(); }, 500);
+    }
+
+
+    /* ═══════════════════ DOWNLOAD ALL REPORTS ═══════════════════ */
+
+    async function loadAllData() {
+      const promises = [];
+      if (!reportData.users) {
+        promises.push(fetch(DashApp.API_URL + '/admin/users').then(r => r.json()).then(d => { reportData.users = d.users; }));
+      }
+      if (!reportData.sales) {
+        promises.push(fetch(DashApp.API_URL + '/admin/stats').then(r => r.json()).then(d => { reportData.sales = d; reportData.bookings = d; }));
+      }
+      if (!reportData.photographers) {
+        promises.push(fetch(DashApp.API_URL + '/admin/photographers').then(r => r.json()).then(d => { reportData.photographers = d.photographers; }));
+      }
+      if (!reportData.activityRows) {
+        promises.push(fetch(DashApp.API_URL + '/admin/logs').then(r => r.json()).then(d => {
+          reportData.activity = d.logs;
+          const authLogs = (d.logs || []).filter(l => l.action === 'login' || l.action === 'logout').sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          const sessions = {};
+          authLogs.forEach(log => {
+            const key = log.user_email || 'System';
+            if (!sessions[key]) sessions[key] = { pending: null, s: [], details: log.details || '' };
+            if (log.action === 'login') { if (sessions[key].pending) sessions[key].s.push({ login: sessions[key].pending, logout: null }); sessions[key].pending = log; }
+            else { sessions[key].s.push({ login: sessions[key].pending, logout: log }); sessions[key].pending = null; }
+          });
+          Object.values(sessions).forEach(u => { if (u.pending) { u.s.push({ login: u.pending, logout: null }); u.pending = null; } });
+          const rows = [];
+          Object.entries(sessions).forEach(([email, u]) => {
+            u.s.forEach(s => { rows.push({ email, details: u.details, loginTime: s.login ? new Date(s.login.timestamp) : null, logoutTime: s.logout ? new Date(s.logout.timestamp) : null, loginLog: s.login, logoutLog: s.logout }); });
+          });
+          rows.sort((a, b) => (b.loginTime || b.logoutTime || 0) - (a.loginTime || a.logoutTime || 0));
+          reportData.activityRows = rows;
+        }));
+      }
+      await Promise.all(promises);
+    }
+
+    async function downloadAllPDF() {
+      Swal.fire({ title: 'Generating...', text: 'Preparing all reports PDF', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      await loadAllData();
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape', 'mm', 'a4');
+
+      const types = ['users', 'sales', 'bookings', 'photographers', 'activity'];
+      types.forEach((type, idx) => {
+        if (idx > 0) doc.addPage();
+        const cfg = getReportConfig(type);
+        let startY = pdfHeader(doc, cfg.title);
+
+        if (cfg.summary) {
+          const [labels, values] = cfg.summary();
+          doc.autoTable({
+            startY, head: [labels], body: [values], theme: 'grid',
+            headStyles: { fillColor: [255, 193, 7], textColor: [51, 51, 51], fontStyle: 'bold', fontSize: 9 },
+            bodyStyles: { fontSize: 10, fontStyle: 'bold', halign: 'center' },
+            styles: { halign: 'center' }, margin: { left: 14, right: 14 }
+          });
+          startY = doc.lastAutoTable.finalY + 8;
+        }
+
+        const rows = cfg.body();
+        doc.autoTable({
+          startY, head: cfg.head, body: rows.length ? rows : [['No data available']], theme: 'striped',
+          headStyles: { fillColor: [102, 126, 234], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+          bodyStyles: { fontSize: 8.5 },
+          alternateRowStyles: { fillColor: [245, 247, 250] },
+          styles: { cellPadding: 3, lineWidth: 0.1, lineColor: [220, 220, 220] },
+          margin: { left: 14, right: 14 }
+        });
+      });
+
+      pdfFooter(doc);
+      doc.save('BookMyShoot_All_Reports_' + new Date().toISOString().split('T')[0] + '.pdf');
+      Swal.fire({ icon: 'success', title: 'All Reports PDF Downloaded!', timer: 2500, showConfirmButton: false });
+    }
+
+    async function downloadAllExcel() {
+      Swal.fire({ title: 'Generating...', text: 'Preparing all reports Excel', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      await loadAllData();
+
+      const wb = XLSX.utils.book_new();
+      const types = ['users', 'sales', 'bookings', 'photographers', 'activity'];
+      const sheetNames = ['Users', 'Sales', 'Bookings', 'Photographers', 'Activity'];
+
+      types.forEach((type, idx) => {
+        const cfg = getReportConfig(type);
+        const rows = cfg.excelRows();
+        const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ 'Info': 'No data available' }]);
+        const colWidths = cfg.excelCols.map((col) => {
+          const maxLen = Math.max(col.length, ...rows.map(r => String(r[col] || '').length));
+          return { wch: Math.min(maxLen + 4, 40) };
+        });
+        ws['!cols'] = colWidths;
+        XLSX.utils.book_append_sheet(wb, ws, sheetNames[idx]);
+      });
+
+      XLSX.writeFile(wb, 'BookMyShoot_All_Reports_' + new Date().toISOString().split('T')[0] + '.xlsx');
+      Swal.fire({ icon: 'success', title: 'All Reports Excel Downloaded!', timer: 2500, showConfirmButton: false });
+    }
+
+    // Load default report
+    loadUsersReport();
+  </script>
+</body>
+</html>

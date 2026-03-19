@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% set hide_sidebar = True %}
+
+{% block title %}BookMyShoot | Capture Your Moments in Premium Style{% endblock %}
+
+{% block main_class %}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-center py-5 mb-5 animate__animated animate__fadeIn">
+  <div class="container py-5">
+    <h1 class="display-3 fw-bold mb-4">Capture Your Moments in <span class="text-primary italic">Premium Style</span>
+    </h1>
+    <p class="lead mb-5 text-muted mx-auto" style="max-width: 700px;">
+      Wedding • Engagement • Baby Shower • Birthdays • Studio Sessions.
+      Professional photography at your fingertips.
+    </p>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="{{ url_for('customer.search') }}"
+        class="btn btn-primary btn-lg rounded-pill px-5 py-3 fw-bold shadow">Book a Session</a>
+      <a href="#services" class="btn btn-outline-dark btn-lg rounded-pill px-5 py-3 fw-bold">Explore Services</a>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Band -->
+<section class="py-5 bg-white border-top border-bottom">
+  <div class="container">
+    <div class="row text-center g-4">
+      <div class="col-md-3">
+        <h2 class="fw-bold mb-0">500+</h2>
+        <p class="text-muted small text-uppercase fw-bold">Sessions Completed</p>
+      </div>
+      <div class="col-md-3">
+        <h2 class="fw-bold mb-0">50+</h2>
+        <p class="text-muted small text-uppercase fw-bold">Photographers</p>
+      </div>
+      <div class="col-md-3">
+        <h2 class="fw-bold mb-0">100%</h2>
+        <p class="text-muted small text-uppercase fw-bold">Satisfaction</p>
+      </div>
+      <div class="col-md-3">
+        <h2 class="fw-bold mb-0">24/7</h2>
+        <p class="text-muted small text-uppercase fw-bold">Support</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Services Grid -->
+<section id="services" class="py-5 bg-light">
+  <div class="container py-5">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Our Professional Services</h2>
+      <p class="text-muted">Choose from our range of high-end photography solutions</p>
+    </div>
+    <div class="row g-4">
+      {% set services = [
+      ('Wedding Photoshoot', '💒', 'Capture your special day with stunning wedding photography'),
+      ('Engagement Shoot', '💍', 'Beautiful pre-wedding engagement photography'),
+      ('Naming Ceremony', '👶', 'Precious moments of your little one\'s special day'),
+      ('Birthday Events', '🎂', 'Fun and memorable birthday party photography'),
+      ('Baby Shower', '🍼', 'Celebrate the upcoming arrival with beautiful photos'),
+      ('Studio Sessions', '📸', 'Professional studio portraits and headshots')
+      ] %}
+      {% for title, icon, desc in services %}
+      <div class="col-md-4">
+        <div class="card p-5 h-100 text-center hover-up">
+          <div class="fs-1 mb-4">{{ icon }}</div>
+          <h4 class="fw-bold mb-3">{{ title }}</h4>
+          <p class="text-muted">{{ desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-5 bg-dark text-white text-center">
+  <div class="container">
+    <h4 class="fw-bold mb-4">BookMyShoot</h4>
+    <div class="d-flex justify-content-center gap-4 mb-4">
+      <a href="#" class="text-white text-decoration-none">Privacy Policy</a>
+      <a href="#" class="text-white text-decoration-none">Terms of Service</a>
+      <a href="#" class="text-white text-decoration-none">Contact Us</a>
+    </div>
+    <p class="text-muted small mb-0">© 2026 BookMyShoot | Developed by Navajith C S</p>
+  </div>
+</footer>
+
+<style>
+  .hover-up {
+    transition: transform 0.3s ease;
+    cursor: pointer;
+  }
+
+  .hover-up:hover {
+    transform: translateY(-10px);
+  }
+
+  .italic {
+    font-style: italic;
+  }
+</style>
+{% endblock %}

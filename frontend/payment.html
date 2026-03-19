@@ -1,0 +1,1944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment — BookMyShoot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --primary: #667eea; --primary-dark: #5a67d8; --accent: #764ba2;
+      --success: #10b981; --success-light: #d1fae5;
+      --warn: #f59e0b; --danger: #ef4444;
+      --bg: #f0f2f5; --card: #ffffff;
+      --text: #1f2937; --muted: #6b7280;
+      --border: #e5e7eb;
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+    /* HEADER */
+    .header {
+      background:linear-gradient(135deg,var(--primary) 0%,var(--accent) 100%);
+      color:#fff; padding:20px 40px;
+      display:flex; justify-content:space-between; align-items:center;
+      box-shadow:0 4px 20px rgba(0,0,0,0.15);
+    }
+    .header h1 { font-size:1.4rem; font-weight:700; display:flex; align-items:center; gap:10px; }
+    .header-btn {
+      background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3);
+      color:#fff; padding:10px 18px; border-radius:10px; font-weight:600;
+      cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px;
+      font-family:inherit; transition:.2s;
+    }
+    .header-btn:hover { background:rgba(255,255,255,0.25); transform:translateY(-1px); }
+
+    /* CONTAINER */
+    .container { max-width:860px; margin:30px auto; padding:0 20px 60px; }
+
+    /* ── PAYMENT SECTION (visible before payment) ── */
+    .pay-card {
+      background:var(--card); border-radius:20px; box-shadow:var(--shadow);
+      overflow:hidden; border:1px solid var(--border);
+    }
+    .pay-card-header {
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      color:#fff; padding:28px 32px;
+    }
+    .pay-card-header h2 { font-size:1.3rem; margin-bottom:4px; }
+    .pay-card-header p { opacity:.85; font-size:.9rem; }
+    .pay-card-body { padding:28px 32px; }
+
+    .booking-summary { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+    .summary-item label { display:block; font-size:.78rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px; }
+    .summary-item span { font-weight:600; font-size:.95rem; display:flex; align-items:center; gap:6px; }
+
+    .price-breakdown { background:#f9fafb; border-radius:14px; padding:20px; margin-bottom:24px; border:1px solid var(--border); }
+    .price-row { display:flex; justify-content:space-between; padding:8px 0; font-size:.92rem; }
+    .price-row.highlight { border-top:2px solid var(--primary); padding-top:14px; margin-top:8px; font-weight:700; font-size:1.05rem; color:var(--primary); }
+
+    .test-mode-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      background:#fef3c7; color:#92400e; padding:8px 16px; border-radius:8px;
+      font-size:.82rem; font-weight:600; margin-bottom:20px;
+    }
+
+    .pay-btn {
+      width:100%; padding:16px; border:none; border-radius:14px;
+      background:linear-gradient(135deg,var(--success),#059669);
+      color:#fff; font-size:1.1rem; font-weight:700; cursor:pointer;
+      font-family:inherit; transition:all .3s; display:flex; align-items:center;
+      justify-content:center; gap:10px;
+    }
+    .pay-btn:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(16,185,129,0.35); }
+    .pay-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    .secure-note { text-align:center; margin-top:14px; font-size:.8rem; color:var(--muted); display:flex; align-items:center; justify-content:center; gap:6px; }
+
+    /* ── SUCCESS SECTION (visible after payment) ── */
+    .success-section { display:none; }
+    .success-section.show { display:block; animation:fadeInUp .6s ease; }
+
+    @keyframes fadeInUp {
+      from { opacity:0; transform:translateY(30px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+
+    .success-hero {
+      background:linear-gradient(135deg,#10b981 0%,#059669 50%,#047857 100%);
+      border-radius:24px; padding:50px 40px; text-align:center; color:#fff;
+      margin-bottom:28px; position:relative; overflow:hidden;
+    }
+    .success-hero::before {
+      content:''; position:absolute; top:-60%; left:-30%; width:160%; height:160%;
+      background:radial-gradient(circle,rgba(255,255,255,0.08) 0%,transparent 50%);
+      animation:pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
+
+    .success-icon {
+      width:100px; height:100px; background:rgba(255,255,255,0.2);
+      border-radius:50%; display:flex; align-items:center; justify-content:center;
+      margin:0 auto 20px; font-size:3rem; position:relative; z-index:1;
+      animation:bounceIn .8s ease .2s both;
+    }
+    @keyframes bounceIn {
+      0% { transform:scale(0); } 50% { transform:scale(1.2); } 100% { transform:scale(1); }
+    }
+    .success-hero h1 { font-size:2rem; margin-bottom:8px; position:relative; z-index:1; }
+    .success-hero p { font-size:1.05rem; opacity:.9; position:relative; z-index:1; }
+    .success-hero .booking-ref { display:inline-block; background:rgba(255,255,255,0.2); padding:6px 18px; border-radius:20px; font-weight:600; margin-top:12px; position:relative; z-index:1; }
+
+    .greeting-card {
+      background:var(--card); border-radius:20px; box-shadow:var(--shadow);
+      padding:36px 32px; text-align:center; margin-bottom:24px; border:1px solid var(--border);
+    }
+    .greeting-card .emoji { font-size:3rem; margin-bottom:12px; }
+    .greeting-card h2 { font-size:1.4rem; color:var(--primary); margin-bottom:8px; }
+    .greeting-card p { color:var(--muted); font-size:.95rem; line-height:1.6; max-width:500px; margin:0 auto; }
+
+    /* ── Professional Receipt/Invoice Card ── */
+    .receipt-card {
+      background:var(--card); border-radius:20px; box-shadow:0 8px 40px rgba(0,0,0,0.10);
+      margin-bottom:24px; border:1px solid var(--border); overflow:hidden; position:relative;
+    }
+
+    /* PAID watermark stamp */
+    .receipt-card .paid-stamp {
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-22deg);
+      font-size:5.5rem; font-weight:900; color:rgba(16,185,129,0.06); letter-spacing:12px;
+      text-transform:uppercase; pointer-events:none; z-index:0; user-select:none; white-space:nowrap;
+      font-family:'Inter',sans-serif;
+    }
+    .receipt-inner { position:relative; z-index:1; padding:32px 36px; }
+
+    /* Receipt letterhead */
+    .receipt-letterhead {
+      display:flex; justify-content:space-between; align-items:flex-start;
+      padding-bottom:20px; margin-bottom:20px;
+      border-bottom:2px solid var(--primary);
+    }
+    .receipt-brand h2 {
+      font-size:1.5rem; font-weight:800; color:var(--primary); margin-bottom:2px;
+      letter-spacing:-0.5px; display:flex; align-items:center; gap:8px;
+    }
+    .receipt-brand p { font-size:.78rem; color:var(--muted); line-height:1.5; }
+    .receipt-meta { text-align:right; }
+    .receipt-meta .invoice-label {
+      font-size:.72rem; text-transform:uppercase; letter-spacing:1.5px;
+      color:var(--muted); font-weight:600;
+    }
+    .receipt-meta .invoice-number {
+      font-size:1.15rem; font-weight:800; color:var(--text); margin:2px 0 8px;
+    }
+    .receipt-meta .invoice-date { font-size:.82rem; color:var(--muted); }
+    .receipt-meta .status-badge {
+      display:inline-flex; align-items:center; gap:5px; margin-top:8px;
+      background:var(--success-light); color:#065f46; padding:5px 14px;
+      border-radius:20px; font-size:.78rem; font-weight:700; letter-spacing:.3px;
+    }
+
+    /* Bill To / Details grid */
+    .receipt-billing {
+      display:grid; grid-template-columns:1fr 1fr; gap:28px;
+      margin-bottom:24px; padding-bottom:20px; border-bottom:1px dashed var(--border);
+    }
+    .receipt-billing-block h4 {
+      font-size:.72rem; text-transform:uppercase; letter-spacing:1.2px;
+      color:var(--muted); font-weight:700; margin-bottom:10px;
+      padding-bottom:5px; border-bottom:2px solid var(--border);
+    }
+    .receipt-billing-block p {
+      font-size:.88rem; color:var(--text); line-height:1.7; margin:0;
+    }
+    .receipt-billing-block p span { color:var(--muted); font-size:.82rem; }
+
+    /* Invoice items table */
+    .receipt-table { width:100%; border-collapse:collapse; margin-bottom:0; }
+    .receipt-table thead th {
+      text-align:left; padding:12px 16px; font-size:.72rem; font-weight:700;
+      text-transform:uppercase; letter-spacing:1px; color:#fff;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+    }
+    .receipt-table thead th:last-child { text-align:right; }
+    .receipt-table tbody td {
+      padding:12px 16px; border-bottom:1px solid #f0f0f0; font-size:.88rem;
+      color:var(--text);
+    }
+    .receipt-table tbody td:last-child { text-align:right; font-family:'Inter',sans-serif; font-weight:500; }
+    .receipt-table tbody tr:nth-child(even) { background:#fafbfc; }
+    .receipt-table tbody tr:hover { background:#f0f4ff; }
+    .receipt-table tbody tr.row-highlight td { color:var(--success); font-weight:700; }
+    .receipt-table tbody tr.row-highlight td:first-child::before { content:'✓ '; }
+
+    /* Totals section */
+    .receipt-totals {
+      display:flex; justify-content:flex-end; padding:0 16px; margin-top:0;
+    }
+    .receipt-totals-box {
+      width:280px; border-top:2px solid var(--primary);
+    }
+    .totals-row {
+      display:flex; justify-content:space-between; padding:10px 0;
+      font-size:.9rem; border-bottom:1px solid #f0f0f0;
+    }
+    .totals-row:last-child { border-bottom:none; }
+    .totals-row.grand-total {
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      color:#fff; font-weight:800; font-size:1.05rem;
+      padding:14px 16px; margin:8px -16px 0; border-radius:10px;
+      border-bottom:none;
+    }
+
+    /* Transaction info bar */
+    .receipt-txn-bar {
+      display:flex; flex-wrap:wrap; gap:16px; align-items:center;
+      background:#f0fdf4; padding:14px 20px; border-radius:12px; margin:20px 0;
+      border:1px solid #bbf7d0;
+    }
+    .receipt-txn-bar .txn-item { display:flex; align-items:center; gap:6px; font-size:.84rem; }
+    .receipt-txn-bar .txn-item .txn-label { color:var(--muted); font-weight:500; }
+    .receipt-txn-bar .txn-item .txn-value { color:var(--text); font-weight:700; font-family:'Inter',sans-serif; }
+    .receipt-txn-bar .txn-divider { width:1px; height:24px; background:#bbf7d0; }
+
+    /* Terms */
+    .receipt-terms {
+      margin-top:20px; padding-top:16px; border-top:1px dashed var(--border);
+    }
+    .receipt-terms h5 {
+      font-size:.72rem; text-transform:uppercase; letter-spacing:1px;
+      color:var(--muted); font-weight:700; margin-bottom:8px;
+    }
+    .receipt-terms ul {
+      list-style:none; padding:0; margin:0;
+    }
+    .receipt-terms ul li {
+      font-size:.78rem; color:var(--muted); line-height:1.8;
+      padding-left:16px; position:relative;
+    }
+    .receipt-terms ul li::before {
+      content:'•'; position:absolute; left:0; color:var(--primary); font-weight:700;
+    }
+
+    /* Receipt footer */
+    .receipt-footer {
+      text-align:center; margin-top:20px; padding-top:16px; border-top:1px solid var(--border);
+    }
+    .receipt-footer p { font-size:.76rem; color:var(--muted); line-height:1.6; }
+    .receipt-footer .gen-note { font-style:italic; margin-top:4px; }
+
+    /* Download buttons */
+    .download-btns { display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; }
+    .dl-btn {
+      flex:1; min-width:160px; padding:14px 20px; border-radius:12px; border:none;
+      font-weight:700; font-size:.92rem; cursor:pointer; font-family:inherit;
+      display:flex; align-items:center; justify-content:center; gap:8px; transition:all .25s;
+    }
+    .dl-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.15); }
+    .dl-btn.pdf { background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; }
+    .dl-btn.excel { background:linear-gradient(135deg,#10b981,#059669); color:#fff; }
+    .dl-btn.print { background:linear-gradient(135deg,#667eea,#5a67d8); color:#fff; }
+
+    /* Feedback card */
+    .feedback-card {
+      background:var(--card); border-radius:20px; box-shadow:var(--shadow);
+      padding:28px 32px; margin-bottom:24px; border:1px solid var(--border);
+    }
+    .feedback-card h3 { font-size:1.1rem; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+    .feedback-card .subtitle { color:var(--muted); font-size:.88rem; margin-bottom:20px; }
+
+    .star-rating { display:flex; gap:8px; justify-content:center; margin-bottom:20px; }
+    .star-rating .star {
+      font-size:2.4rem; cursor:pointer; color:#d1d5db; transition:all .2s;
+    }
+    .star-rating .star:hover, .star-rating .star.active { color:#f59e0b; transform:scale(1.15); }
+    .star-rating .star.active { text-shadow:0 2px 8px rgba(245,158,11,0.3); }
+
+    .feedback-textarea {
+      width:100%; min-height:100px; padding:14px; border:2px solid var(--border);
+      border-radius:12px; font-family:inherit; font-size:.92rem; resize:vertical;
+      transition:.2s; background:#f9fafb;
+    }
+    .feedback-textarea:focus { border-color:var(--primary); outline:none; background:#fff; }
+
+    .submit-feedback-btn {
+      width:100%; padding:14px; border:none; border-radius:12px;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      color:#fff; font-size:1rem; font-weight:700; cursor:pointer;
+      font-family:inherit; transition:.3s; margin-top:14px;
+    }
+    .submit-feedback-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(102,126,234,0.3); }
+    .submit-feedback-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+    .feedback-submitted {
+      text-align:center; padding:20px; display:none;
+    }
+    .feedback-submitted.show { display:block; }
+    .feedback-submitted i { font-size:2.5rem; color:var(--success); }
+    .feedback-submitted h4 { margin-top:8px; color:var(--success); }
+    .feedback-submitted p { color:var(--muted); font-size:.9rem; }
+
+    .back-btn-section { text-align:center; margin-top:10px; }
+    .back-btn-section a {
+      display:inline-flex; align-items:center; gap:8px;
+      background:var(--card); color:var(--primary); padding:14px 28px;
+      border-radius:12px; font-weight:700; text-decoration:none;
+      box-shadow:var(--shadow); border:2px solid var(--primary);
+      transition:.2s; font-family:inherit;
+    }
+    .back-btn-section a:hover { background:var(--primary); color:#fff; }
+
+    /* Loading spinner */
+    .loader { text-align:center; padding:80px 20px; }
+    .loader .spinner { width:50px; height:50px; border:4px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 16px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .error-state { text-align:center; padding:80px 20px; }
+    .error-state i { font-size:3rem; color:var(--danger); }
+    .error-state h3 { margin-top:12px; }
+    .error-state p { color:var(--muted); margin-top:6px; }
+
+    /* Confetti */
+    .confetti-container { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9999; overflow:hidden; }
+    .confetti-piece { position:absolute; top:-20px; width:10px; height:10px; opacity:0; animation:confettiFall 3s ease-out forwards; }
+    @keyframes confettiFall {
+      0% { opacity:1; transform:translateY(0) rotate(0deg); }
+      100% { opacity:0; transform:translateY(100vh) rotate(720deg); }
+    }
+
+    @media (max-width:600px) {
+      .header { padding:16px 20px; }
+      .header h1 { font-size:1.1rem; }
+      .container { padding:0 14px 40px; margin-top:20px; }
+      .booking-summary { grid-template-columns:1fr; }
+      .success-hero { padding:36px 20px; }
+      .success-hero h1 { font-size:1.5rem; }
+      .download-btns { flex-direction:column; }
+      .pay-card-body, .feedback-card, .greeting-card { padding:20px; }
+      .receipt-inner { padding:20px; }
+      .receipt-letterhead { flex-direction:column; gap:12px; }
+      .receipt-meta { text-align:left; }
+      .receipt-billing { grid-template-columns:1fr; gap:16px; }
+      .receipt-totals-box { width:100%; }
+      .receipt-txn-bar { flex-direction:column; gap:8px; }
+      .receipt-txn-bar .txn-divider { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1><i class="bi bi-credit-card-2-front"></i> Payment</h1>
+    <a href="my-orders.html" class="header-btn"><i class="bi bi-arrow-left"></i> My Orders</a>
+  </div>
+
+  <div class="container">
+
+    <!-- LOADING -->
+    <div id="loadingState" class="loader">
+      <div class="spinner"></div>
+      <p style="color:var(--muted);">Loading booking details...</p>
+    </div>
+
+    <!-- ERROR -->
+    <div id="errorState" class="error-state" style="display:none;">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <h3>Booking Not Found</h3>
+      <p>The booking could not be loaded. Please go back and try again.</p>
+      <a href="my-orders.html" class="header-btn" style="margin-top:16px;color:var(--primary);background:var(--card);border:2px solid var(--primary);"><i class="bi bi-arrow-left"></i> Back to Orders</a>
+    </div>
+
+    <!-- ═══════ PAYMENT FORM (before payment) ═══════ -->
+    <div id="paymentSection" style="display:none;">
+      <div class="pay-card">
+        <div class="pay-card-header">
+          <h2><i class="bi bi-shield-lock"></i> Secure Token Payment</h2>
+          <p>Pay the token amount to confirm your booking</p>
+        </div>
+        <div class="pay-card-body">
+
+          <div class="test-mode-badge">
+            <i class="bi bi-info-circle-fill"></i> Razorpay Test Mode — No real charges
+          </div>
+
+          <!-- Booking Summary -->
+          <div class="booking-summary">
+            <div class="summary-item">
+              <label>Booking ID</label>
+              <span><i class="bi bi-hash" style="color:var(--primary);"></i> <span id="payBookingId"></span></span>
+            </div>
+            <div class="summary-item">
+              <label>Service</label>
+              <span><i class="bi bi-camera" style="color:var(--primary);"></i> <span id="payService"></span></span>
+            </div>
+            <div class="summary-item">
+              <label>Package</label>
+              <span><i class="bi bi-box-seam" style="color:#8b5cf6;"></i> <span id="payPackage"></span></span>
+            </div>
+            <div class="summary-item">
+              <label>Event Date</label>
+              <span><i class="bi bi-calendar-event" style="color:#f59e0b;"></i> <span id="payDate"></span></span>
+            </div>
+            <div class="summary-item">
+              <label>Photographer</label>
+              <span><i class="bi bi-person" style="color:var(--success);"></i> <span id="payPhotographer"></span></span>
+            </div>
+            <div class="summary-item">
+              <label>Location</label>
+              <span><i class="bi bi-geo-alt" style="color:#ef4444;"></i> <span id="payLocation"></span></span>
+            </div>
+          </div>
+
+          <!-- Price Breakdown -->
+          <div class="price-breakdown">
+            <div class="price-row">
+              <span>Total Package Price</span>
+              <span id="payTotal">₹0</span>
+            </div>
+            <div class="price-row">
+              <span>Token Amount (20%)</span>
+              <span id="payToken" style="font-weight:600; color:var(--primary);">₹0</span>
+            </div>
+            <div class="price-row">
+              <span>Remaining (pay on event day)</span>
+              <span id="payRemaining">₹0</span>
+            </div>
+            <div class="price-row highlight">
+              <span>Pay Now</span>
+              <span id="payNow">₹0</span>
+            </div>
+          </div>
+
+          <button class="pay-btn" id="payBtn" onclick="initiatePayment()">
+            <i class="bi bi-lock-fill"></i> Pay Token Amount — <span id="payBtnAmount">₹0</span>
+          </button>
+
+          <div class="secure-note">
+            <i class="bi bi-shield-check"></i> 256-bit SSL Secure Payment via Razorpay
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ SUCCESS SECTION (after payment) ═══════ -->
+    <div id="successSection" class="success-section">
+
+      <!-- Big success message -->
+      <div class="success-hero">
+        <div class="success-icon">✅</div>
+        <h1>Booking Confirmed!</h1>
+        <p>Your token payment has been successfully processed</p>
+        <div class="booking-ref" id="successRef"></div>
+      </div>
+
+      <!-- Thank you greeting -->
+      <div class="greeting-card">
+        <div class="emoji">🎉📸✨</div>
+        <h2>Thank You, <span id="customerNameGreet"></span>!</h2>
+        <p>We're thrilled to have your booking confirmed! Your photographer is excited to capture your special moments. We wish you an amazing experience and unforgettable memories.</p>
+      </div>
+
+      <!-- Photographer Contact Card -->
+      <div class="greeting-card" id="photographerContactCard" style="display:none; text-align:left;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+          <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;flex-shrink:0;"><i class="bi bi-camera-fill"></i></div>
+          <div>
+            <h3 style="font-size:1.1rem;margin-bottom:2px;color:var(--text);">Your Photographer</h3>
+            <p style="font-size:.88rem;color:var(--muted);margin:0;">Contact details for your assigned photographer</p>
+          </div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:18px 20px;display:grid;gap:12px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <i class="bi bi-person-fill" style="font-size:1.2rem;color:var(--primary);"></i>
+            <div>
+              <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Name</div>
+              <div style="font-weight:600;font-size:.95rem;" id="contactName">—</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <i class="bi bi-telephone-fill" style="font-size:1.2rem;color:var(--success);"></i>
+            <div>
+              <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Phone</div>
+              <a id="contactPhone" href="#" style="font-weight:600;font-size:.95rem;color:var(--primary);text-decoration:none;">—</a>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <i class="bi bi-envelope-fill" style="font-size:1.2rem;color:var(--accent);"></i>
+            <div>
+              <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Email</div>
+              <a id="contactEmail" href="#" style="font-weight:600;font-size:.95rem;color:var(--primary);text-decoration:none;">—</a>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:12px;text-align:center;"><i class="bi bi-info-circle"></i> You can reach out to your photographer to discuss event details</p>
+      </div>
+
+      <!-- Professional Receipt / Invoice -->
+      <div class="receipt-card">
+        <div class="paid-stamp">PAID</div>
+        <div class="receipt-inner">
+
+          <!-- Letterhead -->
+          <div class="receipt-letterhead">
+            <div class="receipt-brand">
+              <h2><i class="bi bi-camera-fill"></i> BookMyShoot</h2>
+              <p>Professional Photography Services<br>Booking &amp; Payment Platform</p>
+            </div>
+            <div class="receipt-meta">
+              <div class="invoice-label">Payment Receipt</div>
+              <div class="invoice-number" id="receiptInvNo">#BMS-0000</div>
+              <div class="invoice-date" id="receiptDate"></div>
+              <div class="status-badge">
+                <i class="bi bi-patch-check-fill"></i> PAID &amp; CONFIRMED
+              </div>
+            </div>
+          </div>
+
+          <!-- Bill To / Event Details -->
+          <div class="receipt-billing">
+            <div class="receipt-billing-block">
+              <h4><i class="bi bi-person-fill"></i> Billed To</h4>
+              <p id="receiptBillTo"></p>
+            </div>
+            <div class="receipt-billing-block">
+              <h4><i class="bi bi-calendar-event-fill"></i> Event Details</h4>
+              <p id="receiptEventInfo"></p>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          <table class="receipt-table">
+            <thead>
+              <tr>
+                <th style="width:50%;">Description</th>
+                <th style="width:20%;">Details</th>
+                <th style="width:30%;">Amount (INR)</th>
+              </tr>
+            </thead>
+            <tbody id="receiptBody"></tbody>
+          </table>
+
+          <!-- Totals -->
+          <div class="receipt-totals">
+            <div class="receipt-totals-box">
+              <div class="totals-row">
+                <span>Subtotal</span>
+                <span id="receiptSubtotal">-</span>
+              </div>
+              <div class="totals-row">
+                <span>Token Payment (20%)</span>
+                <span id="receiptTokenAmt" style="color:var(--success);font-weight:600;">-</span>
+              </div>
+              <div class="totals-row">
+                <span>Balance Due</span>
+                <span id="receiptBalance">-</span>
+              </div>
+              <div class="totals-row grand-total">
+                <span>Amount Paid</span>
+                <span id="receiptGrandTotal">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transaction Info -->
+          <div class="receipt-txn-bar">
+            <div class="txn-item">
+              <i class="bi bi-shield-check" style="color:var(--success);"></i>
+              <span class="txn-label">Transaction ID:</span>
+              <span class="txn-value" id="receiptTxnId"></span>
+            </div>
+            <div class="txn-divider"></div>
+            <div class="txn-item">
+              <i class="bi bi-credit-card-2-front" style="color:var(--primary);"></i>
+              <span class="txn-label">Method:</span>
+              <span class="txn-value" id="receiptMethod">Online</span>
+            </div>
+            <div class="txn-divider"></div>
+            <div class="txn-item">
+              <i class="bi bi-clock" style="color:var(--accent);"></i>
+              <span class="txn-label">Paid on:</span>
+              <span class="txn-value" id="receiptPaidDate"></span>
+            </div>
+          </div>
+
+          <!-- Terms -->
+          <div class="receipt-terms">
+            <h5>Terms &amp; Conditions</h5>
+            <ul>
+              <li>Token amount is non-refundable once the photographer confirms the session.</li>
+              <li>Remaining balance is payable directly to the photographer on the event day.</li>
+              <li>Rescheduling is subject to photographer availability (24 hrs notice required).</li>
+              <li>For support, contact us at support@bookmyshoot.com</li>
+            </ul>
+          </div>
+
+          <!-- Receipt Footer -->
+          <div class="receipt-footer">
+            <p><strong>BookMyShoot</strong> — Your Moments, Professionally Captured</p>
+            <p class="gen-note">This is a computer-generated receipt. No signature is required.</p>
+          </div>
+
+        </div>
+
+        <!-- Download Buttons -->
+        <div style="padding:0 36px 32px;">
+          <h3 style="font-size:1.1rem; font-weight:700; color:var(--text); margin-bottom:4px;">Download Your Receipt</h3>
+          <p style="font-size:.85rem; color:var(--muted); margin-bottom:16px;">Save a copy of your payment receipt for your records.</p>
+          <div class="download-btns">
+            <button class="dl-btn pdf" onclick="downloadPDF()"><i class="bi bi-file-earmark-pdf-fill"></i> Download PDF</button>
+            <button class="dl-btn excel" onclick="downloadExcel()"><i class="bi bi-file-earmark-excel-fill"></i> Download Excel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="feedback-card" id="feedbackCard">
+        <h3><i class="bi bi-chat-heart" style="color:var(--accent);"></i> Share Your Feedback</h3>
+        <p class="subtitle">How would you rate your booking experience so far?</p>
+
+        <div id="feedbackForm">
+          <div class="star-rating" id="starRating">
+            <span class="star" data-value="1" onclick="setRating(1)">★</span>
+            <span class="star" data-value="2" onclick="setRating(2)">★</span>
+            <span class="star" data-value="3" onclick="setRating(3)">★</span>
+            <span class="star" data-value="4" onclick="setRating(4)">★</span>
+            <span class="star" data-value="5" onclick="setRating(5)">★</span>
+          </div>
+          <textarea class="feedback-textarea" id="feedbackComment" placeholder="Tell us about your experience... (optional)"></textarea>
+          <button class="submit-feedback-btn" id="submitFeedbackBtn" onclick="submitFeedback()" disabled>
+            <i class="bi bi-send-fill"></i> Submit Feedback
+          </button>
+        </div>
+
+        <div class="feedback-submitted" id="feedbackDone">
+          <i class="bi bi-check-circle-fill"></i>
+          <h4>Thank you for your feedback!</h4>
+          <p>Your review helps us improve our service.</p>
+        </div>
+      </div>
+
+      <!-- Back button -->
+      <div class="back-btn-section">
+        <a href="my-orders.html"><i class="bi bi-arrow-left"></i> Back to My Orders</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confetti container -->
+  <div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+  const API_URL = 'http://localhost:5000/api';
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (!user) { window.location.href = 'login.html'; }
+
+  // Get booking ID from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const bookingId = urlParams.get('booking_id');
+  let bookingData = null;
+  let paymentResult = null;
+  let selectedRating = 0;
+
+  if (!bookingId) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'block';
+  } else {
+    loadBooking();
+  }
+
+  async function loadBooking() {
+    try {
+      const res = await fetch(`${API_URL}/bookings/${bookingId}`);
+      if (!res.ok) throw new Error('Not found');
+      const data = await res.json();
+      bookingData = data.booking || data;
+
+      // Verify this is the customer's booking
+      if (bookingData.customer_id !== user.id) {
+        throw new Error('Unauthorized');
+      }
+
+      // If already paid, show success directly
+      if (bookingData.payment_status === 'token_paid' || bookingData.payment_status === 'paid') {
+        // Fetch payment details
+        const payRes = await fetch(`${API_URL}/payments/booking/${bookingId}`);
+        if (payRes.ok) {
+          const payData = await payRes.json();
+          const payments = payData.payments || [];
+          if (payments.length > 0) {
+            paymentResult = payments[0];
+          }
+        }
+        showSuccess();
+        return;
+      }
+
+      // Check if booking is accepted (can pay)
+      if (bookingData.status !== 'accepted') {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('errorState').style.display = 'block';
+        document.querySelector('#errorState h3').textContent = 'Payment Not Available';
+        document.querySelector('#errorState p').textContent =
+          bookingData.status === 'pending' ? 'Please wait for the photographer to accept your booking first.'
+          : `This booking is ${bookingData.status}. Payment is not applicable.`;
+        return;
+      }
+
+      displayPaymentForm();
+    } catch (e) {
+      console.error(e);
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('errorState').style.display = 'block';
+    }
+  }
+
+  function displayPaymentForm() {
+    const b = bookingData;
+    const photographerName = b.photographer?.user
+      ? `${b.photographer.user.first_name} ${b.photographer.user.last_name}` : 'Assigned';
+    const eventDate = b.event_date
+      ? new Date(b.event_date).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' }) : 'TBD';
+    const tokenAmt = Math.round(b.token_amount || 0);
+    const totalAmt = Math.round(b.total_price || 0);
+    const remainAmt = Math.round(b.remaining_amount || 0);
+
+    document.getElementById('payBookingId').textContent = `BMS-${String(b.id).padStart(4,'0')}`;
+    document.getElementById('payService').textContent = b.service_type || 'Photoshoot';
+    document.getElementById('payPackage').textContent = b.package_name || 'Standard';
+    document.getElementById('payDate').textContent = eventDate;
+    document.getElementById('payPhotographer').textContent = photographerName;
+    document.getElementById('payLocation').textContent = b.location || 'Not specified';
+
+    document.getElementById('payTotal').textContent = `₹${totalAmt.toLocaleString('en-IN')}`;
+    document.getElementById('payToken').textContent = `₹${tokenAmt.toLocaleString('en-IN')}`;
+    document.getElementById('payRemaining').textContent = `₹${remainAmt.toLocaleString('en-IN')}`;
+    document.getElementById('payNow').textContent = `₹${tokenAmt.toLocaleString('en-IN')}`;
+    document.getElementById('payBtnAmount').textContent = `₹${tokenAmt.toLocaleString('en-IN')}`;
+
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('paymentSection').style.display = 'block';
+  }
+
+  async function initiatePayment() {
+    const btn = document.getElementById('payBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:22px;height:22px;border-width:3px;margin:0;"></div> Processing...';
+
+    try {
+      const orderRes = await fetch(`${API_URL}/payment/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: bookingId, customer_id: user.id })
+      });
+      const orderData = await orderRes.json();
+
+      if (!orderRes.ok) {
+        if (orderData.error && orderData.error.includes('Razorpay is not configured')) {
+          // Demo mode fallback
+          const result = await Swal.fire({
+            icon: 'info',
+            title: 'Razorpay Test Mode',
+            html: `<div style="text-align:left;font-size:.9rem;">
+              <p>Online payment gateway is in <b>test mode</b>.</p>
+              <p style="margin-top:8px;">This will simulate a successful token payment of <b>₹${Math.round(bookingData.token_amount).toLocaleString('en-IN')}</b>.</p>
+              <div style="background:#fef3c7;padding:10px 14px;border-radius:8px;margin-top:12px;font-size:.82rem;">
+                <i class="bi bi-info-circle"></i> No real money will be charged
+              </div>
+            </div>`,
+            showCancelButton: true,
+            confirmButtonText: '<i class="bi bi-credit-card"></i> Simulate Payment',
+            confirmButtonColor: '#10b981',
+            cancelButtonText: 'Cancel'
+          });
+
+          if (!result.isConfirmed) {
+            resetPayBtn();
+            return;
+          }
+
+          // Process demo payment
+          const offRes = await fetch(`${API_URL}/payment/pay-token-offline`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: bookingId, customer_id: user.id })
+          });
+          const offData = await offRes.json();
+          if (!offRes.ok) {
+            Swal.fire({ icon:'error', title:'Payment Error', text: offData.error || 'Failed' });
+            resetPayBtn();
+            return;
+          }
+          paymentResult = offData.payment;
+          bookingData = offData.booking || bookingData;
+          bookingData.payment_status = 'token_paid';
+          showSuccess();
+          return;
+        }
+
+        Swal.fire({ icon:'error', title:'Error', text: orderData.error });
+        resetPayBtn();
+        return;
+      }
+
+      // Open Razorpay checkout
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: 'INR',
+        name: 'BookMyShoot',
+        description: `Token Payment — BMS-${String(bookingData.id).padStart(4,'0')}`,
+        order_id: orderData.order_id,
+        handler: async function (response) {
+          btn.innerHTML = '<div class="spinner" style="width:22px;height:22px;border-width:3px;margin:0;"></div> Verifying...';
+          const verifyRes = await fetch(`${API_URL}/payment/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              booking_id: bookingId,
+              customer_id: user.id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            })
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyRes.ok && verifyData.status === 'success') {
+            paymentResult = {
+              transaction_id: `RAZOR-${response.razorpay_payment_id}`,
+              amount: bookingData.token_amount,
+              payment_type: 'token',
+              payment_method: 'razorpay',
+              status: 'completed',
+              created_at: new Date().toISOString()
+            };
+            bookingData.payment_status = 'token_paid';
+            showSuccess();
+          } else {
+            Swal.fire({ icon:'error', title:'Verification Failed', text: verifyData.error || 'Please contact support.' });
+            resetPayBtn();
+          }
+        },
+        modal: { ondismiss: () => resetPayBtn() },
+        prefill: {
+          name: `${user.first_name} ${user.last_name}`,
+          email: user.email,
+          contact: user.phone || ''
+        },
+        theme: { color: '#667eea' }
+      };
+      new Razorpay(options).open();
+    } catch (e) {
+      console.error(e);
+      Swal.fire({ icon:'error', title:'Error', text:'Unable to process payment. Please try again.' });
+      resetPayBtn();
+    }
+  }
+
+  function resetPayBtn() {
+    const btn = document.getElementById('payBtn');
+    btn.disabled = false;
+    const tokenAmt = Math.round(bookingData.token_amount || 0);
+    btn.innerHTML = `<i class="bi bi-lock-fill"></i> Pay Token Amount — <span>₹${tokenAmt.toLocaleString('en-IN')}</span>`;
+  }
+
+  // ═══════ SUCCESS ═══════
+  function showSuccess() {
+    document.getElementById('paymentSection').style.display = 'none';
+    document.getElementById('loadingState').style.display = 'none';
+
+    const b = bookingData;
+    const tokenAmt = Math.round(b.token_amount || 0);
+    const totalAmt = Math.round(b.total_price || 0);
+    const remainAmt = Math.round(b.remaining_amount || 0);
+    const photographerName = b.photographer?.user
+      ? `${b.photographer.user.first_name} ${b.photographer.user.last_name}` : 'Photographer';
+    const eventDate = b.event_date
+      ? new Date(b.event_date).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' }) : 'TBD';
+    const txnId = paymentResult?.transaction_id || 'N/A';
+    const payMethod = paymentResult?.payment_method || 'Online';
+    const paidDate = paymentResult?.created_at
+      ? new Date(paymentResult.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
+      : new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const receiptNo = `BMS-${String(b.id).padStart(4,'0')}`;
+
+    // Hero
+    document.getElementById('successRef').textContent = `Booking #${receiptNo}`;
+    document.getElementById('customerNameGreet').textContent = user.first_name || 'Customer';
+
+    // Receipt letterhead
+    document.getElementById('receiptInvNo').textContent = `#${receiptNo}`;
+    document.getElementById('receiptDate').textContent = paidDate;
+    document.getElementById('receiptTxnId').textContent = txnId;
+    document.getElementById('receiptMethod').textContent = payMethod === 'demo/offline' ? 'Demo / Offline' : payMethod.charAt(0).toUpperCase() + payMethod.slice(1);
+    document.getElementById('receiptPaidDate').textContent = paidDate;
+
+    // Bill To
+    document.getElementById('receiptBillTo').innerHTML = `
+      <strong>${user.first_name} ${user.last_name}</strong><br>
+      <span>Email:</span> ${user.email}<br>
+      <span>Phone:</span> ${user.phone || 'N/A'}<br>
+      <span>Customer ID:</span> #${user.id}
+    `;
+
+    // Event details
+    document.getElementById('receiptEventInfo').innerHTML = `
+      <strong>${(b.service_type || 'Photoshoot').replace(/\b\w/g, l => l.toUpperCase())} Photography</strong><br>
+      <span>Photographer:</span> ${photographerName}<br>
+      <span>Date:</span> ${eventDate}<br>
+      <span>Location:</span> ${b.location || 'To be confirmed'}
+    `;
+
+    // Build receipt table
+    document.getElementById('receiptBody').innerHTML = `
+      <tr>
+        <td><strong>${(b.service_type || 'Photoshoot').replace(/\b\w/g, l => l.toUpperCase())} Photography</strong><br>
+        <span style="font-size:.8rem;color:var(--muted);">Professional photography service</span></td>
+        <td>${b.package_name || 'Standard'} Package</td>
+        <td style="text-align:right;font-weight:600;">₹${totalAmt.toLocaleString('en-IN')}</td>
+      </tr>
+      <tr class="row-highlight">
+        <td><strong>Token Payment</strong><br>
+        <span style="font-size:.8rem;color:var(--success);">Advance booking confirmation</span></td>
+        <td>20% of total</td>
+        <td style="text-align:right;font-weight:700;color:var(--success);">₹${tokenAmt.toLocaleString('en-IN')}</td>
+      </tr>
+    `;
+
+    // Totals
+    document.getElementById('receiptSubtotal').textContent = `₹${totalAmt.toLocaleString('en-IN')}`;
+    document.getElementById('receiptTokenAmt').textContent = `- ₹${tokenAmt.toLocaleString('en-IN')}`;
+    document.getElementById('receiptBalance').textContent = `₹${remainAmt.toLocaleString('en-IN')}`;
+    document.getElementById('receiptGrandTotal').textContent = `₹${tokenAmt.toLocaleString('en-IN')}`;
+
+    // Show photographer contact info
+    if (b.photographer && b.photographer.user) {
+      const pu = b.photographer.user;
+      const pName = `${pu.first_name} ${pu.last_name}`;
+      document.getElementById('contactName').textContent = pName;
+      if (pu.phone) {
+        document.getElementById('contactPhone').textContent = pu.phone;
+        document.getElementById('contactPhone').href = `tel:${pu.phone}`;
+      } else {
+        document.getElementById('contactPhone').textContent = 'Not available';
+        document.getElementById('contactPhone').removeAttribute('href');
+      }
+      if (pu.email) {
+        document.getElementById('contactEmail').textContent = pu.email;
+        document.getElementById('contactEmail').href = `mailto:${pu.email}`;
+      } else {
+        document.getElementById('contactEmail').textContent = 'Not available';
+        document.getElementById('contactEmail').removeAttribute('href');
+      }
+      document.getElementById('photographerContactCard').style.display = 'block';
+    }
+
+    // Check if feedback already submitted
+    checkExistingFeedback();
+
+    // Show success section
+    const successEl = document.getElementById('successSection');
+    successEl.classList.add('show');
+
+    // Launch confetti
+    launchConfetti();
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ═══════ CONFETTI ═══════
+  function launchConfetti() {
+    const container = document.getElementById('confettiContainer');
+    const colors = ['#667eea','#764ba2','#10b981','#f59e0b','#ef4444','#3b82f6','#8b5cf6','#ec4899'];
+    for (let i = 0; i < 80; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + '%';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.animationDelay = Math.random() * 2 + 's';
+      piece.style.animationDuration = (2 + Math.random() * 2) + 's';
+      piece.style.width = (6 + Math.random() * 8) + 'px';
+      piece.style.height = (6 + Math.random() * 8) + 'px';
+      piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      container.appendChild(piece);
+    }
+    setTimeout(() => container.innerHTML = '', 5000);
+  }
+
+  // ═══════ STAR RATING ═══════
+  function setRating(n) {
+    selectedRating = n;
+    document.querySelectorAll('#starRating .star').forEach(s => {
+      s.classList.toggle('active', parseInt(s.dataset.value) <= n);
+    });
+    document.getElementById('submitFeedbackBtn').disabled = false;
+  }
+
+  // ═══════ FEEDBACK ═══════
+  async function checkExistingFeedback() {
+    try {
+      const res = await fetch(`${API_URL}/feedback/booking/${bookingId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.feedback) {
+          document.getElementById('feedbackForm').style.display = 'none';
+          const done = document.getElementById('feedbackDone');
+          done.classList.add('show');
+          done.querySelector('p').textContent = `You gave ${data.feedback.rating} star${data.feedback.rating > 1 ? 's' : ''}. Thank you!`;
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  async function submitFeedback() {
+    if (!selectedRating) return;
+
+    const btn = document.getElementById('submitFeedbackBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0;display:inline-block;"></div> Submitting...';
+
+    try {
+      const res = await fetch(`${API_URL}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          booking_id: parseInt(bookingId),
+          customer_id: user.id,
+          rating: selectedRating,
+          comment: document.getElementById('feedbackComment').value.trim()
+        })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById('feedbackForm').style.display = 'none';
+        document.getElementById('feedbackDone').classList.add('show');
+        Swal.fire({
+          icon: 'success',
+          title: 'Thank You! ⭐',
+          text: 'Your feedback has been submitted successfully.',
+          confirmButtonColor: '#667eea',
+          timer: 2500
+        });
+      } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Failed to submit feedback.' });
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-send-fill"></i> Submit Feedback';
+      }
+    } catch (e) {
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Unable to submit feedback.' });
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-send-fill"></i> Submit Feedback';
+    }
+  }
+
+  // ═══════ PDF RECEIPT (Professional Invoice) ═══════
+  function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const b = bookingData;
+    const photographerName = b.photographer?.user
+      ? `${b.photographer.user.first_name} ${b.photographer.user.last_name}` : 'N/A';
+    const eventDate = b.event_date
+      ? new Date(b.event_date).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' }) : 'N/A';
+    const tokenAmt = Math.round(b.token_amount || 0);
+    const totalAmt = Math.round(b.total_price || 0);
+    const remainAmt = Math.round(b.remaining_amount || 0);
+    const txnId = paymentResult?.transaction_id || 'N/A';
+    const payMethod = paymentResult?.payment_method || 'Online';
+    const paidDate = paymentResult?.created_at
+      ? new Date(paymentResult.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
+      : new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const receiptNo = `BMS-${String(b.id).padStart(4, '0')}`;
+    const pageW = 210;
+    const margin = 20;
+    const contentW = pageW - margin * 2;
+
+    // ── Header band ──
+    doc.setFillColor(102, 126, 234);
+    doc.rect(0, 0, pageW, 48, 'F');
+    // Accent stripe
+    doc.setFillColor(118, 75, 162);
+    doc.rect(0, 44, pageW, 4, 'F');
+
+    // Brand name
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('BookMyShoot', margin, 22);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Professional Photography Services', margin, 30);
+
+    // Receipt label (right)
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PAYMENT RECEIPT', pageW - margin, 22, { align: 'right' });
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`#${receiptNo}  |  ${paidDate}`, pageW - margin, 32, { align: 'right' });
+
+    // ── PAID stamp watermark ──
+    doc.saveGraphicsState();
+    doc.setGState(new doc.GState({ opacity: 0.06 }));
+    doc.setFontSize(80);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(16, 185, 129);
+    doc.text('PAID', 105, 170, { align: 'center', angle: 30 });
+    doc.restoreGraphicsState();
+
+    let y = 60;
+
+    // ── Bill To / Event Details side by side ──
+    const colW = contentW / 2 - 4;
+
+    // Bill To box
+    doc.setFillColor(249, 250, 251);
+    doc.roundedRect(margin, y, colW, 46, 3, 3, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(107, 114, 128);
+    doc.text('BILL TO', margin + 8, y + 10);
+    doc.setDrawColor(102, 126, 234);
+    doc.setLineWidth(0.7);
+    doc.line(margin + 8, y + 12, margin + 32, y + 12);
+
+    doc.setFontSize(10);
+    doc.setTextColor(31, 41, 55);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${user.first_name} ${user.last_name}`, margin + 8, y + 20);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(75, 85, 99);
+    doc.text(`Email: ${user.email}`, margin + 8, y + 27);
+    doc.text(`Phone: ${user.phone || 'N/A'}`, margin + 8, y + 33);
+    doc.text(`Customer ID: #${user.id}`, margin + 8, y + 39);
+
+    // Event Details box
+    const eventX = margin + colW + 8;
+    doc.setFillColor(249, 250, 251);
+    doc.roundedRect(eventX, y, colW, 46, 3, 3, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(107, 114, 128);
+    doc.text('EVENT DETAILS', eventX + 8, y + 10);
+    doc.setDrawColor(118, 75, 162);
+    doc.setLineWidth(0.7);
+    doc.line(eventX + 8, y + 12, eventX + 42, y + 12);
+
+    doc.setFontSize(10);
+    doc.setTextColor(31, 41, 55);
+    doc.setFont('helvetica', 'bold');
+    const serviceTitle = (b.service_type || 'Photoshoot').replace(/\b\w/g, l => l.toUpperCase());
+    doc.text(`${serviceTitle} Photography`, eventX + 8, y + 20);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(75, 85, 99);
+    doc.text(`Photographer: ${photographerName}`, eventX + 8, y + 27);
+    doc.text(`Date: ${eventDate}`, eventX + 8, y + 33);
+    doc.text(`Location: ${b.location || 'To be confirmed'}`, eventX + 8, y + 39);
+
+    y += 56;
+
+    // ── Items Table ──
+    // Table header
+    doc.setFillColor(102, 126, 234);
+    doc.roundedRect(margin, y, contentW, 11, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DESCRIPTION', margin + 8, y + 7.5);
+    doc.text('DETAILS', margin + 95, y + 7.5);
+    doc.text('AMOUNT (INR)', pageW - margin - 8, y + 7.5, { align: 'right' });
+    y += 14;
+
+    // Row 1 — Total Package
+    doc.setFillColor(255, 255, 255);
+    doc.setTextColor(31, 41, 55);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text(`${serviceTitle} Photography`, margin + 8, y + 4);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(107, 114, 128);
+    doc.text('Professional photography service', margin + 8, y + 10);
+    doc.setTextColor(31, 41, 55);
+    doc.setFontSize(8.5);
+    doc.text(`${b.package_name || 'Standard'} Package`, margin + 95, y + 6);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Rs. ${totalAmt.toLocaleString('en-IN')}`, pageW - margin - 8, y + 6, { align: 'right' });
+
+    doc.setDrawColor(240, 240, 240);
+    doc.setLineWidth(0.3);
+    y += 15;
+    doc.line(margin + 6, y, pageW - margin - 6, y);
+    y += 3;
+
+    // Row 2 — Token Payment (highlighted green)
+    doc.setFillColor(240, 253, 244);
+    doc.rect(margin, y - 1, contentW, 14, 'F');
+    doc.setTextColor(5, 150, 105);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('Token Payment', margin + 8, y + 5);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.text('Advance booking confirmation', margin + 8, y + 11);
+    doc.setFontSize(8.5);
+    doc.text('20% of total', margin + 95, y + 7);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Rs. ${tokenAmt.toLocaleString('en-IN')}`, pageW - margin - 8, y + 7, { align: 'right' });
+    y += 18;
+
+    // ── Totals section (right aligned) ──
+    const totalsX = pageW - margin - 80;
+    const totalsW = 80;
+
+    // Subtotal
+    doc.setDrawColor(229, 231, 235);
+    doc.setLineWidth(0.3);
+    doc.setTextColor(107, 114, 128);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.text('Subtotal:', totalsX, y + 4);
+    doc.setTextColor(31, 41, 55);
+    doc.text(`Rs. ${totalAmt.toLocaleString('en-IN')}`, pageW - margin - 8, y + 4, { align: 'right' });
+    y += 8;
+
+    doc.setTextColor(107, 114, 128);
+    doc.text('Token (20%):', totalsX, y + 4);
+    doc.setTextColor(5, 150, 105);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`- Rs. ${tokenAmt.toLocaleString('en-IN')}`, pageW - margin - 8, y + 4, { align: 'right' });
+    y += 8;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(107, 114, 128);
+    doc.text('Balance Due:', totalsX, y + 4);
+    doc.setTextColor(31, 41, 55);
+    doc.text(`Rs. ${remainAmt.toLocaleString('en-IN')}`, pageW - margin - 8, y + 4, { align: 'right' });
+    y += 10;
+
+    // Grand total box
+    doc.setFillColor(102, 126, 234);
+    doc.roundedRect(totalsX - 4, y, totalsW + 12, 14, 3, 3, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('AMOUNT PAID', totalsX, y + 9.5);
+    doc.text(`Rs. ${tokenAmt.toLocaleString('en-IN')}`, pageW - margin - 8, y + 9.5, { align: 'right' });
+    y += 24;
+
+    // ── Transaction Details Bar ──
+    doc.setFillColor(240, 253, 244);
+    doc.roundedRect(margin, y, contentW, 18, 3, 3, 'F');
+    doc.setDrawColor(187, 247, 208);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, y, contentW, 18, 3, 3, 'S');
+
+    doc.setTextColor(75, 85, 99);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.text('Transaction ID:', margin + 8, y + 8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(31, 41, 55);
+    doc.text(txnId, margin + 43, y + 8);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(75, 85, 99);
+    doc.text('Method:', margin + 95, y + 8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(31, 41, 55);
+    const displayMethod = payMethod === 'demo/offline' ? 'Demo / Offline' : payMethod.charAt(0).toUpperCase() + payMethod.slice(1);
+    doc.text(displayMethod, margin + 113, y + 8);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(75, 85, 99);
+    doc.text('Status:', margin + 8, y + 14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(5, 150, 105);
+    doc.text('PAID & CONFIRMED', margin + 25, y + 14);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(75, 85, 99);
+    doc.text('Paid On:', margin + 95, y + 14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(31, 41, 55);
+    doc.text(paidDate, margin + 113, y + 14);
+
+    y += 28;
+
+    // ── Terms & Conditions ──
+    doc.setDrawColor(229, 231, 235);
+    doc.setLineWidth(0.3);
+    doc.line(margin, y, pageW - margin, y);
+    y += 8;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(107, 114, 128);
+    doc.text('TERMS & CONDITIONS', margin, y);
+    y += 6;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(156, 163, 175);
+    const terms = [
+      '1. Token amount is non-refundable once the photographer confirms the session.',
+      '2. Remaining balance is payable directly to the photographer on the event day.',
+      '3. Rescheduling is subject to photographer availability (24 hrs notice required).',
+      '4. For support, contact us at support@bookmyshoot.com'
+    ];
+    terms.forEach(t => { doc.text(t, margin, y); y += 5; });
+
+    // ── Footer ──
+    y = 278;
+    doc.setDrawColor(102, 126, 234);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageW - margin, y);
+    y += 5;
+    doc.setFontSize(7);
+    doc.setTextColor(156, 163, 175);
+    doc.setFont('helvetica', 'normal');
+    doc.text('BookMyShoot  |  Your Moments, Professionally Captured  |  www.bookmyshoot.com', 105, y, { align: 'center' });
+    doc.text('This is a computer-generated receipt. No signature is required.', 105, y + 4, { align: 'center' });
+
+    doc.save(`BookMyShoot_Receipt_${receiptNo}.pdf`);
+  }
+
+  // ═══════ EXCEL RECEIPT (Professional Invoice) ═══════
+  function downloadExcel() {
+    const b = bookingData;
+    const photographerName = b.photographer?.user
+      ? `${b.photographer.user.first_name} ${b.photographer.user.last_name}` : 'N/A';
+    const eventDate = b.event_date
+      ? new Date(b.event_date).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' }) : 'N/A';
+    const txnId = paymentResult?.transaction_id || 'N/A';
+    const payMethod = paymentResult?.payment_method || 'Online';
+    const paidDate = paymentResult?.created_at
+      ? new Date(paymentResult.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
+      : new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const receiptNo = `BMS-${String(b.id).padStart(4, '0')}`;
+    const serviceTitle = (b.service_type || 'Photoshoot').replace(/\b\w/g, l => l.toUpperCase());
+    const displayMethod = payMethod === 'demo/offline' ? 'Demo / Offline' : payMethod.charAt(0).toUpperCase() + payMethod.slice(1);
+
+    const data = [
+      ['BOOKMYSHOOT — PAYMENT RECEIPT', '', ''],
+      ['Professional Photography Services', '', ''],
+      [],
+      ['RECEIPT INFORMATION', '', ''],
+      ['Receipt No.', `#${receiptNo}`, ''],
+      ['Date Issued', paidDate, ''],
+      ['Transaction ID', txnId, ''],
+      ['Payment Method', displayMethod, ''],
+      ['Payment Status', 'PAID & CONFIRMED', ''],
+      [],
+      ['BILLED TO', '', 'EVENT DETAILS'],
+      ['Name', `${user.first_name} ${user.last_name}`, `Service: ${serviceTitle} Photography`],
+      ['Email', user.email, `Photographer: ${photographerName}`],
+      ['Phone', user.phone || 'N/A', `Event Date: ${eventDate}`],
+      ['Customer ID', `#${user.id}`, `Location: ${b.location || 'To be confirmed'}`],
+      [],
+      ['ITEMS', '', ''],
+      ['Description', 'Details', 'Amount (INR)'],
+      [`${serviceTitle} Photography — Professional Service`, `${b.package_name || 'Standard'} Package`, Math.round(b.total_price || 0)],
+      ['Token Payment — Advance Booking Confirmation', '20% of Total', Math.round(b.token_amount || 0)],
+      [],
+      ['PAYMENT SUMMARY', '', ''],
+      ['Subtotal (Package Price)', '', Math.round(b.total_price || 0)],
+      ['Token Payment (20%)', '', `- ${Math.round(b.token_amount || 0)}`],
+      ['Balance Due (payable on event day)', '', Math.round(b.remaining_amount || 0)],
+      [],
+      ['AMOUNT PAID', '', Math.round(b.token_amount || 0)],
+      [],
+      ['TERMS & CONDITIONS', '', ''],
+      ['1. Token amount is non-refundable once the photographer confirms the session.', '', ''],
+      ['2. Remaining balance is payable directly to the photographer on the event day.', '', ''],
+      ['3. Rescheduling is subject to photographer availability (24 hrs notice required).', '', ''],
+      ['4. For support, contact us at support@bookmyshoot.com', '', ''],
+      [],
+      ['BookMyShoot — Your Moments, Professionally Captured', '', ''],
+      ['This is a computer-generated receipt. No signature is required.', '', '']
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [{ wch: 48 }, { wch: 30 }, { wch: 28 }];
+
+    // Merge title rows
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 2 } },
+      { s: { r: 16, c: 0 }, e: { r: 16, c: 2 } },
+      { s: { r: 21, c: 0 }, e: { r: 21, c: 2 } },
+      { s: { r: 28, c: 0 }, e: { r: 28, c: 2 } },
+      { s: { r: 34, c: 0 }, e: { r: 34, c: 2 } },
+      { s: { r: 35, c: 0 }, e: { r: 35, c: 2 } },
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Payment Receipt');
+    XLSX.writeFile(wb, `BookMyShoot_Receipt_${receiptNo}.xlsx`);
+  }
+
+  // ═══════ PRINT RECEIPT (Professional Invoice) ═══════
+  function printReceipt() {
+    const b = bookingData;
+    const photographerName = b.photographer?.user
+      ? `${b.photographer.user.first_name} ${b.photographer.user.last_name}` : 'N/A';
+    const eventDate = b.event_date
+      ? new Date(b.event_date).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' }) : 'N/A';
+    const txnId = paymentResult?.transaction_id || 'N/A';
+    const payMethod = paymentResult?.payment_method || 'Online';
+    const paidDate = paymentResult?.created_at
+      ? new Date(paymentResult.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
+      : new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const receiptNo = `BMS-${String(b.id).padStart(4, '0')}`;
+    const serviceTitle = (b.service_type || 'Photoshoot').replace(/\b\w/g, l => l.toUpperCase());
+    const displayMethod = payMethod === 'demo/offline' ? 'Demo / Offline' : payMethod.charAt(0).toUpperCase() + payMethod.slice(1);
+    const totalAmt = Math.round(b.total_price || 0);
+    const tokenAmt = Math.round(b.token_amount || 0);
+    const remainAmt = Math.round(b.remaining_amount || 0);
+
+    const printWindow = window.open('', '_blank', 'width=800,height=1100');
+    printWindow.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Receipt #${receiptNo} — BookMyShoot</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Poppins', 'Inter', -apple-system, sans-serif;
+    background: #fff;
+    color: #1f2937;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .receipt-page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── Decorative top band ── */
+  .top-band {
+    height: 10px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+  }
+
+  /* ── Header / Letterhead ── */
+  .receipt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 32px 40px 24px;
+    border-bottom: 2px solid #667eea;
+  }
+  .brand-area h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #667eea;
+    letter-spacing: -0.5px;
+    margin-bottom: 2px;
+  }
+  .brand-area h1 .cam-icon {
+    display: inline-block;
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border-radius: 8px;
+    text-align: center;
+    line-height: 28px;
+    font-size: 14px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .brand-area .tagline {
+    font-size: 0.78rem;
+    color: #6b7280;
+    font-weight: 400;
+  }
+  .meta-area {
+    text-align: right;
+  }
+  .meta-area .doc-title {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #9ca3af;
+    font-weight: 600;
+  }
+  .meta-area .inv-number {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1f2937;
+    margin: 2px 0 6px;
+  }
+  .meta-area .inv-date {
+    font-size: 0.82rem;
+    color: #6b7280;
+  }
+  .paid-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    background: #d1fae5;
+    color: #065f46;
+    padding: 5px 16px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .paid-badge .check {
+    width: 14px; height: 14px;
+    background: #10b981;
+    color: #fff;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+  }
+
+  /* ── PAID watermark ── */
+  .watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-25deg);
+    font-size: 7rem;
+    font-weight: 900;
+    color: rgba(16, 185, 129, 0.04);
+    letter-spacing: 14px;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 0;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+  }
+
+  /* ── Billing grid ── */
+  .billing-grid {
+    display: flex;
+    gap: 32px;
+    padding: 24px 40px;
+    position: relative;
+    z-index: 1;
+  }
+  .billing-box {
+    flex: 1;
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 18px 20px;
+    border: 1px solid #e5e7eb;
+  }
+  .billing-box h4 {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #9ca3af;
+    font-weight: 700;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e5e7eb;
+  }
+  .billing-box p {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: #1f2937;
+  }
+  .billing-box p .label {
+    color: #6b7280;
+    font-size: 0.8rem;
+  }
+
+  /* ── Items Table ── */
+  .items-section {
+    padding: 0 40px;
+    position: relative;
+    z-index: 1;
+  }
+  .items-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .items-table thead th {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    padding: 12px 18px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: left;
+  }
+  .items-table thead th:last-child { text-align: right; }
+  .items-table tbody td {
+    padding: 14px 18px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #f0f0f0;
+    color: #1f2937;
+  }
+  .items-table tbody td:last-child {
+    text-align: right;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+  }
+  .items-table tbody tr:nth-child(even) { background: #fafbfc; }
+  .items-table .item-desc { font-weight: 600; }
+  .items-table .item-sub { display: block; font-size: 0.75rem; color: #6b7280; font-weight: 400; margin-top: 2px; }
+  .items-table .token-row { background: #f0fdf4 !important; }
+  .items-table .token-row td { color: #059669; font-weight: 700; }
+
+  /* ── Totals ── */
+  .totals-section {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 40px;
+    margin-top: 2px;
+    position: relative;
+    z-index: 1;
+  }
+  .totals-box {
+    width: 260px;
+  }
+  .total-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 0;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .total-line .t-label { color: #6b7280; }
+  .total-line .t-value { font-weight: 600; font-family: 'Inter', sans-serif; }
+  .total-line.token .t-value { color: #059669; }
+  .grand-total-bar {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-top: 8px;
+    font-weight: 800;
+    font-size: 1rem;
+  }
+
+  /* ── Transaction bar ── */
+  .txn-bar {
+    margin: 22px 40px 0;
+    padding: 14px 20px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  .txn-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+  }
+  .txn-item .t-label { color: #6b7280; }
+  .txn-item .t-val { color: #1f2937; font-weight: 700; font-family: 'Inter', sans-serif; }
+  .txn-item .t-val.status { color: #059669; }
+  .txn-sep { width: 1px; height: 22px; background: #bbf7d0; }
+
+  /* ── Terms ── */
+  .terms-section {
+    padding: 0 40px;
+    margin-top: 22px;
+    border-top: 1px dashed #e5e7eb;
+    padding-top: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  .terms-section h5 {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #9ca3af;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .terms-section ul {
+    list-style: none;
+    padding: 0;
+  }
+  .terms-section ul li {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    line-height: 1.8;
+    padding-left: 14px;
+    position: relative;
+  }
+  .terms-section ul li::before {
+    content: '\\2022';
+    position: absolute;
+    left: 0;
+    color: #667eea;
+    font-weight: 700;
+  }
+
+  /* ── Footer ── */
+  .receipt-print-footer {
+    text-align: center;
+    padding: 16px 40px 24px;
+    margin-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    position: relative;
+    z-index: 1;
+  }
+  .receipt-print-footer p {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    line-height: 1.6;
+  }
+  .receipt-print-footer .brand-line {
+    font-weight: 700;
+    color: #6b7280;
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+  }
+  .receipt-print-footer .gen-note {
+    font-style: italic;
+    font-size: 0.7rem;
+  }
+
+  /* ── Bottom decorative band ── */
+  .bottom-band {
+    height: 10px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+    margin-top: 20px;
+  }
+
+  /* ── Print button (hidden on print) ── */
+  .print-action-bar {
+    text-align: center;
+    padding: 20px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .print-action-bar button {
+    padding: 12px 32px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #667eea, #5a67d8);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    margin: 0 6px;
+    transition: .2s;
+  }
+  .print-action-bar button:hover { opacity: 0.9; transform: translateY(-1px); }
+  .print-action-bar button.close-btn {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+
+  @media print {
+    .print-action-bar { display: none !important; }
+    body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .receipt-page { width: 100%; }
+  }
+</style>
+</head>
+<body>
+  <div class="print-action-bar">
+    <button onclick="window.print()">&#128424; Print Now</button>
+    <button class="close-btn" onclick="window.close()">&#10005; Close</button>
+  </div>
+
+  <div class="receipt-page">
+    <div class="watermark">PAID</div>
+    <div class="top-band"></div>
+
+    <!-- Header -->
+    <div class="receipt-header">
+      <div class="brand-area">
+        <h1><span class="cam-icon">&#128247;</span> BookMyShoot</h1>
+        <div class="tagline">Professional Photography Services &bull; Booking &amp; Payment Platform</div>
+      </div>
+      <div class="meta-area">
+        <div class="doc-title">Payment Receipt</div>
+        <div class="inv-number">#${receiptNo}</div>
+        <div class="inv-date">${paidDate}</div>
+        <div class="paid-badge">
+          <span class="check">&#10003;</span> PAID &amp; CONFIRMED
+        </div>
+      </div>
+    </div>
+
+    <!-- Billing grid -->
+    <div class="billing-grid">
+      <div class="billing-box">
+        <h4>&#128100; Billed To</h4>
+        <p>
+          <strong>${user.first_name} ${user.last_name}</strong><br>
+          <span class="label">Email:</span> ${user.email}<br>
+          <span class="label">Phone:</span> ${user.phone || 'N/A'}<br>
+          <span class="label">Customer ID:</span> #${user.id}
+        </p>
+      </div>
+      <div class="billing-box">
+        <h4>&#128197; Event Details</h4>
+        <p>
+          <strong>${serviceTitle} Photography</strong><br>
+          <span class="label">Photographer:</span> ${photographerName}<br>
+          <span class="label">Event Date:</span> ${eventDate}<br>
+          <span class="label">Location:</span> ${b.location || 'To be confirmed'}
+        </p>
+      </div>
+    </div>
+
+    <!-- Items table -->
+    <div class="items-section">
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th style="width:50%;">Description</th>
+            <th style="width:25%;">Details</th>
+            <th style="width:25%;">Amount (INR)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="item-desc">${serviceTitle} Photography</span>
+              <span class="item-sub">Professional photography service</span>
+            </td>
+            <td>${b.package_name || 'Standard'} Package</td>
+            <td>&#8377; ${totalAmt.toLocaleString('en-IN')}</td>
+          </tr>
+          <tr class="token-row">
+            <td>
+              <span class="item-desc">&#10003; Token Payment</span>
+              <span class="item-sub">Advance booking confirmation</span>
+            </td>
+            <td>20% of Total</td>
+            <td>&#8377; ${tokenAmt.toLocaleString('en-IN')}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totals -->
+    <div class="totals-section">
+      <div class="totals-box">
+        <div class="total-line">
+          <span class="t-label">Subtotal</span>
+          <span class="t-value">&#8377; ${totalAmt.toLocaleString('en-IN')}</span>
+        </div>
+        <div class="total-line token">
+          <span class="t-label">Token Payment (20%)</span>
+          <span class="t-value">- &#8377; ${tokenAmt.toLocaleString('en-IN')}</span>
+        </div>
+        <div class="total-line">
+          <span class="t-label">Balance Due</span>
+          <span class="t-value">&#8377; ${remainAmt.toLocaleString('en-IN')}</span>
+        </div>
+        <div class="grand-total-bar">
+          <span>AMOUNT PAID</span>
+          <span>&#8377; ${tokenAmt.toLocaleString('en-IN')}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transaction bar -->
+    <div class="txn-bar">
+      <div class="txn-item">
+        <span class="t-label">Transaction ID:</span>
+        <span class="t-val">${txnId}</span>
+      </div>
+      <div class="txn-sep"></div>
+      <div class="txn-item">
+        <span class="t-label">Method:</span>
+        <span class="t-val">${displayMethod}</span>
+      </div>
+      <div class="txn-sep"></div>
+      <div class="txn-item">
+        <span class="t-label">Status:</span>
+        <span class="t-val status">PAID &amp; CONFIRMED</span>
+      </div>
+      <div class="txn-sep"></div>
+      <div class="txn-item">
+        <span class="t-label">Paid On:</span>
+        <span class="t-val">${paidDate}</span>
+      </div>
+    </div>
+
+    <!-- Terms -->
+    <div class="terms-section">
+      <h5>Terms &amp; Conditions</h5>
+      <ul>
+        <li>Token amount is non-refundable once the photographer confirms the session.</li>
+        <li>Remaining balance is payable directly to the photographer on the event day.</li>
+        <li>Rescheduling is subject to photographer availability (24 hrs notice required).</li>
+        <li>For support, contact us at support@bookmyshoot.com</li>
+      </ul>
+    </div>
+
+    <!-- Footer -->
+    <div class="receipt-print-footer">
+      <p class="brand-line">BookMyShoot &mdash; Your Moments, Professionally Captured</p>
+      <p class="gen-note">This is a computer-generated receipt. No signature is required.</p>
+    </div>
+
+    <div class="bottom-band"></div>
+  </div>
+</body>
+</html>`);
+    printWindow.document.close();
+    printWindow.focus();
+  }
+</script>
+</body>
+</html>

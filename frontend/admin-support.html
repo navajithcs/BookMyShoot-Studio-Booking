@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Tickets — BookMyShoot Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .ticket-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--space-4); margin-bottom: var(--space-5); }
+    @media (max-width: 768px) { .ticket-stats { grid-template-columns: repeat(2,1fr); } }
+    .filter-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: var(--space-4); }
+    .filter-bar select { padding: 8px 14px; border: 1px solid var(--border-primary); border-radius: var(--radius-md); background: var(--surface-secondary); color: var(--text-primary); font-size: 0.85rem; }
+    .ticket-card {
+      background: var(--surface-primary); border: 1px solid var(--border-primary);
+      border-radius: var(--radius-xl); padding: 20px; margin-bottom: 16px; transition: all 0.2s;
+    }
+    .ticket-card:hover { box-shadow: var(--shadow-md); border-color: var(--brand-200); }
+    .ticket-card.priority-high { border-left: 4px solid var(--danger-500); }
+    .ticket-card.priority-medium { border-left: 4px solid var(--warning-500); }
+    .ticket-card.priority-low { border-left: 4px solid var(--success-500); }
+    .ticket-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+    .ticket-title { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+    .ticket-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ticket-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; font-size: 0.8rem; color: var(--text-secondary); }
+    .ticket-meta span { display: flex; align-items: center; gap: 4px; }
+    .ticket-message { font-size: 0.88rem; color: var(--text-primary); margin: 12px 0; padding: 12px 16px; background: var(--surface-secondary); border-radius: var(--radius-md); line-height: 1.6; }
+    .admin-reply-box { margin-top: 10px; padding: 12px 16px; background: rgba(16,185,129,0.06); border-radius: var(--radius-md); border-left: 3px solid var(--success-500); }
+    .admin-reply-box strong { font-size: 0.78rem; color: var(--success-700); text-transform: uppercase; letter-spacing: 0.05em; }
+    .admin-reply-box p { margin: 4px 0 0; font-size: 0.85rem; color: var(--text-primary); }
+    .ticket-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .btn-reply { padding: 8px 18px; border: none; border-radius: var(--radius-md); background: var(--brand-600); color: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+    .btn-reply:hover { background: var(--brand-700); transform: translateY(-1px); }
+    .btn-status { padding: 8px 14px; border: 1px solid var(--border-primary); border-radius: var(--radius-md); background: var(--surface-secondary); color: var(--text-secondary); font-weight: 600; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; }
+    .btn-status:hover { background: var(--surface-tertiary); }
+    .empty-tickets { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .empty-tickets i { font-size: 3rem; color: var(--text-tertiary); margin-bottom: 12px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <div class="dash-layout">
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-logo">
+          <div class="logo-icon">&#x1F4F8;</div>
+          <div class="logo-text">BookMyShoot<span class="logo-sub">Admin Panel</span></div>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Overview</div>
+          <a href="admin-dashboard.html" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Management</div>
+          <a href="admin-users.html" class="sidebar-link"><i class="bi bi-people"></i> Customer Management</a>
+          <a href="admin-photographers.html" class="sidebar-link"><i class="bi bi-camera"></i> Photographer Management</a>
+          <a href="admin-portfolio.html" class="sidebar-link"><i class="bi bi-images"></i> Portfolio</a>
+          <a href="admin-bookings.html" class="sidebar-link"><i class="bi bi-calendar-event"></i> Booking Management</a>
+          <a href="admin-services.html" class="sidebar-link"><i class="bi bi-box-seam"></i> Service & Packages</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Support</div>
+          <a href="admin-refunds.html" class="sidebar-link"><i class="bi bi-arrow-return-left"></i> Refund Requests</a>
+          <a href="admin-feedback.html" class="sidebar-link"><i class="bi bi-star"></i> Feedback</a>
+          <a href="admin-support.html" class="sidebar-link active"><i class="bi bi-headset"></i> Support Tickets</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Analytics</div>
+          <a href="admin-reports.html" class="sidebar-link"><i class="bi bi-bar-chart-line"></i> Reports</a>
+          <a href="admin-revenue.html" class="sidebar-link"><i class="bi bi-currency-rupee"></i> Revenue Details</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar" id="sidebarAvatar">A</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+            <div class="sidebar-user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="sidebar-logout" onclick="DashApp.logout()"><i class="bi bi-box-arrow-left"></i> Logout</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+          <div>
+            <div class="topbar-title">Support Tickets</div>
+            <div class="topbar-subtitle">Manage customer support requests</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="theme-toggle" data-tooltip="Toggle theme"><i class="bi bi-moon-fill icon-moon"></i><i class="bi bi-sun-fill icon-sun"></i></button>
+          <button class="topbar-icon-btn" id="notifBtn" data-tooltip="Notifications"><i class="bi bi-bell"></i><span class="badge-count" id="notifBadge" style="display:none;">0</span></button>
+          <div class="dropdown">
+            <div class="topbar-user" id="userDropdownTrigger">
+              <div class="topbar-user-avatar" id="topbarAvatar">A</div>
+              <span class="topbar-user-name" id="topbarUserName">Admin</span>
+              <i class="bi bi-chevron-down text-sm text-secondary"></i>
+            </div>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="admin-profile.html" class="dropdown-item"><i class="bi bi-person-gear"></i> Profile Settings</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" onclick="DashApp.logout()" style="color:var(--danger-600);"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="dash-content">
+        <!-- Stats -->
+        <div class="ticket-stats animate-fadeInUp">
+          <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-envelope-open"></i></div><div class="stat-label">Open</div><div class="stat-value" id="statOpen">0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-arrow-repeat"></i></div><div class="stat-label">In Progress</div><div class="stat-value" id="statInProgress">0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-check-circle"></i></div><div class="stat-label">Resolved</div><div class="stat-value" id="statResolved">0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon danger"><i class="bi bi-exclamation-triangle"></i></div><div class="stat-label">High Priority</div><div class="stat-value" id="statHighPriority">0</div></div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-bar animate-fadeInUp">
+          <select id="statusFilter" onchange="loadTickets()">
+            <option value="">All Status</option>
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
+          <select id="priorityFilter" onchange="loadTickets()">
+            <option value="">All Priority</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <span id="ticketCount" style="font-size:0.85rem;color:var(--text-secondary);margin-left:auto;">0 tickets</span>
+        </div>
+
+        <!-- Ticket List -->
+        <div id="ticketList" class="animate-fadeInUp">
+          <div class="empty-tickets"><i class="bi bi-arrow-repeat spin" style="animation:spin 1s linear infinite;"></i> Loading tickets...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3 class="font-semibold text-base m-0">Notifications</h3>
+      <button class="btn btn-sm btn-ghost" id="notifClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="notif-panel-body" id="notifList">
+      <div class="empty-state"><div class="empty-state-icon">&#x1F514;</div><div class="empty-state-title">No notifications</div></div>
+    </div>
+  </aside>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    var user = DashApp.requireAuth(['admin']);
+    if (user) {
+      var uname = user.first_name || 'Admin';
+      var initial = uname.charAt(0).toUpperCase();
+      document.getElementById('topbarAvatar').textContent = initial;
+      document.getElementById('topbarUserName').textContent = uname;
+      document.getElementById('sidebarAvatar').textContent = initial;
+      document.getElementById('sidebarUserName').textContent = uname;
+    }
+    DashApp.init();
+
+    var allTickets = [];
+
+    function loadTickets() {
+      var status = document.getElementById('statusFilter').value;
+      var priority = document.getElementById('priorityFilter').value;
+      var params = [];
+      if (status) params.push('status=' + status);
+      if (priority) params.push('priority=' + priority);
+      var url = DashApp.API_URL + '/admin/support-tickets' + (params.length ? '?' + params.join('&') : '');
+
+      fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+        allTickets = data.tickets || [];
+        updateStats();
+        renderTickets();
+      }).catch(function() {
+        document.getElementById('ticketList').innerHTML = '<div class="empty-tickets"><i class="bi bi-exclamation-triangle"></i> Failed to load support tickets</div>';
+      });
+    }
+
+    function updateStats() {
+      document.getElementById('statOpen').textContent = allTickets.filter(function(t) { return t.status === 'open'; }).length;
+      document.getElementById('statInProgress').textContent = allTickets.filter(function(t) { return t.status === 'in_progress'; }).length;
+      document.getElementById('statResolved').textContent = allTickets.filter(function(t) { return t.status === 'resolved' || t.status === 'closed'; }).length;
+      document.getElementById('statHighPriority').textContent = allTickets.filter(function(t) { return t.priority === 'high'; }).length;
+      document.getElementById('ticketCount').textContent = allTickets.length + ' tickets';
+    }
+
+    function renderTickets() {
+      var container = document.getElementById('ticketList');
+      if (!allTickets.length) {
+        container.innerHTML = '<div class="empty-tickets"><i class="bi bi-headset"></i> No support tickets found</div>';
+        return;
+      }
+
+      var statusBadges = { open: 'badge-warning', in_progress: 'badge-primary', resolved: 'badge-success', closed: 'badge-neutral' };
+      var priorityBadges = { high: 'badge-danger', medium: 'badge-warning', low: 'badge-success' };
+      var statusLabels = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed' };
+
+      container.innerHTML = allTickets.map(function(t) {
+        var sBadge = statusBadges[t.status] || 'badge-neutral';
+        var pBadge = priorityBadges[t.priority] || 'badge-neutral';
+        var dateStr = t.created_at ? new Date(t.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+        var customerName = t.customer_name || ('Customer #' + (t.customer_id || ''));
+
+        var replyHtml = '';
+        if (t.admin_reply) {
+          replyHtml = '<div class="admin-reply-box"><strong>Admin Reply</strong><p>' + DashApp.escapeHtml(t.admin_reply) + '</p></div>';
+        }
+
+        var actionsHtml = '';
+        if (t.status !== 'closed' && t.status !== 'resolved') {
+          actionsHtml = '<div class="ticket-actions">' +
+            '<button class="btn-reply" onclick="replyTicket(' + t.id + ')"><i class="bi bi-reply"></i> Reply</button>' +
+            '<button class="btn-status" onclick="updateTicketStatus(' + t.id + ',\'in_progress\')"><i class="bi bi-arrow-repeat"></i> In Progress</button>' +
+            '<button class="btn-status" onclick="updateTicketStatus(' + t.id + ',\'resolved\')" style="color:var(--success-600);border-color:var(--success-300);"><i class="bi bi-check-circle"></i> Resolve</button>' +
+            '<button class="btn-status" onclick="updateTicketStatus(' + t.id + ',\'closed\')" style="color:var(--danger-600);border-color:var(--danger-300);"><i class="bi bi-x-circle"></i> Close</button>' +
+          '</div>';
+        }
+
+        return '<div class="ticket-card priority-' + (t.priority || 'low') + '">' +
+          '<div class="ticket-header">' +
+            '<h4 class="ticket-title"><i class="bi bi-ticket-detailed" style="color:var(--brand-600);margin-right:6px;"></i>#' + t.id + ' — ' + DashApp.escapeHtml(t.subject || 'No Subject') + '</h4>' +
+            '<div class="ticket-badges">' +
+              '<span class="badge-v2 ' + pBadge + '">' + (t.priority || 'low').toUpperCase() + '</span>' +
+              '<span class="badge-v2 ' + sBadge + '">' + (statusLabels[t.status] || t.status) + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="ticket-meta">' +
+            '<span><i class="bi bi-person"></i> ' + DashApp.escapeHtml(customerName) + '</span>' +
+            '<span><i class="bi bi-calendar3"></i> ' + dateStr + '</span>' +
+          '</div>' +
+          '<div class="ticket-message">' + DashApp.escapeHtml(t.message || '') + '</div>' +
+          replyHtml +
+          actionsHtml +
+        '</div>';
+      }).join('');
+    }
+
+    function replyTicket(ticketId) {
+      Swal.fire({
+        title: 'Reply to Ticket #' + ticketId,
+        input: 'textarea',
+        inputLabel: 'Your Reply',
+        inputPlaceholder: 'Type your reply to the customer...',
+        inputAttributes: { required: 'true' },
+        showCancelButton: true,
+        confirmButtonText: 'Send Reply',
+        confirmButtonColor: '#6366f1',
+        inputValidator: function(value) { if (!value) return 'Please enter a reply'; }
+      }).then(function(result) {
+        if (result.isConfirmed && result.value) {
+          fetch(DashApp.API_URL + '/admin/support-tickets/' + ticketId, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ admin_reply: result.value, status: 'in_progress' })
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.error) {
+              Swal.fire('Error', data.error, 'error');
+            } else {
+              Swal.fire({ icon: 'success', title: 'Reply Sent!', timer: 2000, showConfirmButton: false });
+              loadTickets();
+            }
+          })
+          .catch(function() { Swal.fire('Error', 'Failed to send reply', 'error'); });
+        }
+      });
+    }
+
+    function updateTicketStatus(ticketId, newStatus) {
+      var labels = { in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed' };
+      Swal.fire({
+        title: 'Update to ' + labels[newStatus] + '?',
+        text: 'Change ticket #' + ticketId + ' status to ' + labels[newStatus],
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Update',
+        confirmButtonColor: '#6366f1'
+      }).then(function(result) {
+        if (result.isConfirmed) {
+          fetch(DashApp.API_URL + '/admin/support-tickets/' + ticketId, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.error) {
+              Swal.fire('Error', data.error, 'error');
+            } else {
+              Swal.fire({ icon: 'success', title: 'Status Updated!', timer: 2000, showConfirmButton: false });
+              loadTickets();
+            }
+          })
+          .catch(function() { Swal.fire('Error', 'Failed to update status', 'error'); });
+        }
+      });
+    }
+
+    loadTickets();
+  </script>
+</body>
+</html>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Management — BookMyShoot Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .dash-content { max-width: 100% !important; }
+    .filter-bar {
+      display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap;
+      margin-bottom: var(--space-5);
+    }
+    .filter-bar select, .filter-bar input {
+      padding: 10px 14px; border-radius: var(--radius-lg);
+      border: 1px solid var(--border-primary); font-size: var(--text-sm);
+      background: var(--surface-primary); color: var(--text-primary);
+      min-width: 160px;
+    }
+    .booking-details-modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); display: none; z-index: 1000;
+      align-items: center; justify-content: center;
+    }
+    .booking-details-modal.active { display: flex; }
+    .booking-details-content {
+      background: var(--surface-primary); border-radius: var(--radius-xl);
+      padding: var(--space-6); width: 95%; max-width: 600px;
+      max-height: 80vh; overflow-y: auto;
+      box-shadow: var(--shadow-xl);
+    }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-4); }
+    .detail-item { padding: var(--space-3); background: var(--surface-secondary); border-radius: var(--radius-md); }
+    .detail-label { font-size: var(--text-xs); color: var(--text-tertiary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .detail-value { font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
+    .detail-full { grid-column: 1 / -1; }
+    #bookingsTableBody tr { cursor: pointer; transition: background .15s; }
+    #bookingsTableBody tr:hover { background: var(--brand-50) !important; }
+    [data-theme="dark"] #bookingsTableBody tr:hover { background: rgba(99,102,241,.08) !important; }
+    .detail-section-title { font-size: var(--text-sm); font-weight: 700; color: var(--brand-600); margin-top: var(--space-4); margin-bottom: var(--space-2); padding-bottom: var(--space-2); border-bottom: 2px solid var(--border-secondary); display: flex; align-items: center; gap: 6px; }
+    .payment-timeline { margin-top: var(--space-2); }
+    .payment-entry { display: flex; align-items: flex-start; gap: 12px; padding: 10px; background: var(--surface-secondary); border-radius: var(--radius-md); margin-bottom: 8px; }
+    .payment-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--success-500); margin-top: 5px; flex-shrink: 0; }
+    .payment-dot.pending { background: var(--warning-500); }
+    .payment-info { flex: 1; }
+    .payment-info .pay-amount { font-weight: 700; font-size: var(--text-sm); }
+    .payment-info .pay-meta { font-size: var(--text-xs); color: var(--text-tertiary); margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <div class="dash-layout">
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-logo">
+          <div class="logo-icon">📸</div>
+          <div class="logo-text">BookMyShoot<span class="logo-sub">Admin Panel</span></div>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Overview</div>
+          <a href="admin-dashboard.html" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Management</div>
+          <a href="admin-users.html" class="sidebar-link"><i class="bi bi-people"></i> Customer Management</a>
+          <a href="admin-photographers.html" class="sidebar-link"><i class="bi bi-camera"></i> Photographer Management</a>
+          <a href="admin-portfolio.html" class="sidebar-link"><i class="bi bi-images"></i> Portfolio</a>
+          <a href="admin-bookings.html" class="sidebar-link active"><i class="bi bi-calendar-event"></i> Booking Management</a>
+          <a href="admin-services.html" class="sidebar-link"><i class="bi bi-box-seam"></i> Service & Packages</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Analytics</div>
+          <a href="admin-reports.html" class="sidebar-link"><i class="bi bi-bar-chart-line"></i> Reports</a>
+          <a href="admin-revenue.html" class="sidebar-link"><i class="bi bi-currency-rupee"></i> Revenue Details</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Support</div>
+          <a href="admin-refunds.html" class="sidebar-link"><i class="bi bi-arrow-return-left"></i> Refund Requests</a>
+          <a href="admin-feedback.html" class="sidebar-link"><i class="bi bi-chat-square-text"></i> Feedback</a>
+          <a href="admin-support.html" class="sidebar-link"><i class="bi bi-headset"></i> Support Tickets</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar" id="sidebarAvatar">A</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+            <div class="sidebar-user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="sidebar-logout" onclick="DashApp.logout()"><i class="bi bi-box-arrow-left"></i> Logout</button>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+          <div>
+            <div class="topbar-title">Booking Management</div>
+            <div class="topbar-subtitle">View and manage all platform bookings</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="theme-toggle" data-tooltip="Toggle theme">
+            <i class="bi bi-moon-fill icon-moon"></i>
+            <i class="bi bi-sun-fill icon-sun"></i>
+          </button>
+          <button class="topbar-icon-btn" id="notifBtn" data-tooltip="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="badge-count" id="notifBadge" style="display:none;">0</span>
+          </button>
+          <div class="dropdown">
+            <div class="topbar-user" id="userDropdownTrigger">
+              <div class="topbar-user-avatar" id="topbarAvatar">A</div>
+              <span class="topbar-user-name" id="topbarUserName">Admin</span>
+              <i class="bi bi-chevron-down text-sm text-secondary"></i>
+            </div>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="admin-profile.html" class="dropdown-item"><i class="bi bi-person-gear"></i> Profile Settings</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" onclick="DashApp.logout()" style="color:var(--danger-600);"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="dash-content">
+        <!-- Stats -->
+        <div class="stats-grid-v2 animate-fadeInUp" style="grid-template-columns: repeat(4, 1fr); margin-bottom: var(--space-5);">
+          <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-calendar-check"></i></div><div class="stat-label">Total Bookings</div><div class="stat-value" id="statTotal">0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-hourglass-split"></i></div><div class="stat-label">Pending</div><div class="stat-value" id="statPending">0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-check-circle"></i></div><div class="stat-label">Completed</div><div class="stat-value" id="statCompleted">0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon info"><i class="bi bi-cash-stack"></i></div><div class="stat-label">Total Revenue</div><div class="stat-value" id="statRevenue">₹0</div></div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar animate-fadeInUp">
+          <input type="text" id="searchInput" placeholder="Search by customer, service, location..." oninput="filterBookings()">
+          <select id="statusFilter" onchange="filterBookings()">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="accepted">Accepted</option>
+            <option value="completed">Completed</option>
+            <option value="declined">Declined</option>
+          </select>
+          <select id="serviceFilter" onchange="filterBookings()">
+            <option value="">All Services</option>
+            <option value="wedding">Wedding</option>
+            <option value="birthday">Birthday</option>
+            <option value="babyshower">Baby Shower</option>
+            <option value="engagement">Engagement</option>
+            <option value="naming">Naming</option>
+            <option value="studio">Studio</option>
+          </select>
+        </div>
+
+        <!-- Bookings Table -->
+        <div class="ds-card animate-fadeInUp">
+          <div class="ds-card-header">
+            <h3 class="font-semibold text-base m-0"><i class="bi bi-calendar-event"></i> All Bookings</h3>
+            <span class="badge-v2 badge-primary" id="bookingCount">0 bookings</span>
+          </div>
+          <div class="table-responsive">
+            <table class="ds-table" id="bookingsTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Customer</th>
+                  <th>Service</th>
+                  <th>Event Date</th>
+                  <th>Location</th>
+                  <th>Amount</th>
+                  <th>Payment</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="bookingsTableBody">
+                <tr><td colspan="9" class="text-center text-secondary py-5">Loading bookings...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking Details Modal -->
+  <div class="booking-details-modal" id="detailsModal">
+    <div class="booking-details-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+        <h3 class="font-semibold text-base m-0"><i class="bi bi-info-circle"></i> Booking Details</h3>
+        <button class="btn btn-sm btn-ghost" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="detailsContent"></div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <aside class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3 class="font-semibold text-base m-0">Notifications</h3>
+      <button class="btn btn-sm btn-ghost" id="notifClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="notif-panel-body" id="notifList">
+      <div class="empty-state"><div class="empty-state-icon">🔔</div><div class="empty-state-title">No notifications</div></div>
+    </div>
+  </aside>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    const user = DashApp.requireAuth(['admin']);
+    if (user) {
+      const name = user.first_name || 'Admin';
+      const initial = name.charAt(0).toUpperCase();
+      document.getElementById('topbarAvatar').textContent = initial;
+      document.getElementById('topbarUserName').textContent = name;
+      document.getElementById('sidebarAvatar').textContent = initial;
+      document.getElementById('sidebarUserName').textContent = name;
+    }
+    DashApp.init();
+
+    let allBookings = [];
+
+    function loadBookings() {
+      fetch(`${DashApp.API_URL}/admin/bookings`)
+        .then(r => r.json())
+        .then(data => {
+          allBookings = data.bookings || [];
+          updateStats();
+          renderBookings(allBookings);
+        })
+        .catch(() => {
+          document.getElementById('bookingsTableBody').innerHTML =
+              '<tr><td colspan="8" class="text-center text-secondary py-5">Failed to load bookings</td></tr>';
+        });
+    }
+
+    function updateStats() {
+      document.getElementById('statTotal').textContent = allBookings.length;
+      document.getElementById('statPending').textContent = allBookings.filter(b => b.status === 'pending').length;
+      document.getElementById('statCompleted').textContent = allBookings.filter(b => b.status === 'completed').length;
+      const revenue = allBookings.filter(b => b.status === 'completed').reduce((sum, b) => sum + (b.total_price || 0), 0);
+      document.getElementById('statRevenue').textContent = DashApp.formatCurrency(revenue);
+    }
+
+    function renderBookings(bookings) {
+      const tbody = document.getElementById('bookingsTableBody');
+      document.getElementById('bookingCount').textContent = bookings.length + ' bookings';
+
+      if (!bookings.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-secondary py-5">No bookings found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = bookings.map(b => {
+        const customerName = b.customer ? DashApp.escapeHtml(b.customer.first_name + ' ' + b.customer.last_name) : 'Customer #' + b.customer_id;
+        const statusBadge = {
+          pending: 'badge-warning', accepted: 'badge-primary', completed: 'badge-success', declined: 'badge-danger'
+        }[b.status] || 'badge-neutral';
+        const payBadge = {
+          paid: 'badge-success', token_paid: 'badge-primary', pending: 'badge-warning'
+        }[b.payment_status] || 'badge-neutral';
+
+        return `<tr onclick="viewDetails(${b.id})" title="Click to view full details">
+          <td class="font-medium" style="color:var(--brand-600);font-weight:700;">#BMS-${String(b.id).padStart(4,'0')}</td>
+          <td class="font-semibold">${customerName}</td>
+          <td><span class="badge-v2 badge-info" style="text-transform:capitalize;">${DashApp.escapeHtml(b.service_type)}</span></td>
+          <td>${DashApp.formatDate(b.event_date)}</td>
+          <td>${DashApp.escapeHtml(b.location || '—')}</td>
+          <td class="font-semibold">${DashApp.formatCurrency(b.total_price)}</td>
+          <td><span class="badge-v2 ${payBadge}" style="text-transform:capitalize;">${b.payment_status}</span></td>
+          <td><span class="badge-v2 ${statusBadge}" style="text-transform:capitalize;">${b.status}</span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function filterBookings() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const status = document.getElementById('statusFilter').value;
+      const service = document.getElementById('serviceFilter').value;
+
+      let filtered = allBookings;
+
+      if (status) filtered = filtered.filter(b => b.status === status);
+      if (service) filtered = filtered.filter(b => b.service_type === service);
+      if (search) {
+        filtered = filtered.filter(b => {
+          const customerName = b.customer ? (b.customer.first_name + ' ' + b.customer.last_name).toLowerCase() : '';
+          const loc = (b.location || '').toLowerCase();
+          const svc = (b.service_type || '').toLowerCase();
+          return customerName.includes(search) || loc.includes(search) || svc.includes(search) || String(b.id).includes(search);
+        });
+      }
+      renderBookings(filtered);
+    }
+
+    function viewDetails(id) {
+      const b = allBookings.find(x => x.id === id);
+      if (!b) return;
+
+      const customerName = b.customer ? DashApp.escapeHtml(b.customer.first_name + ' ' + b.customer.last_name) : 'Customer #' + b.customer_id;
+      const custId = '#CUST-' + String(b.customer_id).padStart(4, '0');
+      const bookingId = '#BMS-' + String(b.id).padStart(4, '0');
+      const photographerName = b.photographer && b.photographer.user
+        ? DashApp.escapeHtml(b.photographer.user.first_name + ' ' + b.photographer.user.last_name)
+        : (b.photographer_id ? 'Photographer #' + b.photographer_id : 'Not Assigned');
+      const photId = b.photographer ? '#PHOT-' + String(b.photographer.id).padStart(4, '0') : '—';
+
+      const statusColors = { pending:'#f59e0b', accepted:'#6366f1', completed:'#10b981', declined:'#ef4444' };
+      const sColor = statusColors[b.status] || '#6b7280';
+      const payColors = { paid:'#10b981', token_paid:'#6366f1', pending:'#f59e0b' };
+      const pColor = payColors[b.payment_status] || '#6b7280';
+
+      const totalAmt = Math.round(b.total_price || 0);
+      const tokenAmt = Math.round(b.token_amount || 0);
+      const remainAmt = Math.round(b.remaining_amount || 0);
+      const tokenPaid = b.payment_status === 'token_paid' || b.payment_status === 'paid';
+      const balancePaid = b.payment_status === 'paid';
+
+      const eventDate = b.event_date ? new Date(b.event_date).toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'}) : '—';
+      const createdDate = b.created_at ? new Date(b.created_at).toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+
+      // Fetch payments for this booking
+      fetch(`${DashApp.API_URL}/payments/booking/${b.id}`)
+        .then(r => r.ok ? r.json() : { payments: [] })
+        .then(payData => {
+          const payments = payData.payments || [];
+
+          let paymentTimeline = '';
+          if (payments.length) {
+            paymentTimeline = payments.map(p => {
+              const pDate = p.created_at ? new Date(p.created_at).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+              const method = p.payment_method === 'demo/offline' ? 'Demo / Offline' : (p.payment_method || 'Online');
+              return `<div class="payment-entry">
+                <div class="payment-dot ${p.status === 'completed' ? '' : 'pending'}"></div>
+                <div class="payment-info">
+                  <div class="pay-amount">₹${Math.round(p.amount).toLocaleString('en-IN')} — ${(p.payment_type || 'Payment').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                  <div class="pay-meta">Txn: ${p.transaction_id || '—'} &bull; ${method} &bull; ${pDate}</div>
+                  <div class="pay-meta">Status: <strong style="color:${p.status === 'completed' ? '#10b981' : '#f59e0b'};">${(p.status || 'pending').toUpperCase()}</strong></div>
+                </div>
+              </div>`;
+            }).join('');
+          } else {
+            paymentTimeline = '<div style="padding:10px;color:var(--text-tertiary);font-size:var(--text-sm);">No payment records found</div>';
+          }
+
+          document.getElementById('detailsContent').innerHTML = `
+            <div style="text-align:center;margin-bottom:16px;">
+              <div style="font-size:1.6rem;font-weight:800;color:var(--brand-600);">${bookingId}</div>
+              <span style="display:inline-block;background:${sColor}15;color:${sColor};padding:4px 16px;border-radius:20px;font-size:0.82rem;font-weight:700;margin-top:6px;">${(b.status||'').toUpperCase()}</span>
+            </div>
+
+            <div class="detail-section-title"><i class="bi bi-person-fill"></i> Customer & Photographer</div>
+            <div class="detail-grid">
+              <div class="detail-item"><div class="detail-label">Customer</div><div class="detail-value">${customerName} <span style="color:var(--brand-600);font-size:0.78rem;">${custId}</span></div></div>
+              <div class="detail-item"><div class="detail-label">Photographer</div><div class="detail-value">${photographerName} <span style="color:var(--brand-600);font-size:0.78rem;">${photId}</span></div></div>
+            </div>
+
+            <div class="detail-section-title"><i class="bi bi-calendar-event-fill"></i> Booking Details</div>
+            <div class="detail-grid">
+              <div class="detail-item"><div class="detail-label">Service Type</div><div class="detail-value" style="text-transform:capitalize;">${DashApp.escapeHtml(b.service_type)}</div></div>
+              <div class="detail-item"><div class="detail-label">Package</div><div class="detail-value">${DashApp.escapeHtml(b.package_name || '—')}</div></div>
+              <div class="detail-item"><div class="detail-label">Event Date</div><div class="detail-value">${eventDate}</div></div>
+              <div class="detail-item"><div class="detail-label">Event Time</div><div class="detail-value">${b.event_time || '—'}</div></div>
+              <div class="detail-item detail-full"><div class="detail-label">Location</div><div class="detail-value">${DashApp.escapeHtml(b.location || '—')}</div></div>
+              <div class="detail-item"><div class="detail-label">Booking Created</div><div class="detail-value">${createdDate}</div></div>
+              ${b.notes ? `<div class="detail-item detail-full"><div class="detail-label">Notes</div><div class="detail-value">${DashApp.escapeHtml(b.notes)}</div></div>` : ''}
+            </div>
+
+            <div class="detail-section-title"><i class="bi bi-cash-stack"></i> Payment Summary</div>
+            <div class="detail-grid">
+              <div class="detail-item"><div class="detail-label">Total Package Price</div><div class="detail-value">₹${totalAmt.toLocaleString('en-IN')}</div></div>
+              <div class="detail-item"><div class="detail-label">Token Amount (20%)</div><div class="detail-value" style="display:flex;align-items:center;gap:8px;">₹${tokenAmt.toLocaleString('en-IN')} <span style="background:${tokenPaid?'#d1fae5':'#fef3c7'};color:${tokenPaid?'#065f46':'#92400e'};padding:2px 10px;border-radius:12px;font-size:0.72rem;font-weight:700;">${tokenPaid?'PAID':'UNPAID'}</span></div></div>
+              <div class="detail-item"><div class="detail-label">Balance Amount</div><div class="detail-value" style="display:flex;align-items:center;gap:8px;">₹${remainAmt.toLocaleString('en-IN')} <span style="background:${balancePaid?'#d1fae5':'#fef3c7'};color:${balancePaid?'#065f46':'#92400e'};padding:2px 10px;border-radius:12px;font-size:0.72rem;font-weight:700;">${balancePaid?'PAID':'UNPAID'}</span></div></div>
+              <div class="detail-item"><div class="detail-label">Payment Status</div><div class="detail-value"><span style="background:${pColor}15;color:${pColor};padding:4px 14px;border-radius:20px;font-size:0.82rem;font-weight:700;">${(b.payment_status||'pending').toUpperCase()}</span></div></div>
+            </div>
+
+            <div class="detail-section-title"><i class="bi bi-clock-history"></i> Payment History</div>
+            <div class="payment-timeline">${paymentTimeline}</div>
+          `;
+          document.getElementById('detailsModal').classList.add('active');
+        })
+        .catch(() => {
+          // Still show basic details without payment history
+          document.getElementById('detailsContent').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-tertiary);">Error loading payment details</div>';
+          document.getElementById('detailsModal').classList.add('active');
+        });
+    }
+
+    function closeModal() {
+      document.getElementById('detailsModal').classList.remove('active');
+    }
+
+    document.getElementById('detailsModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    loadBookings();
+  </script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Refund Requests — BookMyShoot Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .refund-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--space-4); margin-bottom: var(--space-5); }
+    @media (max-width: 768px) { .refund-stats { grid-template-columns: repeat(2,1fr); } }
+    .filter-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: var(--space-4); }
+    .filter-bar select { padding: 8px 14px; border: 1px solid var(--border-primary); border-radius: var(--radius-md); background: var(--surface-secondary); color: var(--text-primary); font-size: 0.85rem; }
+    .refund-card {
+      background: var(--surface-primary); border: 1px solid var(--border-primary);
+      border-radius: var(--radius-xl); padding: 20px; margin-bottom: 16px;
+      transition: all 0.2s; display: flex; gap: 20px; align-items: flex-start;
+    }
+    .refund-card:hover { box-shadow: var(--shadow-md); border-color: var(--brand-200); }
+    .refund-info { flex: 1; }
+    .refund-info h4 { margin: 0 0 6px 0; font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+    .refund-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+    .refund-meta span { font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }
+    .refund-reason { font-size: 0.85rem; color: var(--text-secondary); margin: 8px 0; padding: 10px 14px; background: var(--surface-secondary); border-radius: var(--radius-md); border-left: 3px solid var(--brand-400); }
+    .refund-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+    .btn-approve { padding: 8px 18px; border: none; border-radius: var(--radius-md); background: var(--success-600); color: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+    .btn-approve:hover { background: var(--success-700); transform: translateY(-1px); }
+    .btn-reject { padding: 8px 18px; border: none; border-radius: var(--radius-md); background: var(--danger-600); color: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+    .btn-reject:hover { background: var(--danger-700); transform: translateY(-1px); }
+    .admin-notes { font-size: 0.82rem; color: var(--text-secondary); margin-top: 6px; padding: 8px 12px; background: rgba(16,185,129,0.08); border-radius: var(--radius-md); border-left: 3px solid var(--success-500); }
+    .empty-refunds { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .empty-refunds i { font-size: 3rem; color: var(--text-tertiary); margin-bottom: 12px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <div class="dash-layout">
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-logo">
+          <div class="logo-icon">&#x1F4F8;</div>
+          <div class="logo-text">BookMyShoot<span class="logo-sub">Admin Panel</span></div>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Overview</div>
+          <a href="admin-dashboard.html" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Management</div>
+          <a href="admin-users.html" class="sidebar-link"><i class="bi bi-people"></i> Customer Management</a>
+          <a href="admin-photographers.html" class="sidebar-link"><i class="bi bi-camera"></i> Photographer Management</a>
+          <a href="admin-portfolio.html" class="sidebar-link"><i class="bi bi-images"></i> Portfolio</a>
+          <a href="admin-bookings.html" class="sidebar-link"><i class="bi bi-calendar-event"></i> Booking Management</a>
+          <a href="admin-services.html" class="sidebar-link"><i class="bi bi-box-seam"></i> Service & Packages</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Support</div>
+          <a href="admin-refunds.html" class="sidebar-link active"><i class="bi bi-arrow-return-left"></i> Refund Requests</a>
+          <a href="admin-feedback.html" class="sidebar-link"><i class="bi bi-star"></i> Feedback</a>
+          <a href="admin-support.html" class="sidebar-link"><i class="bi bi-headset"></i> Support Tickets</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Analytics</div>
+          <a href="admin-reports.html" class="sidebar-link"><i class="bi bi-bar-chart-line"></i> Reports</a>
+          <a href="admin-revenue.html" class="sidebar-link"><i class="bi bi-currency-rupee"></i> Revenue Details</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar" id="sidebarAvatar">A</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+            <div class="sidebar-user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="sidebar-logout" onclick="DashApp.logout()"><i class="bi bi-box-arrow-left"></i> Logout</button>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+          <div>
+            <div class="topbar-title">Refund Requests</div>
+            <div class="topbar-subtitle">Manage customer refund and cancellation requests</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="theme-toggle" data-tooltip="Toggle theme"><i class="bi bi-moon-fill icon-moon"></i><i class="bi bi-sun-fill icon-sun"></i></button>
+          <button class="topbar-icon-btn" id="notifBtn" data-tooltip="Notifications"><i class="bi bi-bell"></i><span class="badge-count" id="notifBadge" style="display:none;">0</span></button>
+          <div class="dropdown">
+            <div class="topbar-user" id="userDropdownTrigger">
+              <div class="topbar-user-avatar" id="topbarAvatar">A</div>
+              <span class="topbar-user-name" id="topbarUserName">Admin</span>
+              <i class="bi bi-chevron-down text-sm text-secondary"></i>
+            </div>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="admin-profile.html" class="dropdown-item"><i class="bi bi-person-gear"></i> Profile Settings</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" onclick="DashApp.logout()" style="color:var(--danger-600);"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="dash-content">
+        <!-- Stats -->
+        <div class="refund-stats animate-fadeInUp">
+          <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-hourglass-split"></i></div><div class="stat-label">Pending</div><div class="stat-value" id="statPending">0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-check-circle"></i></div><div class="stat-label">Approved</div><div class="stat-value" id="statApproved">0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon danger"><i class="bi bi-x-circle"></i></div><div class="stat-label">Rejected</div><div class="stat-value" id="statRejected">0</div></div>
+          <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-currency-rupee"></i></div><div class="stat-label">Total Refund Amount</div><div class="stat-value" id="statTotalAmount">&#8377;0</div></div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-bar animate-fadeInUp">
+          <select id="statusFilter" onchange="applyFilters()">
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <select id="cancelledByFilter" onchange="applyFilters()">
+            <option value="">All Sources</option>
+            <option value="photographer">Photographer Cancellation</option>
+            <option value="customer">Customer Request</option>
+          </select>
+          <input type="date" id="dateFrom" onchange="applyFilters()" style="padding:8px 14px;border:1px solid var(--border-primary);border-radius:var(--radius-md);background:var(--surface-secondary);color:var(--text-primary);font-size:0.85rem;">
+          <input type="date" id="dateTo" onchange="applyFilters()" style="padding:8px 14px;border:1px solid var(--border-primary);border-radius:var(--radius-md);background:var(--surface-secondary);color:var(--text-primary);font-size:0.85rem;">
+          <div style="position:relative;margin-left:auto;">
+            <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-secondary);"></i>
+            <input type="text" id="searchInput" placeholder="Search customer, booking..." oninput="applyFilters()" style="padding:8px 14px 8px 32px;border:1px solid var(--border-primary);border-radius:var(--radius-md);background:var(--surface-secondary);color:var(--text-primary);font-size:0.85rem;width:220px;">
+          </div>
+          <span id="refundCount" style="font-size:0.85rem;color:var(--text-secondary);">0 requests</span>
+        </div>
+
+        <!-- Refund List -->
+        <div id="refundList" class="animate-fadeInUp">
+          <div class="empty-refunds"><i class="bi bi-arrow-repeat spin"></i> Loading refund requests...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3 class="font-semibold text-base m-0">Notifications</h3>
+      <button class="btn btn-sm btn-ghost" id="notifClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="notif-panel-body" id="notifList">
+      <div class="empty-state"><div class="empty-state-icon">&#x1F514;</div><div class="empty-state-title">No notifications</div></div>
+    </div>
+  </aside>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    var user = DashApp.requireAuth(['admin']);
+    if (user) {
+      var name = user.first_name || 'Admin';
+      var initial = name.charAt(0).toUpperCase();
+      document.getElementById('topbarAvatar').textContent = initial;
+      document.getElementById('topbarUserName').textContent = name;
+      document.getElementById('sidebarAvatar').textContent = initial;
+      document.getElementById('sidebarUserName').textContent = name;
+    }
+    DashApp.init();
+
+    var allRefunds = [];
+    var filteredRefunds = [];
+
+    function loadRefunds() {
+      fetch(DashApp.API_URL + '/admin/refunds').then(function(r) { return r.json(); }).then(function(data) {
+        allRefunds = data.refunds || [];
+        applyFilters();
+      }).catch(function() {
+        document.getElementById('refundList').innerHTML = '<div class="empty-refunds"><i class="bi bi-exclamation-triangle"></i> Failed to load refund requests</div>';
+      });
+    }
+
+    function applyFilters() {
+      var status = document.getElementById('statusFilter').value;
+      var cancelledBy = document.getElementById('cancelledByFilter').value;
+      var dateFrom = document.getElementById('dateFrom').value;
+      var dateTo = document.getElementById('dateTo').value;
+      var search = document.getElementById('searchInput').value.toLowerCase();
+
+      filteredRefunds = allRefunds.filter(function(r) {
+        if (status && r.status !== status) return false;
+        if (cancelledBy && (r.cancelled_by || 'customer') !== cancelledBy) return false;
+        if (dateFrom && r.created_at && r.created_at.substring(0, 10) < dateFrom) return false;
+        if (dateTo && r.created_at && r.created_at.substring(0, 10) > dateTo) return false;
+        if (search) {
+          var customerName = r.customer ? (r.customer.first_name + ' ' + r.customer.last_name).toLowerCase() : '';
+          var bookingStr = 'bms-' + String(r.booking_id).padStart(4, '0');
+          if (!customerName.includes(search) && !bookingStr.includes(search) && !String(r.booking_id).includes(search) && !(r.receipt_number || '').toLowerCase().includes(search)) return false;
+        }
+        return true;
+      });
+
+      updateStats();
+      renderRefunds();
+    }
+
+    function updateStats() {
+      var pending = filteredRefunds.filter(function(r) { return r.status === 'pending'; }).length;
+      var approved = filteredRefunds.filter(function(r) { return r.status === 'approved'; }).length;
+      var rejected = filteredRefunds.filter(function(r) { return r.status === 'rejected'; }).length;
+      var totalAmt = filteredRefunds.reduce(function(sum, r) { return sum + (r.refund_amount || 0); }, 0);
+      document.getElementById('statPending').textContent = pending;
+      document.getElementById('statApproved').textContent = approved;
+      document.getElementById('statRejected').textContent = rejected;
+      document.getElementById('statTotalAmount').textContent = DashApp.formatCurrency(totalAmt);
+      document.getElementById('refundCount').textContent = filteredRefunds.length + ' requests';
+    }
+
+    function renderRefunds() {
+      var container = document.getElementById('refundList');
+      if (!filteredRefunds.length) {
+        container.innerHTML = '<div class="empty-refunds"><i class="bi bi-arrow-return-left"></i> No refund requests found</div>';
+        return;
+      }
+
+      var statusBadges = { pending: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger' };
+      container.innerHTML = filteredRefunds.map(function(r) {
+        var badge = statusBadges[r.status] || 'badge-neutral';
+        var dateStr = r.created_at ? new Date(r.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+        var resolvedStr = r.resolved_at ? new Date(r.resolved_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+        var customerName = r.customer ? (r.customer.first_name + ' ' + r.customer.last_name) : 'Customer #' + r.customer_id;
+
+        var cancelledByBadge = '';
+        if (r.cancelled_by === 'photographer') {
+          cancelledByBadge = '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#fef2f2;color:#991b1b;border-radius:6px;font-size:0.78rem;font-weight:600;margin-left:8px;"><i class="bi bi-camera"></i> Photographer Cancelled</span>';
+        } else {
+          cancelledByBadge = '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#eff6ff;color:#1e40af;border-radius:6px;font-size:0.78rem;font-weight:600;margin-left:8px;"><i class="bi bi-person"></i> Customer Request</span>';
+        }
+
+        var actionsHtml = '';
+        if (r.status === 'pending') {
+          if (r.cancelled_by === 'photographer') {
+            actionsHtml = '<div class="refund-actions">' +
+              '<button class="btn-approve" onclick="processRazorpayRefund(' + r.booking_id + ',' + r.id + ')"><i class="bi bi-currency-rupee"></i> Refund via Razorpay</button>' +
+              '<button class="btn-reject" onclick="handleRefund(' + r.id + ',\'reject\')"><i class="bi bi-x-lg"></i> Reject</button>' +
+            '</div>';
+          } else {
+            actionsHtml = '<div class="refund-actions">' +
+              '<button class="btn-approve" onclick="handleRefund(' + r.id + ',\'approve\')"><i class="bi bi-check-lg"></i> Approve</button>' +
+              '<button class="btn-reject" onclick="handleRefund(' + r.id + ',\'reject\')"><i class="bi bi-x-lg"></i> Reject</button>' +
+            '</div>';
+          }
+        } else {
+          actionsHtml = '<div class="refund-actions"><span class="badge-v2 ' + badge + '" style="font-size:0.85rem;padding:6px 16px;">' + r.status.toUpperCase() + '</span></div>';
+        }
+
+        var notesHtml = r.admin_notes ? '<div class="admin-notes"><strong>Admin Notes:</strong> ' + DashApp.escapeHtml(r.admin_notes) + '</div>' : '';
+
+        var extraDetails = '';
+        if (r.razorpay_refund_id) extraDetails += '<span><i class="bi bi-credit-card-2-front"></i> Razorpay: ' + DashApp.escapeHtml(r.razorpay_refund_id) + '</span>';
+        if (r.receipt_number) extraDetails += '<span><i class="bi bi-receipt"></i> ' + DashApp.escapeHtml(r.receipt_number) + '</span>';
+        if (r.refund_method) extraDetails += '<span><i class="bi bi-wallet2"></i> ' + r.refund_method.toUpperCase() + '</span>';
+
+        var eventInfo = '';
+        if (r.booking && r.booking.event_date) {
+          eventInfo = '<span><i class="bi bi-calendar-event"></i> Event: ' + new Date(r.booking.event_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) + '</span>';
+        }
+
+        return '<div class="refund-card">' +
+          '<div class="refund-info">' +
+            '<h4><i class="bi bi-receipt" style="color:var(--brand-600);margin-right:6px;"></i>Refund #' + r.id + ' — Booking #BMS-' + String(r.booking_id).padStart(4, '0') + cancelledByBadge + '</h4>' +
+            '<div class="refund-meta">' +
+              '<span><i class="bi bi-person"></i> ' + DashApp.escapeHtml(customerName) + '</span>' +
+              '<span><i class="bi bi-currency-rupee"></i> ' + DashApp.formatCurrency(r.refund_amount || 0) + '</span>' +
+              '<span><i class="bi bi-calendar3"></i> ' + dateStr + '</span>' +
+              eventInfo +
+              (resolvedStr ? '<span><i class="bi bi-check2-circle"></i> Resolved: ' + resolvedStr + '</span>' : '') +
+            '</div>' +
+            (extraDetails ? '<div class="refund-meta" style="margin-top:4px;">' + extraDetails + '</div>' : '') +
+            '<div class="refund-reason"><strong>Reason:</strong> ' + DashApp.escapeHtml(r.reason || 'No reason provided') + '</div>' +
+            notesHtml +
+          '</div>' +
+          actionsHtml +
+        '</div>';
+      }).join('');
+    }
+
+    function handleRefund(refundId, action) {
+      Swal.fire({
+        title: action === 'approve' ? 'Approve Refund?' : 'Reject Refund?',
+        input: 'textarea',
+        inputLabel: 'Admin Notes (optional)',
+        inputPlaceholder: 'Add any notes about this decision...',
+        showCancelButton: true,
+        confirmButtonText: action === 'approve' ? 'Yes, Approve' : 'Yes, Reject',
+        confirmButtonColor: action === 'approve' ? '#10b981' : '#ef4444',
+        cancelButtonText: 'Cancel'
+      }).then(function(result) {
+        if (result.isConfirmed) {
+          fetch(DashApp.API_URL + '/admin/refunds/' + refundId, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: action, admin_notes: result.value || '' })
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.error) {
+              Swal.fire('Error', data.error, 'error');
+            } else {
+              Swal.fire({ icon: 'success', title: action === 'approve' ? 'Refund Approved!' : 'Refund Rejected!', timer: 2000, showConfirmButton: false });
+              loadRefunds();
+            }
+          })
+          .catch(function() { Swal.fire('Error', 'Failed to process refund', 'error'); });
+        }
+      });
+    }
+
+    function processRazorpayRefund(bookingId, refundId) {
+      var refund = allRefunds.find(function(r) { return r.id === refundId; });
+      var amount = refund ? refund.refund_amount : 0;
+      Swal.fire({
+        title: 'Process Razorpay Refund?',
+        html: '<div style="text-align:left;font-size:0.92rem;">' +
+          '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px;margin-bottom:12px;">' +
+            '<div style="display:flex;justify-content:space-between;"><span style="font-weight:600;color:#1e40af;">Refund Amount:</span><span style="font-weight:700;font-size:1.1rem;color:#1d4ed8;">₹' + Number(amount).toLocaleString('en-IN') + '</span></div>' +
+            '<div style="display:flex;justify-content:space-between;margin-top:8px;"><span style="font-weight:600;color:#1e40af;">Payment Method:</span><span style="font-weight:600;color:#065f46;">Razorpay</span></div>' +
+          '</div>' +
+          '<p style="color:#6b7280;font-size:0.85rem;">This will process the refund via Razorpay API to the customer\'s original payment method.</p>' +
+        '</div>',
+        showCancelButton: true,
+        confirmButtonText: 'Confirm Refund',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#10b981'
+      }).then(function(result) {
+        if (result.isConfirmed) {
+          DashApp.showLoader(true);
+          fetch(DashApp.API_URL + '/bookings/' + bookingId + '/process-refund', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+          })
+          .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+          .then(function(res) {
+            DashApp.showLoader(false);
+            if (!res.ok) {
+              Swal.fire('Error', res.data.error || 'Failed to process refund', 'error');
+            } else {
+              Swal.fire({
+                icon: 'success',
+                title: 'Refund Processed!',
+                html: '<p>₹' + Number(res.data.refund_amount || amount).toLocaleString('en-IN') + ' refunded via Razorpay.</p>' +
+                  (res.data.razorpay_refund_id ? '<p style="font-size:0.85rem;color:#6b7280;">Refund ID: ' + res.data.razorpay_refund_id + '</p>' : '') +
+                  (res.data.receipt_number ? '<p style="font-size:0.85rem;color:#6b7280;">Receipt: ' + res.data.receipt_number + '</p>' : ''),
+                timer: 4000,
+                showConfirmButton: true
+              });
+              loadRefunds();
+            }
+          })
+          .catch(function() { DashApp.showLoader(false); Swal.fire('Error', 'Failed to process refund', 'error'); });
+        }
+      });
+    }
+
+    document.getElementById('statusFilter').addEventListener('change', applyFilters);
+    document.getElementById('cancelledByFilter').addEventListener('change', applyFilters);
+    document.getElementById('dateFrom').addEventListener('change', applyFilters);
+    document.getElementById('dateTo').addEventListener('change', applyFilters);
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+    loadRefunds();
+  </script>
+</body>
+</html>

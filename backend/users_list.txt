@@ -1,0 +1,11 @@
+--- RELOADING APP ---
+Admin           | Name: New        Admin      | Email: new_admin@bookmyshoot.com     
+Customer        | Name: Raj        Patel      | Email: raj.patel@example.com         
+Customer        | Name: Priya      Sharma     | Email: priya.sharma@example.com      
+Customer        | Name: Amit       Kumar      | Email: amit.kumar@example.com        
+Customer        | Name: Sneha      Gupta      | Email: sneha.gupta@example.com       
+Customer        | Name: Vikram     Singh      | Email: vikram.singh@example.com      
+Photographer    | Name: John       Doe        | Email: photo@example.com             
+Photographer    | Name: Alice      Smith      | Email: alice.photo@example.com       
+Photographer    | Name: Bob        Johnson    | Email: bob.photo@example.com         
+Photographer    | Name: Carol      Williams   | Email: carol.photo@example.com       

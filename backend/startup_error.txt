@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "C:\Users\navaj\OneDrive\Desktop\main_project\backend\app.py", line 2, in <module>
+    from flask_cors import CORS
+  File "C:\Users\navaj\OneDrive\Desktop\main_project\backend\venv\Lib\site-packages\flask_cors\__init__.py", line 12, in <module>
+    from .extension import CORS
+  File "C:\Users\navaj\OneDrive\Desktop\main_project\backend\venv\Lib\site-packages\flask_cors\extension.py", line 6, in <module>
+    from .core import ACL_ORIGIN, get_cors_options, get_regexp_pattern, parse_resources, set_cors_headers, try_match_pattern
+ImportError: cannot import name 'try_match_pattern' from 'flask_cors.core' (C:\Users\navaj\OneDrive\Desktop\main_project\backend\venv\Lib\site-packages\flask_cors\core.py)

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Earnings — BookMyShoot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{--primary:#6366f1;--success:#22c55e;--danger:#ef4444;--warn:#f59e0b;--bg:#0b1224;--text:#e5e7eb;--muted:#9ca3af;--card:rgba(255,255,255,0.08);--stroke:rgba(255,255,255,0.14);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Poppins',sans-serif;background:radial-gradient(circle at 20% 20%,rgba(99,102,241,0.18),transparent 32%),var(--bg);color:var(--text);min-height:100vh;}
+    .topbar{display:flex;justify-content:space-between;align-items:center;padding:18px 30px;background:rgba(8,12,24,0.75);backdrop-filter:blur(14px);border-bottom:1px solid var(--stroke);position:sticky;top:0;z-index:10;}
+    .topbar h1{font-size:1.3rem;}
+    .btn{padding:10px 18px;border-radius:10px;border:1px solid var(--stroke);background:var(--card);color:var(--text);font-weight:600;cursor:pointer;transition:.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-family:inherit;}
+    .btn:hover{transform:translateY(-2px);}
+    .btn.primary{border-color:rgba(99,102,241,0.5);color:#c7d2fe;}
+    .content{max-width:960px;margin:30px auto;padding:0 20px;}
+    .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+    .metric{background:var(--card);border:1px solid var(--stroke);border-radius:16px;padding:20px;position:relative;}
+    .metric .label{color:var(--muted);font-size:0.85rem;}
+    .metric .value{font-size:1.8rem;font-weight:700;margin-top:4px;}
+    .metric .icon{position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:1.1rem;}
+    .metric .icon.green{background:rgba(34,197,94,0.2);color:#34d399;}
+    .metric .icon.blue{background:rgba(59,130,246,0.2);color:#93c5fd;}
+    .metric .icon.yellow{background:rgba(245,158,11,0.2);color:#fbbf24;}
+    .metric .icon.purple{background:rgba(99,102,241,0.2);color:#a5b4fc;}
+    .panel{background:var(--card);border:1px solid var(--stroke);border-radius:16px;padding:20px;margin-bottom:20px;}
+    .panel h3{margin-bottom:14px;font-size:1.05rem;}
+    .chart-wrap{height:260px;position:relative;}
+    table{width:100%;border-collapse:collapse;font-size:0.9rem;}
+    th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--stroke);}
+    th{color:var(--muted);font-weight:600;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px;}
+    .pill{padding:4px 10px;border-radius:999px;font-weight:700;font-size:0.75rem;display:inline-block;}
+    .pill.completed{background:rgba(34,197,94,0.18);color:#34d399;}
+    .pill.token{background:rgba(59,130,246,0.18);color:#93c5fd;}
+    .empty{text-align:center;padding:40px;color:var(--muted);}
+    .layout{display:grid;grid-template-columns:250px 1fr;min-height:100vh;}
+    .sidebar{position:sticky;top:0;height:100vh;padding:20px 16px;background:rgba(8,12,24,0.85);border-right:1px solid var(--stroke);backdrop-filter:blur(16px);overflow-y:auto;}
+    .sidebar .logo{font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:8px;margin-bottom:22px;}
+    .sidebar .logo span{color:var(--muted);font-weight:500;font-size:0.8rem;display:block;}
+    .sidebar .nav{list-style:none;padding:0;margin:0;display:grid;gap:6px;}
+    .sidebar .nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text);border:1px solid transparent;transition:all .25s ease;text-decoration:none;font-size:0.9rem;}
+    .sidebar .nav a:hover{background:rgba(255,255,255,0.05);border-color:var(--stroke);}
+    .sidebar .nav a.active{background:rgba(99,102,241,0.16);border-color:rgba(99,102,241,0.3);color:#c7d2fe;}
+    .sidebar .nav a .dot{width:7px;height:7px;border-radius:50%;background:var(--primary);opacity:0;transition:.2s;}
+    .sidebar .nav a.active .dot{opacity:1;}
+    .sidebar .slogout{margin-top:20px;width:100%;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.12);color:#fecdd3;padding:10px;border-radius:10px;font-weight:600;cursor:pointer;transition:.2s;font-family:inherit;font-size:0.9rem;}
+    .sidebar .slogout:hover{background:rgba(239,68,68,0.2);}
+    .toggle-sb{display:none;background:var(--card);border:1px solid var(--stroke);color:var(--text);width:38px;height:38px;border-radius:10px;cursor:pointer;font-size:1.2rem;}
+    @media(max-width:768px){.layout{grid-template-columns:1fr;}.sidebar{position:fixed;left:-280px;width:250px;transition:transform .3s ease;z-index:30;}.sidebar.show{transform:translateX(280px);}.toggle-sb{display:inline-flex;align-items:center;justify-content:center;}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">📸 BookMyShoot <span>Photographer</span></div>
+    <ul class="nav">
+      <li><a href="photographer-dashboard.html"><span class="dot"></span><i class="bi bi-grid-3x3-gap"></i> Dashboard</a></li>
+      <li><a href="photographer-requests.html"><span class="dot"></span><i class="bi bi-chat-dots"></i> Requests</a></li>
+      <li><a href="photographer-sessions.html"><span class="dot"></span><i class="bi bi-calendar-check"></i> Sessions</a></li>
+      <li><a href="photographer-packages.html"><span class="dot"></span><i class="bi bi-box"></i> Packages</a></li>
+      <li><a class="active" href="photographer-earnings.html"><span class="dot"></span><i class="bi bi-wallet2"></i> Earnings</a></li>
+      <li><a href="photographer-portfolio.html"><span class="dot"></span><i class="bi bi-images"></i> Portfolio</a></li>
+      <li><a href="photographer-profile.html"><span class="dot"></span><i class="bi bi-person-circle"></i> Profile</a></li>
+    </ul>
+    <button class="slogout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+  </aside>
+  <div class="main-area">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px"><button class="toggle-sb" onclick="document.getElementById('sidebar').classList.toggle('show')"><i class="bi bi-list"></i></button><h1><i class="bi bi-wallet2"></i> Earnings</h1></div>
+  </div>
+  <div class="content">
+    <div class="metrics">
+      <div class="metric"><div class="label">Total Earnings</div><div class="value" id="totalEarnings">₹0</div><div class="icon green"><i class="bi bi-cash-stack"></i></div></div>
+      <div class="metric"><div class="label">Token Collected</div><div class="value" id="tokenCollected">₹0</div><div class="icon blue"><i class="bi bi-credit-card"></i></div></div>
+      <div class="metric"><div class="label">Pending Amount</div><div class="value" id="pendingAmount">₹0</div><div class="icon yellow"><i class="bi bi-hourglass-split"></i></div></div>
+      <div class="metric"><div class="label">Completed Jobs</div><div class="value" id="completedJobs">0</div><div class="icon purple"><i class="bi bi-check2-circle"></i></div></div>
+    </div>
+
+    <div class="panel">
+      <h3><i class="bi bi-bar-chart-line"></i> Earnings Trend</h3>
+      <div class="chart-wrap"><canvas id="earningsChart"></canvas></div>
+    </div>
+
+    <div class="panel">
+      <h3><i class="bi bi-clock-history"></i> Payment History</h3>
+      <div id="paymentHistory">
+        <div class="empty">Loading...</div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /main-area -->
+</div><!-- /layout -->
+
+  <script>
+    const API = 'http://localhost:5000/api';
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (!user || !user.photographer_id) { window.location.href = 'login.html'; }
+    function logout() { fetch(`${API}/logout`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:user.id}) }).finally(() => { localStorage.removeItem('user'); window.location.href='index.html'; }); }
+    const pid = user.photographer_id;
+
+    async function load() {
+      try {
+        const [revRes, bookRes] = await Promise.all([
+          fetch(`${API}/photographers/revenue/${pid}`).then(r => r.json()),
+          fetch(`${API}/bookings/photographer/${pid}`).then(r => r.json())
+        ]);
+
+        document.getElementById('totalEarnings').textContent = '₹' + (revRes.total_earnings || 0).toLocaleString('en-IN');
+        document.getElementById('tokenCollected').textContent = '₹' + (revRes.token_collected || 0).toLocaleString('en-IN');
+        document.getElementById('pendingAmount').textContent = '₹' + (revRes.pending_amount || 0).toLocaleString('en-IN');
+        document.getElementById('completedJobs').textContent = revRes.completed_jobs || 0;
+
+        // Payment history table
+        const payments = revRes.payments || [];
+        const container = document.getElementById('paymentHistory');
+        if (!payments.length) {
+          container.innerHTML = '<div class="empty"><i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:10px;"></i>No payments yet</div>';
+        } else {
+          container.innerHTML = `<table><thead><tr><th>Date</th><th>Booking</th><th>Type</th><th>Method</th><th>Amount</th><th>Status</th></tr></thead><tbody>${
+            payments.map(p => `<tr>
+              <td>${new Date(p.created_at).toLocaleDateString('en-IN')}</td>
+              <td>#${p.booking_id}</td>
+              <td>${p.payment_type}</td>
+              <td>${p.payment_method || 'online'}</td>
+              <td style="font-weight:700;">₹${Number(p.amount).toLocaleString('en-IN')}</td>
+              <td><span class="pill completed">${p.status}</span></td>
+            </tr>`).join('')
+          }</tbody></table>`;
+        }
+
+        // Chart
+        const allBookings = bookRes.bookings || [];
+        renderChart(allBookings);
+      } catch (err) {
+        console.error(err);
+        Swal.fire({ icon: 'error', title: 'Load Error', text: 'Could not load earnings data.' });
+      }
+    }
+
+    function renderChart(bookings) {
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const byMonth = new Array(12).fill(0);
+      const now = new Date();
+      bookings.forEach(b => {
+        if (b.status === 'completed' || b.payment_status === 'paid') {
+          const d = b.event_date ? new Date(b.event_date) : null;
+          if (d && d.getFullYear() === now.getFullYear()) {
+            byMonth[d.getMonth()] += (b.total_price || 0);
+          }
+        }
+      });
+      const labels = [], data = [];
+      for (let i = 5; i >= 0; i--) {
+        const idx = (now.getMonth() - i + 12) % 12;
+        labels.push(months[idx]);
+        data.push(byMonth[idx]);
+      }
+      new Chart(document.getElementById('earningsChart'), {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Earnings (₹)', data, backgroundColor: 'rgba(99,102,241,0.5)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 8 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9ca3af' } }, x: { grid: { display: false }, ticks: { color: '#9ca3af' } } } }
+      });
+    }
+
+    load();
+  </script>
+</body>
+</html>

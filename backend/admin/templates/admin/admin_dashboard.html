@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - BookMyShoot Admin{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1>Dashboard</h1>
+        <div class="breadcrumb">Welcome back, {{ current_user.first_name }}</div>
+    </div>
+    <div class="topbar-actions">
+        <a href="{{ url_for('admin.categories') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="bi bi-tags me-1"></i> Categories</a>
+    </div>
+</div>
+
+<div class="page-content fade-in">
+    <!-- KEY METRICS -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Total Revenue</h3>
+                    <div class="value">₹{{ total_revenue or 0 }}</div>
+                </div>
+                <div class="stat-icon green"><i class="bi bi-currency-rupee"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Total Users</h3>
+                    <div class="value">{{ total_users or 0 }}</div>
+                </div>
+                <div class="stat-icon purple"><i class="bi bi-people"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Active Bookings</h3>
+                    <div class="value">{{ total_bookings or 0 }}</div>
+                </div>
+                <div class="stat-icon orange"><i class="bi bi-calendar-check"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Completed Jobs</h3>
+                    <div class="value">{{ completed_jobs or 0 }}</div>
+                </div>
+                <div class="stat-icon blue"><i class="bi bi-check-circle"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card p-4">
+                <h3 class="h6 fw-bold mb-3">Performance Insights</h3>
+                <canvas id="revenueChart" height="180"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card p-4 h-100">
+                <h3 class="h6 fw-bold mb-3">Quick Shortcuts</h3>
+                <a href="{{ url_for('admin.categories') }}" class="d-flex align-items-center gap-3 p-3 rounded-3 mb-2" style="background:#f8fafc;transition:.2s;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'">
+                    <div class="stat-icon purple" style="width:36px;height:36px;font-size:.9rem;"><i class="bi bi-tags"></i></div>
+                    <div><div class="fw-600 small">Event Categories</div><div class="text-muted" style="font-size:.75rem;">Add or edit types</div></div>
+                </a>
+                <a href="{{ url_for('admin.users') }}" class="d-flex align-items-center gap-3 p-3 rounded-3 mb-2" style="background:#f8fafc;transition:.2s;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'">
+                    <div class="stat-icon blue" style="width:36px;height:36px;font-size:.9rem;"><i class="bi bi-people"></i></div>
+                    <div><div class="fw-600 small">User Management</div><div class="text-muted" style="font-size:.75rem;">Manage all users</div></div>
+                </a>
+                <a href="{{ url_for('admin.bookings') }}" class="d-flex align-items-center gap-3 p-3 rounded-3 mb-2" style="background:#f8fafc;transition:.2s;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'">
+                    <div class="stat-icon orange" style="width:36px;height:36px;font-size:.9rem;"><i class="bi bi-calendar-check"></i></div>
+                    <div><div class="fw-600 small">All Bookings</div><div class="text-muted" style="font-size:.75rem;">Track requests & payments</div></div>
+                </a>
+                <a href="{{ url_for('admin.profile') }}" class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:#f8fafc;transition:.2s;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'">
+                    <div class="stat-icon green" style="width:36px;height:36px;font-size:.9rem;"><i class="bi bi-person-gear"></i></div>
+                    <div><div class="fw-600 small">Security Settings</div><div class="text-muted" style="font-size:.75rem;">Update password & profile</div></div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+new Chart(document.getElementById('revenueChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Jan','Feb','Mar','Apr','May','Jun'],
+        datasets: [{
+            label: 'Revenue (₹)',
+            data: [12000, 19000, 15000, 25000, 22000, {{ total_revenue or 0 }}],
+            backgroundColor: 'rgba(99,102,241,0.15)',
+            borderColor: '#6366f1',
+            borderWidth: 2,
+            borderRadius: 8,
+            barThickness: 32
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 } } },
+            x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+        }
+    }
+});
+</script>
+{% endblock %}

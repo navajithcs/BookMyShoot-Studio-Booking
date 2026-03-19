@@ -1,0 +1,16 @@
+--- Testing Booking Flow ---
+Sending POST request to http://localhost:5000/api/bookings with data:
+{
+  "customer_id": 9,
+  "service_type": "wedding",
+  "event_date": "2026-03-15",
+  "event_time": "10:00AM",
+  "location": "Bangalore",
+  "notes": "Looking for candid photography.",
+  "total_price": 35000.0,
+  "photographer_id": 2
+}
+
+Response Code: 500
+
+Error connecting to API: Expecting value: line 1 column 1 (char 0)

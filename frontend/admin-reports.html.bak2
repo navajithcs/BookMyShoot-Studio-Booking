@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports — BookMyShoot Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    .dash-content { max-width: 100% !important; }
+    .report-tabs {
+      display: flex; gap: var(--space-2); flex-wrap: wrap;
+      margin-bottom: var(--space-5);
+    }
+    .report-tab {
+      padding: 10px 20px; border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg); font-size: var(--text-sm);
+      font-weight: 600; color: var(--text-secondary);
+      background: var(--surface-primary); cursor: pointer;
+      transition: all var(--duration-fast); text-decoration: none;
+    }
+    .report-tab:hover {
+      border-color: var(--brand-300); color: var(--brand-700);
+      background: var(--brand-50);
+    }
+    .report-tab.active {
+      background: var(--brand-600); color: #fff;
+      border-color: var(--brand-600);
+    }
+    [data-theme="dark"] .report-tab:hover { background: rgba(99,102,241,.1); color: var(--brand-300); }
+    [data-theme="dark"] .report-tab.active { background: var(--brand-500); border-color: var(--brand-500); }
+    .download-actions {
+      display: flex; gap: var(--space-2); flex-wrap: wrap;
+      margin-bottom: var(--space-5);
+    }
+    .report-section { display: none; }
+    .report-section.active { display: block; }
+    .report-stats {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4); margin-bottom: var(--space-5);
+    }
+    @media (max-width: 768px) {
+      .report-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <div class="dash-layout">
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-logo">
+          <div class="logo-icon">📸</div>
+          <div class="logo-text">BookMyShoot<span class="logo-sub">Admin Panel</span></div>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Overview</div>
+          <a href="admin-dashboard.html" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Management</div>
+          <a href="admin-users.html" class="sidebar-link"><i class="bi bi-people"></i> Customer Management</a>
+          <a href="admin-photographers.html" class="sidebar-link"><i class="bi bi-camera"></i> Photographer Management</a>
+          <a href="admin-portfolio.html" class="sidebar-link"><i class="bi bi-images"></i> Portfolio</a>
+          <a href="admin-bookings.html" class="sidebar-link"><i class="bi bi-calendar-event"></i> Booking Management</a>
+          <a href="admin-services.html" class="sidebar-link"><i class="bi bi-box-seam"></i> Service & Packages</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Analytics</div>
+          <a href="admin-reports.html" class="sidebar-link active"><i class="bi bi-bar-chart-line"></i> Reports</a>
+          <a href="admin-revenue.html" class="sidebar-link"><i class="bi bi-currency-rupee"></i> Revenue Details</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar" id="sidebarAvatar">A</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+            <div class="sidebar-user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="sidebar-logout" onclick="DashApp.logout()"><i class="bi bi-box-arrow-left"></i> Logout</button>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+          <div>
+            <div class="topbar-title">Reports & Analytics</div>
+            <div class="topbar-subtitle">View and export platform reports</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="theme-toggle" data-tooltip="Toggle theme">
+            <i class="bi bi-moon-fill icon-moon"></i>
+            <i class="bi bi-sun-fill icon-sun"></i>
+          </button>
+          <button class="topbar-icon-btn" id="notifBtn" data-tooltip="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="badge-count" id="notifBadge" style="display:none;">0</span>
+          </button>
+          <div class="dropdown">
+            <div class="topbar-user" id="userDropdownTrigger">
+              <div class="topbar-user-avatar" id="topbarAvatar">A</div>
+              <span class="topbar-user-name" id="topbarUserName">Admin</span>
+              <i class="bi bi-chevron-down text-sm text-secondary"></i>
+            </div>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="admin-dashboard.html" class="dropdown-item"><i class="bi bi-person"></i> Profile</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" onclick="DashApp.logout()" style="color:var(--danger-600);"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="dash-content">
+        <!-- Report Tabs -->
+        <div class="report-tabs animate-fadeInUp">
+          <button class="report-tab active" onclick="showReport('users')" id="tabUsers"><i class="bi bi-people"></i> User Details</button>
+          <button class="report-tab" onclick="showReport('sales')" id="tabSales"><i class="bi bi-cash-stack"></i> Sales Report</button>
+          <button class="report-tab" onclick="showReport('bookings')" id="tabBookings"><i class="bi bi-calendar-check"></i> Session Report</button>
+          <button class="report-tab" onclick="showReport('photographers')" id="tabPhotographers"><i class="bi bi-camera"></i> Photographer Report</button>
+          <button class="report-tab" onclick="showReport('activity')" id="tabActivity"><i class="bi bi-clock-history"></i> Login/Logout Activity</button>
+        </div>
+
+        <!-- Download Actions -->
+        <div class="download-actions animate-fadeInUp">
+          <button class="btn btn-sm btn-primary" onclick="downloadPDF()"><i class="bi bi-file-earmark-pdf"></i> Download PDF</button>
+          <button class="btn btn-sm btn-primary" onclick="downloadExcel()"><i class="bi bi-file-earmark-spreadsheet"></i> Download Excel</button>
+          <button class="btn btn-sm btn-primary" onclick="downloadCSV()"><i class="bi bi-filetype-csv"></i> Download CSV</button>
+          <button class="btn btn-sm btn-secondary" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+        </div>
+
+        <!-- ═══ Users Report ═══ -->
+        <div id="reportUsers" class="report-section active">
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header">
+              <h3 class="font-semibold text-base m-0"><i class="bi bi-people"></i> All Users Login Details</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="ds-table" id="usersTable">
+                <thead>
+                  <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Joined Date</th></tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <tr><td colspan="6" class="text-center text-secondary py-5">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ Sales Report ═══ -->
+        <div id="reportSales" class="report-section">
+          <div class="report-stats animate-fadeInUp">
+            <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-cash-stack"></i></div><div class="stat-label">Total Revenue</div><div class="stat-value" id="salesRevenue">₹0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-check-circle"></i></div><div class="stat-label">Completed Payments</div><div class="stat-value" id="salesCompleted">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-hourglass-split"></i></div><div class="stat-label">Pending Payments</div><div class="stat-value" id="salesPending">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon info"><i class="bi bi-receipt"></i></div><div class="stat-label">Total Bookings</div><div class="stat-value" id="salesTotalBookings">0</div></div>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-cash-stack"></i> Sales Details</h3></div>
+            <div class="table-responsive">
+              <table class="ds-table" id="salesTable">
+                <thead><tr><th>Booking ID</th><th>Customer</th><th>Service</th><th>Amount</th><th>Payment Status</th><th>Date</th></tr></thead>
+                <tbody id="salesTableBody"><tr><td colspan="6" class="text-center text-secondary py-5">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ Bookings Report ═══ -->
+        <div id="reportBookings" class="report-section">
+          <div class="report-stats animate-fadeInUp">
+            <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-hourglass-split"></i></div><div class="stat-label">Pending</div><div class="stat-value" id="bookPending">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-check-circle"></i></div><div class="stat-label">Accepted</div><div class="stat-value" id="bookAccepted">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-check-all"></i></div><div class="stat-label">Completed</div><div class="stat-value" id="bookCompleted">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon danger"><i class="bi bi-x-circle"></i></div><div class="stat-label">Declined</div><div class="stat-value" id="bookDeclined">0</div></div>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-calendar-check"></i> Session/Booking Details</h3></div>
+            <div class="table-responsive">
+              <table class="ds-table" id="bookingsTable">
+                <thead><tr><th>ID</th><th>Customer</th><th>Photographer</th><th>Service</th><th>Date</th><th>Status</th></tr></thead>
+                <tbody id="bookingsTableBody"><tr><td colspan="6" class="text-center text-secondary py-5">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ Photographers Report ═══ -->
+        <div id="reportPhotographers" class="report-section">
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-camera"></i> Photographer Performance</h3></div>
+            <div class="table-responsive">
+              <table class="ds-table" id="photographersTable">
+                <thead><tr><th>ID</th><th>Name</th><th>Specialty</th><th>Hourly Rate</th><th>Total Jobs</th><th>Total Earnings</th><th>Status</th></tr></thead>
+                <tbody id="photographersTableBody"><tr><td colspan="7" class="text-center text-secondary py-5">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ Activity Report ═══ -->
+        <div id="reportActivity" class="report-section">
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-clock-history"></i> Login/Logout Activity</h3></div>
+            <div class="table-responsive">
+              <table class="ds-table" id="activityTable">
+                <thead><tr><th>#</th><th>User</th><th>Role</th><th>Login Time</th><th>Logout Time</th><th>Duration</th></tr></thead>
+                <tbody id="activityTableBody"><tr><td colspan="6" class="text-center text-secondary py-5">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <aside class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3 class="font-semibold text-base m-0">Notifications</h3>
+      <button class="btn btn-sm btn-ghost" id="notifClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="notif-panel-body" id="notifList">
+      <div class="empty-state"><div class="empty-state-icon">🔔</div><div class="empty-state-title">No notifications</div></div>
+    </div>
+  </aside>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    const user = DashApp.requireAuth(['admin']);
+    if (user) {
+      const name = user.first_name || 'Admin';
+      const initial = name.charAt(0).toUpperCase();
+      document.getElementById('topbarAvatar').textContent = initial;
+      document.getElementById('topbarUserName').textContent = name;
+      document.getElementById('sidebarAvatar').textContent = initial;
+      document.getElementById('sidebarUserName').textContent = name;
+    }
+    DashApp.init();
+
+    let currentReport = 'users';
+    let reportData = {};
+
+    function showReport(type) {
+      currentReport = type;
+      document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
+      document.querySelectorAll('.report-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('report' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
+
+      if (type === 'users') loadUsersReport();
+      else if (type === 'sales') loadSalesReport();
+      else if (type === 'bookings') loadBookingsReport();
+      else if (type === 'photographers') loadPhotographersReport();
+      else if (type === 'activity') loadActivityReport();
+    }
+
+    function loadUsersReport() {
+      fetch(`${DashApp.API_URL}/admin/users`)
+        .then(r => r.json())
+        .then(data => {
+          reportData.users = data.users;
+          const tbody = document.getElementById('usersTableBody');
+          tbody.innerHTML = data.users.map(u => {
+            const typeBadge = u.user_type === 'admin' ? 'badge-danger' : u.user_type === 'photographer' ? 'badge-primary' : 'badge-success';
+            return `<tr>
+              <td class="font-medium">#${u.id}</td>
+              <td class="font-semibold">${DashApp.escapeHtml(u.first_name + ' ' + u.last_name)}</td>
+              <td>${DashApp.escapeHtml(u.email)}</td>
+              <td>${u.phone || '—'}</td>
+              <td><span class="badge-v2 ${typeBadge}">${u.user_type}</span></td>
+              <td>${DashApp.formatDate(u.created_at)}</td>
+            </tr>`;
+          }).join('');
+        });
+    }
+
+    function loadSalesReport() {
+      fetch(`${DashApp.API_URL}/admin/stats`)
+        .then(r => r.json())
+        .then(data => {
+          reportData.sales = data;
+          document.getElementById('salesRevenue').textContent = DashApp.formatCurrency(data.revenue.total || 0);
+          document.getElementById('salesCompleted').textContent = data.bookings.completed || 0;
+          document.getElementById('salesPending').textContent = (data.bookings.pending + data.bookings.accepted) || 0;
+          document.getElementById('salesTotalBookings').textContent = (data.bookings.completed + data.bookings.pending + data.bookings.accepted) || 0;
+
+          const tbody = document.getElementById('salesTableBody');
+          const bookings = data.recent_activity || [];
+          if (bookings.length) {
+            tbody.innerHTML = bookings.map(b => {
+              const pBadge = b.payment_status === 'paid' ? 'badge-success' : b.payment_status === 'token_paid' ? 'badge-primary' : 'badge-warning';
+              return `<tr>
+                <td class="font-medium">#${b.id}</td>
+                <td>Customer #${b.customer_id}</td>
+                <td>${DashApp.escapeHtml(b.service_type)}</td>
+                <td class="font-semibold">${DashApp.formatCurrency(b.total_price)}</td>
+                <td><span class="badge-v2 ${pBadge}">${b.payment_status}</span></td>
+                <td>${DashApp.formatDate(b.event_date)}</td>
+              </tr>`;
+            }).join('');
+          } else {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-5">No sales data</td></tr>';
+          }
+        });
+    }
+
+    function loadBookingsReport() {
+      fetch(`${DashApp.API_URL}/admin/stats`)
+        .then(r => r.json())
+        .then(data => {
+          reportData.bookings = data;
+          const bookings = data.recent_activity || [];
+          document.getElementById('bookPending').textContent = bookings.filter(b => b.status === 'pending').length;
+          document.getElementById('bookAccepted').textContent = bookings.filter(b => b.status === 'accepted').length;
+          document.getElementById('bookCompleted').textContent = bookings.filter(b => b.status === 'completed').length;
+          document.getElementById('bookDeclined').textContent = bookings.filter(b => b.status === 'declined').length;
+
+          const tbody = document.getElementById('bookingsTableBody');
+          tbody.innerHTML = bookings.map(b => {
+            const sBadge = { pending:'badge-warning', accepted:'badge-primary', completed:'badge-success', declined:'badge-danger', token_paid:'badge-info' }[b.status] || 'badge-neutral';
+            return `<tr>
+              <td class="font-medium">#${b.id}</td>
+              <td>Customer #${b.customer_id}</td>
+              <td>${b.photographer_id ? 'Assigned' : 'Unassigned'}</td>
+              <td>${DashApp.escapeHtml(b.service_type)}</td>
+              <td>${DashApp.formatDate(b.event_date)}</td>
+              <td><span class="badge-v2 ${sBadge}">${b.status}</span></td>
+            </tr>`;
+          }).join('');
+        });
+    }
+
+    function loadPhotographersReport() {
+      fetch(`${DashApp.API_URL}/admin/photographers`)
+        .then(r => r.json())
+        .then(data => {
+          reportData.photographers = data.photographers;
+          const tbody = document.getElementById('photographersTableBody');
+          tbody.innerHTML = data.photographers.map(p => {
+            const name = p.user ? DashApp.escapeHtml(p.user.first_name + ' ' + p.user.last_name) : 'N/A';
+            const statusBadge = p.is_available ? '<span class="badge-v2 badge-success">Available</span>' : '<span class="badge-v2 badge-warning">Unavailable</span>';
+            return `<tr>
+              <td class="font-medium">#${p.id}</td>
+              <td class="font-semibold">${name}</td>
+              <td>${DashApp.escapeHtml(p.specialty)}</td>
+              <td>${DashApp.formatCurrency(p.hourly_rate)}/hr</td>
+              <td>${p.portfolio ? p.portfolio.length : 0}</td>
+              <td class="font-semibold">${DashApp.formatCurrency(p.total_earnings || 0)}</td>
+              <td>${statusBadge}</td>
+            </tr>`;
+          }).join('');
+        });
+    }
+
+    function loadActivityReport() {
+      fetch(`${DashApp.API_URL}/admin/logs`)
+        .then(r => r.json())
+        .then(data => {
+          reportData.activity = data.logs;
+          const tbody = document.getElementById('activityTableBody');
+          if (data.logs && data.logs.length) {
+            // Filter only login/logout entries and sort by timestamp ascending
+            const authLogs = data.logs
+              .filter(l => l.action === 'login' || l.action === 'logout')
+              .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+            // Group by user and pair login→logout
+            const userSessions = {};
+            authLogs.forEach(log => {
+              const key = log.user_email || 'System';
+              if (!userSessions[key]) userSessions[key] = { pending: null, sessions: [], details: log.details || '' };
+              if (log.action === 'login') {
+                // If there's already a pending login, close it without logout
+                if (userSessions[key].pending) {
+                  userSessions[key].sessions.push({ login: userSessions[key].pending, logout: null });
+                }
+                userSessions[key].pending = log;
+              } else if (log.action === 'logout') {
+                userSessions[key].sessions.push({ login: userSessions[key].pending, logout: log });
+                userSessions[key].pending = null;
+              }
+            });
+            // Push any remaining pending logins
+            Object.values(userSessions).forEach(u => {
+              if (u.pending) { u.sessions.push({ login: u.pending, logout: null }); u.pending = null; }
+            });
+
+            // Flatten into rows sorted by most recent first
+            const rows = [];
+            Object.entries(userSessions).forEach(([email, u]) => {
+              u.sessions.forEach(s => {
+                const loginTime = s.login ? new Date(s.login.timestamp) : null;
+                const logoutTime = s.logout ? new Date(s.logout.timestamp) : null;
+                rows.push({ email, details: u.details, loginTime, logoutTime, loginLog: s.login, logoutLog: s.logout });
+              });
+            });
+            rows.sort((a, b) => (b.loginTime || b.logoutTime || 0) - (a.loginTime || a.logoutTime || 0));
+
+            // Store for downloads
+            reportData.activityRows = rows;
+
+            // Extract user role from details string
+            function extractRole(details) {
+              if (!details) return '—';
+              const m = details.match(/\b(admin|photographer|customer)\b/i);
+              return m ? m[1].charAt(0).toUpperCase() + m[1].slice(1) : '—';
+            }
+            function roleBadge(role) {
+              if (role === 'Admin') return 'badge-danger';
+              if (role === 'Photographer') return 'badge-primary';
+              if (role === 'Customer') return 'badge-success';
+              return 'badge-neutral';
+            }
+            function calcDuration(login, logout) {
+              if (!login || !logout) return '—';
+              const diff = Math.floor((logout - login) / 1000);
+              if (diff < 60) return `${diff}s`;
+              if (diff < 3600) return `${Math.floor(diff / 60)}m ${diff % 60}s`;
+              const h = Math.floor(diff / 3600);
+              const m = Math.floor((diff % 3600) / 60);
+              return `${h}h ${m}m`;
+            }
+            function fmtTime(dt) {
+              if (!dt) return '<span style="color:var(--text-tertiary);">—</span>';
+              return dt.toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+            }
+
+            tbody.innerHTML = rows.map((r, i) => {
+              const role = extractRole(r.loginLog?.details || r.logoutLog?.details);
+              const dur = calcDuration(r.loginTime, r.logoutTime);
+              return `<tr>
+                <td class="font-medium">${i + 1}</td>
+                <td class="font-semibold">${DashApp.escapeHtml(r.email)}</td>
+                <td><span class="badge-v2 ${roleBadge(role)}">${role}</span></td>
+                <td>${r.loginTime ? '<i class="bi bi-box-arrow-in-right" style="color:var(--success-600);margin-right:4px;"></i>' + fmtTime(r.loginTime) : fmtTime(null)}</td>
+                <td>${r.logoutTime ? '<i class="bi bi-box-arrow-left" style="color:var(--warning-600);margin-right:4px;"></i>' + fmtTime(r.logoutTime) : (r.loginTime ? '<span class="badge-v2 badge-success" style="font-size:0.7rem;">Active Now</span>' : fmtTime(null))}</td>
+                <td>${dur}</td>
+              </tr>`;
+            }).join('');
+          } else {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-5">No activity logs</td></tr>';
+          }
+        });
+    }
+
+    // Download PDF
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.text('BookMyShoot Report - ' + currentReport.charAt(0).toUpperCase() + currentReport.slice(1), 10, 10);
+      doc.setFontSize(10);
+      doc.text('Generated: ' + new Date().toLocaleString(), 10, 20);
+      let y = 30;
+
+      if (currentReport === 'users' && reportData.users) {
+        doc.setFontSize(12); doc.text('User Details', 10, y); y += 10;
+        doc.setFontSize(9);
+        doc.text('ID | Name | Email | Phone | Type | Joined', 10, y); y += 5;
+        reportData.users.forEach(u => {
+          if (y > 280) { doc.addPage(); y = 15; }
+          doc.text(`${u.id} | ${u.first_name} ${u.last_name} | ${u.email} | ${u.phone || '-'} | ${u.user_type} | ${new Date(u.created_at).toLocaleDateString()}`, 10, y);
+          y += 5;
+        });
+      } else if (currentReport === 'photographers' && reportData.photographers) {
+        doc.setFontSize(12); doc.text('Photographer Report', 10, y); y += 10;
+        doc.setFontSize(9);
+        reportData.photographers.forEach(p => {
+          if (y > 280) { doc.addPage(); y = 15; }
+          doc.text(`#${p.id} | ${p.user ? p.user.first_name + ' ' + p.user.last_name : 'N/A'} | ${p.specialty} | ₹${p.hourly_rate}/hr | ${p.is_available ? 'Available' : 'Unavailable'}`, 10, y);
+          y += 5;
+        });
+      } else if (currentReport === 'activity' && reportData.activityRows) {
+        doc.setFontSize(12); doc.text('Login / Logout Activity', 10, y); y += 10;
+        doc.setFontSize(9);
+        doc.text('# | User | Login Time | Logout Time | Duration', 10, y); y += 6;
+        reportData.activityRows.forEach((r, i) => {
+          if (y > 280) { doc.addPage(); y = 15; }
+          const loginStr = r.loginTime ? r.loginTime.toLocaleString() : '—';
+          const logoutStr = r.logoutTime ? r.logoutTime.toLocaleString() : (r.loginTime ? 'Active Now' : '—');
+          const dur = r.loginTime && r.logoutTime ? Math.floor((r.logoutTime - r.loginTime) / 60000) + ' min' : '—';
+          doc.text(`${i+1} | ${r.email} | ${loginStr} | ${logoutStr} | ${dur}`, 10, y);
+          y += 5;
+        });
+      } else {
+        doc.text('Please select a report type and view the data first.', 10, y);
+      }
+      doc.save(`report_${currentReport}_${new Date().toISOString().split('T')[0]}.pdf`);
+    }
+
+    // Download Excel
+    function downloadExcel() {
+      let data = [], sheetName = 'Report';
+      if (currentReport === 'users' && reportData.users) {
+        sheetName = 'Users';
+        data = reportData.users.map(u => ({ 'ID': u.id, 'First Name': u.first_name, 'Last Name': u.last_name, 'Email': u.email, 'Phone': u.phone || '', 'Type': u.user_type, 'Joined': new Date(u.created_at).toLocaleDateString() }));
+      } else if (currentReport === 'photographers' && reportData.photographers) {
+        sheetName = 'Photographers';
+        data = reportData.photographers.map(p => ({ 'ID': p.id, 'Name': p.user ? p.user.first_name + ' ' + p.user.last_name : 'N/A', 'Specialty': p.specialty, 'Hourly Rate': p.hourly_rate, 'Portfolio Items': p.portfolio ? p.portfolio.length : 0, 'Status': p.is_available ? 'Available' : 'Unavailable' }));
+      } else if (currentReport === 'sales' && reportData.sales) {
+        sheetName = 'Sales';
+        data = (reportData.sales.recent_activity || []).map(b => ({ 'Booking ID': b.id, 'Customer ID': b.customer_id, 'Service': b.service_type, 'Amount': b.total_price, 'Payment Status': b.payment_status, 'Event Date': b.event_date }));
+      } else if (currentReport === 'bookings' && reportData.bookings) {
+        sheetName = 'Bookings';
+        data = (reportData.bookings.recent_activity || []).map(b => ({ 'Booking ID': b.id, 'Customer ID': b.customer_id, 'Service': b.service_type, 'Event Date': b.event_date, 'Status': b.status }));
+      } else if (currentReport === 'activity' && reportData.activityRows) {
+        sheetName = 'Activity';
+        data = reportData.activityRows.map((r, i) => ({
+          '#': i + 1,
+          'User': r.email,
+          'Login Time': r.loginTime ? r.loginTime.toLocaleString() : '—',
+          'Logout Time': r.logoutTime ? r.logoutTime.toLocaleString() : (r.loginTime ? 'Active Now' : '—'),
+          'Duration': r.loginTime && r.logoutTime ? Math.floor((r.logoutTime - r.loginTime) / 60000) + ' min' : '—'
+        }));
+      }
+      if (data.length) {
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        XLSX.writeFile(wb, `report_${currentReport}_${new Date().toISOString().split('T')[0]}.xlsx`);
+      } else {
+        Swal.fire('Info', 'Please view a report first before downloading.', 'info');
+      }
+    }
+
+    // Download CSV
+    function downloadCSV() {
+      let csvContent = '';
+      if (currentReport === 'users' && reportData.users) {
+        csvContent = 'ID,First Name,Last Name,Email,Phone,Type,Joined Date\n';
+        reportData.users.forEach(u => { csvContent += `${u.id},${u.first_name},${u.last_name},${u.email},${u.phone || ''},${u.user_type},${new Date(u.created_at).toLocaleDateString()}\n`; });
+      } else if (currentReport === 'photographers' && reportData.photographers) {
+        csvContent = 'ID,Name,Specialty,Hourly Rate,Portfolio Items,Status\n';
+        reportData.photographers.forEach(p => { csvContent += `${p.id},"${p.user ? p.user.first_name + ' ' + p.user.last_name : 'N/A'}",${p.specialty},${p.hourly_rate},${p.portfolio ? p.portfolio.length : 0},${p.is_available ? 'Available' : 'Unavailable'}\n`; });
+      } else if (currentReport === 'sales' && reportData.sales) {
+        csvContent = 'Booking ID,Customer ID,Service,Amount,Payment Status,Event Date\n';
+        (reportData.sales.recent_activity || []).forEach(b => { csvContent += `${b.id},${b.customer_id},${b.service_type},${b.total_price},${b.payment_status},${b.event_date}\n`; });
+      } else if (currentReport === 'bookings' && reportData.bookings) {
+        csvContent = 'Booking ID,Customer ID,Service,Event Date,Status\n';
+        (reportData.bookings.recent_activity || []).forEach(b => { csvContent += `${b.id},${b.customer_id},${b.service_type},${b.event_date},${b.status}\n`; });
+      } else if (currentReport === 'activity' && reportData.activityRows) {
+        csvContent = '#,User,Login Time,Logout Time,Duration\n';
+        reportData.activityRows.forEach((r, i) => {
+          const loginStr = r.loginTime ? r.loginTime.toLocaleString() : '—';
+          const logoutStr = r.logoutTime ? r.logoutTime.toLocaleString() : (r.loginTime ? 'Active Now' : '—');
+          const dur = r.loginTime && r.logoutTime ? Math.floor((r.logoutTime - r.loginTime) / 60000) + ' min' : '—';
+          csvContent += `${i+1},${r.email},"${loginStr}","${logoutStr}",${dur}\n`;
+        });
+      }
+      if (csvContent && csvContent.split('\n').length > 1) {
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url;
+        a.download = `report_${currentReport}_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+      } else {
+        Swal.fire('Info', 'Please view a report first before downloading.', 'info');
+      }
+    }
+
+    // Load default
+    loadUsersReport();
+  </script>
+</body>
+</html>

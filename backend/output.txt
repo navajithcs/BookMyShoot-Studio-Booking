@@ -1,0 +1,5 @@
+Testing Customer Login: test_customer@example.com
+Customer ID: 4
+Testing Photographer Login: photo@example.com
+Photographer User Data: {'created_at': '2026-02-18T04:50:58.084690', 'email': 'photo@example.com', 'first_name': 'John', 'id': 2, 'last_name': 'Doe', 'phone': '9876543210', 'user_type': 'photographer'}
+ERROR: photographer_id missing in login response! Full response: {'message': 'Login successful', 'user': {'created_at': '2026-02-18T04:50:58.084690', 'email': 'photo@example.com', 'first_name': 'John', 'id': 2, 'last_name': 'Doe', 'phone': '9876543210', 'user_type': 'photographer'}}

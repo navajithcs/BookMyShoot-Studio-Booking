@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Request</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #5a6fd6;
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .flash {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .flash.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Submit a Booking Request</h2>
+
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <form action="{{ url_for('booking_request_form') }}" method="POST">
+            <!-- Simulated customer_id for demo purposes (usually comes from session) -->
+            <input type="hidden" name="customer_id" value="1">
+
+            <div class="form-group">
+                <label for="event_type_id">Event Type</label>
+                <select name="event_type_id" id="event_type_id" required>
+                    <option value="">-- Select Event Type --</option>
+                    {% for etype in event_types %}
+                    <option value="{{ etype }}">{{ etype }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="photographer_id">Photographer</label>
+                <select name="photographer_id" id="photographer_id">
+                    <option value="">-- Any Available Photographer --</option>
+                    {% for photog in photographers %}
+                    <option value="{{ photog.id }}">
+                        {{ photog.user.first_name }} {{ photog.user.last_name }} ({{ photog.specialty }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="event_date">Event Date</label>
+                <input type="date" name="event_date" id="event_date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Message (Notes)</label>
+                <textarea name="message" id="message" rows="4"
+                    placeholder="Any special requests or location info..."></textarea>
+            </div>
+
+            <button type="submit">Request Session</button>
+        </form>
+    </div>
+</body>
+
+</html>

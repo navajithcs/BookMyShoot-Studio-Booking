@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports — BookMyShoot Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    .dash-content { max-width: 100% !important; }
+    .report-tabs { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-5); }
+    .report-tab {
+      padding: 10px 20px; border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg); font-size: var(--text-sm);
+      font-weight: 600; color: var(--text-secondary);
+      background: var(--surface-primary); cursor: pointer;
+      transition: all var(--duration-fast); text-decoration: none;
+    }
+    .report-tab:hover { border-color: var(--brand-300); color: var(--brand-700); background: var(--brand-50); }
+    .report-tab.active { background: var(--brand-600); color: #fff; border-color: var(--brand-600); }
+    [data-theme="dark"] .report-tab:hover { background: rgba(99,102,241,.1); color: var(--brand-300); }
+    [data-theme="dark"] .report-tab.active { background: var(--brand-500); border-color: var(--brand-500); }
+    .report-section { display: none; }
+    .report-section.active { display: block; }
+    .report-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--space-4); margin-bottom: var(--space-5); }
+    @media (max-width: 768px) { .report-stats { grid-template-columns: repeat(2,1fr); } }
+
+    /* Filter panel */
+    .filter-panel {
+      background: var(--surface-primary); border: 1px solid var(--border-primary);
+      border-radius: var(--radius-xl); padding: 20px 24px; margin-bottom: var(--space-5);
+    }
+    .filter-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+    .filter-group { display: flex; flex-direction: column; gap: 4px; }
+    .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+    .filter-group select, .filter-group input {
+      padding: 8px 12px; border: 1px solid var(--border-primary); border-radius: var(--radius-md);
+      font-size: 0.85rem; background: var(--surface-secondary); color: var(--text-primary); min-width: 150px;
+    }
+    .quick-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .quick-btn {
+      padding: 6px 14px; border: 1px solid var(--border-primary); border-radius: 20px;
+      font-size: 0.78rem; font-weight: 600; background: var(--surface-secondary);
+      color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
+    }
+    .quick-btn:hover, .quick-btn.active { background: var(--brand-600); color: #fff; border-color: var(--brand-600); }
+    .filter-actions { display: flex; gap: 8px; align-items: end; }
+    .btn-filter { padding: 8px 18px; border: none; border-radius: var(--radius-md); font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+    .btn-apply { background: var(--brand-600); color: #fff; }
+    .btn-apply:hover { background: var(--brand-700); }
+    .btn-reset { background: var(--surface-secondary); color: var(--text-secondary); border: 1px solid var(--border-primary); }
+    .btn-reset:hover { background: var(--surface-tertiary); }
+
+    /* Download bar */
+    .section-download-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px; padding: 14px 20px;
+      background: var(--surface-secondary); border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg); margin-bottom: var(--space-4);
+    }
+    .section-download-bar .bar-title { font-size: var(--text-sm); font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+    .section-download-bar .bar-title i { font-size: 1.1rem; color: var(--brand-600); }
+    .download-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dl-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: var(--radius-md); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all var(--duration-fast); }
+    .dl-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .dl-btn-pdf { background: #dc3545; color: #fff; }
+    .dl-btn-excel { background: #198754; color: #fff; }
+    .dl-btn-csv { background: #0d6efd; color: #fff; }
+    .dl-btn-print { background: #6c757d; color: #fff; }
+
+    .download-all-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px; padding: 16px 24px;
+      background: linear-gradient(135deg, rgba(102,126,234,0.08) 0%, rgba(118,75,162,0.08) 100%);
+      border: 2px solid var(--brand-200); border-radius: var(--radius-xl); margin-bottom: var(--space-5);
+    }
+    .download-all-bar .bar-title { font-size: var(--text-base); font-weight: 800; color: var(--brand-700); }
+    [data-theme="dark"] .download-all-bar { border-color: var(--brand-800); background: rgba(99,102,241,0.08); }
+    [data-theme="dark"] .download-all-bar .bar-title { color: var(--brand-300); }
+
+    /* Pagination */
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 16px; padding: 12px 0; }
+    .page-btn {
+      padding: 6px 12px; border: 1px solid var(--border-primary); border-radius: var(--radius-md);
+      background: var(--surface-primary); color: var(--text-secondary);
+      cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s;
+    }
+    .page-btn:hover, .page-btn.active { background: var(--brand-600); color: #fff; border-color: var(--brand-600); }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-info { font-size: 0.8rem; color: var(--text-secondary); padding: 0 8px; }
+
+    .table-loading { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 40px; color: var(--text-secondary); font-size: 0.9rem; }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <div class="dash-layout">
+    <!-- SIDEBAR -->
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-logo">
+          <div class="logo-icon">&#x1F4F8;</div>
+          <div class="logo-text">BookMyShoot<span class="logo-sub">Admin Panel</span></div>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Overview</div>
+          <a href="admin-dashboard.html" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Management</div>
+          <a href="admin-users.html" class="sidebar-link"><i class="bi bi-people"></i> Customer Management</a>
+          <a href="admin-photographers.html" class="sidebar-link"><i class="bi bi-camera"></i> Photographer Management</a>
+          <a href="admin-portfolio.html" class="sidebar-link"><i class="bi bi-images"></i> Portfolio</a>
+          <a href="admin-bookings.html" class="sidebar-link"><i class="bi bi-calendar-event"></i> Booking Management</a>
+          <a href="admin-services.html" class="sidebar-link"><i class="bi bi-box-seam"></i> Service & Packages</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Support</div>
+          <a href="admin-refunds.html" class="sidebar-link"><i class="bi bi-arrow-return-left"></i> Refund Requests</a>
+          <a href="admin-feedback.html" class="sidebar-link"><i class="bi bi-star"></i> Feedback</a>
+          <a href="admin-support.html" class="sidebar-link"><i class="bi bi-headset"></i> Support Tickets</a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Analytics</div>
+          <a href="admin-reports.html" class="sidebar-link active"><i class="bi bi-bar-chart-line"></i> Reports</a>
+          <a href="admin-revenue.html" class="sidebar-link"><i class="bi bi-currency-rupee"></i> Revenue Details</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar" id="sidebarAvatar">A</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+            <div class="sidebar-user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="sidebar-logout" onclick="DashApp.logout()"><i class="bi bi-box-arrow-left"></i> Logout</button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+          <div>
+            <div class="topbar-title">Reports &amp; Analytics</div>
+            <div class="topbar-subtitle">Advanced reporting with filters &amp; export</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="theme-toggle" data-tooltip="Toggle theme">
+            <i class="bi bi-moon-fill icon-moon"></i>
+            <i class="bi bi-sun-fill icon-sun"></i>
+          </button>
+          <button class="topbar-icon-btn" id="notifBtn" data-tooltip="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="badge-count" id="notifBadge" style="display:none;">0</span>
+          </button>
+          <div class="dropdown">
+            <div class="topbar-user" id="userDropdownTrigger">
+              <div class="topbar-user-avatar" id="topbarAvatar">A</div>
+              <span class="topbar-user-name" id="topbarUserName">Admin</span>
+              <i class="bi bi-chevron-down text-sm text-secondary"></i>
+            </div>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="admin-profile.html" class="dropdown-item"><i class="bi bi-person-gear"></i> Profile Settings</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" onclick="DashApp.logout()" style="color:var(--danger-600);"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="dash-content">
+
+        <!-- Download All -->
+        <div class="download-all-bar animate-fadeInUp">
+          <div class="bar-title"><i class="bi bi-download"></i> Download All Reports at Once</div>
+          <div class="download-btns">
+            <button class="dl-btn dl-btn-pdf" onclick="downloadAllPDF()"><i class="bi bi-file-earmark-pdf-fill"></i> All Reports PDF</button>
+            <button class="dl-btn dl-btn-excel" onclick="downloadAllExcel()"><i class="bi bi-file-earmark-spreadsheet-fill"></i> All Reports Excel</button>
+          </div>
+        </div>
+
+        <!-- Report Tabs -->
+        <div class="report-tabs animate-fadeInUp">
+          <button class="report-tab active" onclick="showReport('advanced')" id="tabAdvanced"><i class="bi bi-funnel"></i> Advanced Bookings</button>
+          <button class="report-tab" onclick="showReport('users')" id="tabUsers"><i class="bi bi-people"></i> User Details</button>
+          <button class="report-tab" onclick="showReport('sales')" id="tabSales"><i class="bi bi-cash-stack"></i> Sales Report</button>
+          <button class="report-tab" onclick="showReport('photographers')" id="tabPhotographers"><i class="bi bi-camera"></i> Photographer Report</button>
+          <button class="report-tab" onclick="showReport('customer')" id="tabCustomer"><i class="bi bi-person-lines-fill"></i> Customer Wise Report</button>
+          <button class="report-tab" onclick="showReport('activity')" id="tabActivity"><i class="bi bi-clock-history"></i> Login/Logout Activity</button>
+        </div>
+
+        <!-- ══════ ADVANCED BOOKING REPORT ══════ -->
+        <div id="reportAdvanced" class="report-section active">
+          <div class="filter-panel animate-fadeInUp">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:0;"><i class="bi bi-funnel" style="color:var(--brand-600);margin-right:6px;"></i>Report Filters</h3>
+              <div class="quick-filters">
+                <button class="quick-btn" onclick="applyQuickFilter('today',this)">Today</button>
+                <button class="quick-btn" onclick="applyQuickFilter('yesterday',this)">Yesterday</button>
+                <button class="quick-btn" onclick="applyQuickFilter('this_week',this)">This Week</button>
+                <button class="quick-btn" onclick="applyQuickFilter('this_month',this)">This Month</button>
+                <button class="quick-btn active" onclick="applyQuickFilter('',this)">All Time</button>
+              </div>
+            </div>
+            <div class="filter-row">
+              <div class="filter-group"><label>Date From</label><input type="date" id="filterDateFrom"></div>
+              <div class="filter-group"><label>Date To</label><input type="date" id="filterDateTo"></div>
+              <div class="filter-group">
+                <label>Service Type</label>
+                <select id="filterService"><option value="">All Services</option><option value="wedding">Wedding</option><option value="engagement">Engagement</option><option value="birthday">Birthday</option><option value="babyshower">Baby Shower</option><option value="naming">Naming Ceremony</option><option value="studio">Studio</option></select>
+              </div>
+              <div class="filter-group">
+                <label>Booking Status</label>
+                <select id="filterStatus"><option value="">All Status</option><option value="pending">Pending</option><option value="accepted">Accepted</option><option value="token_paid">Token Paid</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option><option value="declined">Declined</option></select>
+              </div>
+              <div class="filter-group">
+                <label>Payment Status</label>
+                <select id="filterPayment"><option value="">All Payments</option><option value="pending">Pending</option><option value="token_paid">Token Paid</option><option value="paid">Fully Paid</option><option value="refunded">Refunded</option></select>
+              </div>
+              <div class="filter-group"><label>Customer</label><select id="filterCustomer"><option value="">All Customers</option></select></div>
+              <div class="filter-actions">
+                <button class="btn-filter btn-apply" onclick="applyFilters()"><i class="bi bi-search"></i> Search</button>
+                <button class="btn-filter btn-reset" onclick="resetFilters()"><i class="bi bi-x-circle"></i> Reset</button>
+              </div>
+            </div>
+          </div>
+          <div class="report-stats animate-fadeInUp">
+            <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-calendar-check"></i></div><div class="stat-label">Total Bookings</div><div class="stat-value" id="advTotalBookings">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-currency-rupee"></i></div><div class="stat-label">Total Revenue</div><div class="stat-value" id="advTotalRevenue">&#8377;0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon danger"><i class="bi bi-x-circle"></i></div><div class="stat-label">Cancellations</div><div class="stat-value" id="advCancellations">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-hourglass-split"></i></div><div class="stat-label">Pending</div><div class="stat-value" id="advPending">0</div></div>
+          </div>
+          <div class="section-download-bar animate-fadeInUp">
+            <div class="bar-title"><i class="bi bi-bar-chart-line-fill"></i> Advanced Booking Report</div>
+            <div class="download-btns">
+              <button class="dl-btn dl-btn-excel" onclick="downloadAdvancedExcel()"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+              <button class="dl-btn dl-btn-csv" onclick="downloadAdvancedCSV()"><i class="bi bi-filetype-csv"></i> CSV</button>
+              <button class="dl-btn dl-btn-pdf" onclick="downloadAdvancedPDF()"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+              <button class="dl-btn dl-btn-print" onclick="printAdvanced()"><i class="bi bi-printer-fill"></i> Print</button>
+            </div>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header" style="display:flex;justify-content:space-between;align-items:center;">
+              <h3 class="font-semibold text-base m-0"><i class="bi bi-table"></i> Report Results</h3>
+              <span id="advResultCount" style="font-size:0.8rem;color:var(--text-secondary);">0 records</span>
+            </div>
+            <div class="table-responsive">
+              <table class="ds-table" id="advancedTable">
+                <thead><tr><th>Booking ID</th><th>Customer</th><th>Service</th><th>Date</th><th>Time</th><th>Amount</th><th>Payment</th><th>Status</th><th>Photographer</th></tr></thead>
+                <tbody id="advancedTableBody"><tr><td colspan="9" class="table-loading"><i class="bi bi-arrow-repeat spin"></i> Loading...</td></tr></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="advPagination"></div>
+          </div>
+        </div>
+
+        <!-- ══════ Users Report ══════ -->
+        <div id="reportUsers" class="report-section">
+          <div class="filter-panel animate-fadeInUp">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:0;"><i class="bi bi-funnel" style="color:var(--brand-600);margin-right:6px;"></i>User Filters</h3>
+            </div>
+            <div class="filter-row">
+              <div class="filter-group">
+                <label>User Type</label>
+                <select id="filterUserType"><option value="">All Types</option><option value="customer">Customer</option><option value="photographer">Photographer</option><option value="admin">Admin</option></select>
+              </div>
+              <div class="filter-group"><label>Search Name/Email</label><input type="text" id="filterUserSearch" placeholder="Search..."></div>
+              <div class="filter-group"><label>Joined From</label><input type="date" id="filterUserDateFrom"></div>
+              <div class="filter-group"><label>Joined To</label><input type="date" id="filterUserDateTo"></div>
+              <div class="filter-actions">
+                <button class="btn-filter btn-apply" onclick="loadUsersReport()"><i class="bi bi-search"></i> Search</button>
+                <button class="btn-filter btn-reset" onclick="resetUserFilters()"><i class="bi bi-x-circle"></i> Reset</button>
+              </div>
+            </div>
+          </div>
+          <div class="report-stats animate-fadeInUp">
+            <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-people-fill"></i></div><div class="stat-label">Total Users</div><div class="stat-value" id="usersTotalCount">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-person-check"></i></div><div class="stat-label">Customers</div><div class="stat-value" id="usersCustomerCount">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-camera"></i></div><div class="stat-label">Photographers</div><div class="stat-value" id="usersPhotographerCount">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon danger"><i class="bi bi-shield-check"></i></div><div class="stat-label">Admins</div><div class="stat-value" id="usersAdminCount">0</div></div>
+          </div>
+          <div class="section-download-bar animate-fadeInUp">
+            <div class="bar-title"><i class="bi bi-people-fill"></i> User Details Report</div>
+            <div class="download-btns">
+              <button class="dl-btn dl-btn-pdf" onclick="downloadReportPDF('users')"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+              <button class="dl-btn dl-btn-excel" onclick="downloadReportExcel('users')"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+              <button class="dl-btn dl-btn-csv" onclick="downloadReportCSV('users')"><i class="bi bi-filetype-csv"></i> CSV</button>
+              <button class="dl-btn dl-btn-print" onclick="printSection('reportUsers')"><i class="bi bi-printer-fill"></i> Print</button>
+            </div>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header" style="display:flex;justify-content:space-between;align-items:center;">
+              <h3 class="font-semibold text-base m-0"><i class="bi bi-people"></i> All Users</h3>
+              <span id="usersResultCount" style="font-size:0.8rem;color:var(--text-secondary);">0 records</span>
+            </div>
+            <div class="table-responsive">
+              <table class="ds-table" id="usersTable">
+                <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Joined Date</th></tr></thead>
+                <tbody id="usersTableBody"><tr><td colspan="6" class="table-loading"><i class="bi bi-arrow-repeat spin"></i> Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════ Sales Report ══════ -->
+        <div id="reportSales" class="report-section">
+          <div class="filter-panel animate-fadeInUp">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:0;"><i class="bi bi-funnel" style="color:var(--brand-600);margin-right:6px;"></i>Sales Filters</h3>
+              <div class="quick-filters">
+                <button class="quick-btn" onclick="applySalesQuickFilter('today',this)">Today</button>
+                <button class="quick-btn" onclick="applySalesQuickFilter('this_week',this)">This Week</button>
+                <button class="quick-btn" onclick="applySalesQuickFilter('this_month',this)">This Month</button>
+                <button class="quick-btn active" onclick="applySalesQuickFilter('',this)">All Time</button>
+              </div>
+            </div>
+            <div class="filter-row">
+              <div class="filter-group"><label>Date From</label><input type="date" id="filterSalesDateFrom"></div>
+              <div class="filter-group"><label>Date To</label><input type="date" id="filterSalesDateTo"></div>
+              <div class="filter-group">
+                <label>Payment Status</label>
+                <select id="filterSalesPayment"><option value="">All</option><option value="pending">Pending</option><option value="token_paid">Token Paid</option><option value="paid">Fully Paid</option></select>
+              </div>
+              <div class="filter-group">
+                <label>Service Type</label>
+                <select id="filterSalesService"><option value="">All Services</option><option value="wedding">Wedding</option><option value="engagement">Engagement</option><option value="birthday">Birthday</option><option value="babyshower">Baby Shower</option><option value="naming">Naming Ceremony</option><option value="studio">Studio</option></select>
+              </div>
+              <div class="filter-actions">
+                <button class="btn-filter btn-apply" onclick="loadSalesReport()"><i class="bi bi-search"></i> Search</button>
+                <button class="btn-filter btn-reset" onclick="resetSalesFilters()"><i class="bi bi-x-circle"></i> Reset</button>
+              </div>
+            </div>
+          </div>
+          <div class="report-stats animate-fadeInUp">
+            <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-cash-stack"></i></div><div class="stat-label">Total Revenue</div><div class="stat-value" id="salesRevenue">&#8377;0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-check-circle"></i></div><div class="stat-label">Completed Payments</div><div class="stat-value" id="salesCompleted">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-hourglass-split"></i></div><div class="stat-label">Pending Payments</div><div class="stat-value" id="salesPending">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon info"><i class="bi bi-receipt"></i></div><div class="stat-label">Total Bookings</div><div class="stat-value" id="salesTotalBookings">0</div></div>
+          </div>
+          <div class="section-download-bar animate-fadeInUp">
+            <div class="bar-title"><i class="bi bi-cash-stack"></i> Sales Report</div>
+            <div class="download-btns">
+              <button class="dl-btn dl-btn-pdf" onclick="downloadReportPDF('sales')"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+              <button class="dl-btn dl-btn-excel" onclick="downloadReportExcel('sales')"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+              <button class="dl-btn dl-btn-csv" onclick="downloadReportCSV('sales')"><i class="bi bi-filetype-csv"></i> CSV</button>
+              <button class="dl-btn dl-btn-print" onclick="printSection('reportSales')"><i class="bi bi-printer-fill"></i> Print</button>
+            </div>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header" style="display:flex;justify-content:space-between;align-items:center;">
+              <h3 class="font-semibold text-base m-0"><i class="bi bi-cash-stack"></i> Sales Details</h3>
+              <span id="salesResultCount" style="font-size:0.8rem;color:var(--text-secondary);">0 records</span>
+            </div>
+            <div class="table-responsive">
+              <table class="ds-table" id="salesTable">
+                <thead><tr><th>Booking ID</th><th>Customer</th><th>Service</th><th>Amount</th><th>Token Paid</th><th>Remaining</th><th>Payment Status</th><th>Date</th></tr></thead>
+                <tbody id="salesTableBody"><tr><td colspan="8" class="table-loading"><i class="bi bi-arrow-repeat spin"></i> Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════ Photographers Report ══════ -->
+        <div id="reportPhotographers" class="report-section">
+          <div class="filter-panel animate-fadeInUp">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:0;"><i class="bi bi-funnel" style="color:var(--brand-600);margin-right:6px;"></i>Photographer Filters</h3>
+            </div>
+            <div class="filter-row">
+              <div class="filter-group">
+                <label>Status</label>
+                <select id="filterPhotoStatus"><option value="">All</option><option value="available">Available</option><option value="unavailable">Unavailable</option></select>
+              </div>
+              <div class="filter-group">
+                <label>Specialty</label>
+                <select id="filterPhotoSpecialty"><option value="">All Specialties</option><option value="Wedding">Wedding</option><option value="Portrait">Portrait</option><option value="Event">Event</option><option value="Landscape">Landscape</option></select>
+              </div>
+              <div class="filter-group"><label>Search Name</label><input type="text" id="filterPhotoSearch" placeholder="Search..."></div>
+              <div class="filter-group">
+                <label>Sort By</label>
+                <select id="filterPhotoSort"><option value="">Default</option><option value="earnings_desc">Earnings (High to Low)</option><option value="earnings_asc">Earnings (Low to High)</option><option value="jobs_desc">Jobs (High to Low)</option><option value="jobs_asc">Jobs (Low to High)</option></select>
+              </div>
+              <div class="filter-actions">
+                <button class="btn-filter btn-apply" onclick="loadPhotographersReport()"><i class="bi bi-search"></i> Search</button>
+                <button class="btn-filter btn-reset" onclick="resetPhotoFilters()"><i class="bi bi-x-circle"></i> Reset</button>
+              </div>
+            </div>
+          </div>
+          <div class="report-stats animate-fadeInUp">
+            <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-camera-fill"></i></div><div class="stat-label">Total Photographers</div><div class="stat-value" id="photoTotalCount">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-check-circle"></i></div><div class="stat-label">Available</div><div class="stat-value" id="photoAvailableCount">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon info"><i class="bi bi-briefcase"></i></div><div class="stat-label">Total Jobs Done</div><div class="stat-value" id="photoTotalJobs">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-currency-rupee"></i></div><div class="stat-label">Total Earnings</div><div class="stat-value" id="photoTotalEarnings">&#8377;0</div></div>
+          </div>
+          <div class="section-download-bar animate-fadeInUp">
+            <div class="bar-title"><i class="bi bi-camera-fill"></i> Photographer Performance Report</div>
+            <div class="download-btns">
+              <button class="dl-btn dl-btn-pdf" onclick="downloadReportPDF('photographers')"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+              <button class="dl-btn dl-btn-excel" onclick="downloadReportExcel('photographers')"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+              <button class="dl-btn dl-btn-csv" onclick="downloadReportCSV('photographers')"><i class="bi bi-filetype-csv"></i> CSV</button>
+              <button class="dl-btn dl-btn-print" onclick="printSection('reportPhotographers')"><i class="bi bi-printer-fill"></i> Print</button>
+            </div>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header" style="display:flex;justify-content:space-between;align-items:center;">
+              <h3 class="font-semibold text-base m-0"><i class="bi bi-camera"></i> Photographer Performance</h3>
+              <span id="photoResultCount" style="font-size:0.8rem;color:var(--text-secondary);">0 records</span>
+            </div>
+            <div class="table-responsive">
+              <table class="ds-table" id="photographersTable">
+                <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Specialty</th><th>Hourly Rate</th><th>Total Jobs</th><th>Total Earnings</th><th>Status</th></tr></thead>
+                <tbody id="photographersTableBody"><tr><td colspan="8" class="table-loading"><i class="bi bi-arrow-repeat spin"></i> Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════ Customer Wise Report ══════ -->
+        <div id="reportCustomer" class="report-section">
+          <div class="filter-panel animate-fadeInUp">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:0;"><i class="bi bi-person-lines-fill" style="color:var(--brand-600);margin-right:6px;"></i>Select Customer</h3>
+            </div>
+            <div class="filter-row">
+              <div class="filter-group" style="min-width:280px;">
+                <label>Customer</label>
+                <select id="filterCustSelect"><option value="">-- Select a Customer --</option></select>
+              </div>
+              <div class="filter-group"><label>Date From</label><input type="date" id="filterCustDateFrom"></div>
+              <div class="filter-group"><label>Date To</label><input type="date" id="filterCustDateTo"></div>
+              <div class="filter-group">
+                <label>Booking Status</label>
+                <select id="filterCustStatus"><option value="">All Status</option><option value="pending">Pending</option><option value="accepted">Accepted</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select>
+              </div>
+              <div class="filter-actions">
+                <button class="btn-filter btn-apply" onclick="loadCustomerReport()"><i class="bi bi-search"></i> Generate</button>
+                <button class="btn-filter btn-reset" onclick="resetCustFilters()"><i class="bi bi-x-circle"></i> Reset</button>
+              </div>
+            </div>
+          </div>
+          <div id="custReportContent" style="display:none;">
+            <div class="report-stats animate-fadeInUp">
+              <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-person-fill"></i></div><div class="stat-label">Customer</div><div class="stat-value" id="custName" style="font-size:0.95rem;">—</div></div>
+              <div class="stat-card-v2"><div class="stat-icon info"><i class="bi bi-calendar-check"></i></div><div class="stat-label">Total Bookings</div><div class="stat-value" id="custTotalBookings">0</div></div>
+              <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-currency-rupee"></i></div><div class="stat-label">Total Spent</div><div class="stat-value" id="custTotalSpent">&#8377;0</div></div>
+              <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-check-circle"></i></div><div class="stat-label">Completed</div><div class="stat-value" id="custCompleted">0</div></div>
+            </div>
+            <div class="section-download-bar animate-fadeInUp">
+              <div class="bar-title"><i class="bi bi-person-lines-fill"></i> Customer Wise Report</div>
+              <div class="download-btns">
+                <button class="dl-btn dl-btn-pdf" onclick="downloadReportPDF('customer')"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+                <button class="dl-btn dl-btn-excel" onclick="downloadReportExcel('customer')"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+                <button class="dl-btn dl-btn-csv" onclick="downloadReportCSV('customer')"><i class="bi bi-filetype-csv"></i> CSV</button>
+                <button class="dl-btn dl-btn-print" onclick="printSection('reportCustomer')"><i class="bi bi-printer-fill"></i> Print</button>
+              </div>
+            </div>
+            <div class="ds-card animate-fadeInUp">
+              <div class="ds-card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                <h3 class="font-semibold text-base m-0"><i class="bi bi-person-lines-fill"></i> Customer Bookings</h3>
+                <span id="custResultCount" style="font-size:0.8rem;color:var(--text-secondary);">0 records</span>
+              </div>
+              <div class="table-responsive">
+                <table class="ds-table" id="customerTable">
+                  <thead><tr><th>Booking ID</th><th>Service</th><th>Package</th><th>Event Date</th><th>Location</th><th>Amount</th><th>Payment</th><th>Status</th><th>Photographer</th></tr></thead>
+                  <tbody id="customerTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div id="custPlaceholder" class="ds-card animate-fadeInUp" style="padding:40px;text-align:center;">
+            <i class="bi bi-person-lines-fill" style="font-size:3rem;color:var(--text-tertiary);display:block;margin-bottom:12px;"></i>
+            <p style="color:var(--text-secondary);font-size:0.95rem;margin:0;">Select a customer from the dropdown above and click <b>Generate</b> to view their booking report.</p>
+          </div>
+        </div>
+
+        <!-- ══════ Activity Report ══════ -->
+        <div id="reportActivity" class="report-section">
+          <div class="filter-panel animate-fadeInUp">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:0;"><i class="bi bi-funnel" style="color:var(--brand-600);margin-right:6px;"></i>Activity Filters</h3>
+            </div>
+            <div class="filter-row">
+              <div class="filter-group">
+                <label>Role</label>
+                <select id="filterActRole"><option value="">All Roles</option><option value="admin">Admin</option><option value="photographer">Photographer</option><option value="customer">Customer</option></select>
+              </div>
+              <div class="filter-group"><label>Search Email</label><input type="text" id="filterActSearch" placeholder="Search..."></div>
+              <div class="filter-group"><label>Date From</label><input type="date" id="filterActDateFrom"></div>
+              <div class="filter-group"><label>Date To</label><input type="date" id="filterActDateTo"></div>
+              <div class="filter-actions">
+                <button class="btn-filter btn-apply" onclick="loadActivityReport()"><i class="bi bi-search"></i> Search</button>
+                <button class="btn-filter btn-reset" onclick="resetActFilters()"><i class="bi bi-x-circle"></i> Reset</button>
+              </div>
+            </div>
+          </div>
+          <div class="report-stats animate-fadeInUp">
+            <div class="stat-card-v2"><div class="stat-icon brand"><i class="bi bi-clock-history"></i></div><div class="stat-label">Total Sessions</div><div class="stat-value" id="actTotalSessions">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon success"><i class="bi bi-box-arrow-in-right"></i></div><div class="stat-label">Active Now</div><div class="stat-value" id="actActiveNow">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon info"><i class="bi bi-people"></i></div><div class="stat-label">Unique Users</div><div class="stat-value" id="actUniqueUsers">0</div></div>
+            <div class="stat-card-v2"><div class="stat-icon warning"><i class="bi bi-calendar-date"></i></div><div class="stat-label">Today's Logins</div><div class="stat-value" id="actTodayLogins">0</div></div>
+          </div>
+          <div class="section-download-bar animate-fadeInUp">
+            <div class="bar-title"><i class="bi bi-clock-history"></i> Login / Logout Activity Report</div>
+            <div class="download-btns">
+              <button class="dl-btn dl-btn-pdf" onclick="downloadReportPDF('activity')"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+              <button class="dl-btn dl-btn-excel" onclick="downloadReportExcel('activity')"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</button>
+              <button class="dl-btn dl-btn-csv" onclick="downloadReportCSV('activity')"><i class="bi bi-filetype-csv"></i> CSV</button>
+              <button class="dl-btn dl-btn-print" onclick="printSection('reportActivity')"><i class="bi bi-printer-fill"></i> Print</button>
+            </div>
+          </div>
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header"><h3 class="font-semibold text-base m-0"><i class="bi bi-clock-history"></i> Login/Logout Activity</h3></div>
+            <div class="table-responsive">
+              <table class="ds-table" id="activityTable">
+                <thead><tr><th>#</th><th>User</th><th>Role</th><th>Login Time</th><th>Logout Time</th><th>Duration</th></tr></thead>
+                <tbody id="activityTableBody"><tr><td colspan="6" class="table-loading"><i class="bi bi-arrow-repeat spin"></i> Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <aside class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3 class="font-semibold text-base m-0">Notifications</h3>
+      <button class="btn btn-sm btn-ghost" id="notifClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="notif-panel-body" id="notifList">
+      <div class="empty-state"><div class="empty-state-icon">&#x1F514;</div><div class="empty-state-title">No notifications</div></div>
+    </div>
+  </aside>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    const user = DashApp.requireAuth(['admin']);
+    if (user) {
+      const name = user.first_name || 'Admin';
+      const initial = name.charAt(0).toUpperCase();
+      document.getElementById('topbarAvatar').textContent = initial;
+      document.getElementById('topbarUserName').textContent = name;
+      document.getElementById('sidebarAvatar').textContent = initial;
+      document.getElementById('sidebarUserName').textContent = name;
+    }
+    DashApp.init();
+
+    let currentReport = 'advanced';
+    let reportData = {};
+    let advancedData = [];
+    let advCurrentPage = 1;
+    const advPageSize = 15;
+    let activeQuickFilter = '';
+
+    function showReport(type) {
+      currentReport = type;
+      document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
+      document.querySelectorAll('.report-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('report' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
+      if (type === 'advanced') loadAdvancedReport();
+      else if (type === 'users') loadUsersReport();
+      else if (type === 'sales') loadSalesReport();
+      else if (type === 'photographers') loadPhotographersReport();
+      else if (type === 'customer') loadCustomerDropdown();
+      else if (type === 'activity') loadActivityReport();
+    }
+
+    /* ═══ LOAD CUSTOMERS FOR FILTER ═══ */
+    function loadCustomerFilter() {
+      fetch(DashApp.API_URL + '/admin/users?user_type=customer')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var sel = document.getElementById('filterCustomer');
+          (data.users || []).forEach(function(u) {
+            var opt = document.createElement('option');
+            opt.value = u.id;
+            opt.textContent = u.first_name + ' ' + u.last_name + ' (' + u.email + ')';
+            sel.appendChild(opt);
+          });
+        });
+    }
+    loadCustomerFilter();
+
+    /* ═══ QUICK FILTER ═══ */
+    function applyQuickFilter(value, btn) {
+      activeQuickFilter = value;
+      document.querySelectorAll('.quick-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      if (value) {
+        document.getElementById('filterDateFrom').value = '';
+        document.getElementById('filterDateTo').value = '';
+      }
+      loadAdvancedReport();
+    }
+
+    function applyFilters() {
+      activeQuickFilter = '';
+      document.querySelectorAll('.quick-btn').forEach(function(b) { b.classList.remove('active'); });
+      loadAdvancedReport();
+    }
+
+    function resetFilters() {
+      document.getElementById('filterDateFrom').value = '';
+      document.getElementById('filterDateTo').value = '';
+      document.getElementById('filterService').value = '';
+      document.getElementById('filterStatus').value = '';
+      document.getElementById('filterPayment').value = '';
+      document.getElementById('filterCustomer').value = '';
+      activeQuickFilter = '';
+      document.querySelectorAll('.quick-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelector('.quick-btn:last-child').classList.add('active');
+      loadAdvancedReport();
+    }
+
+    /* ═══ BUILD FILTER PARAMS ═══ */
+    function buildFilterParams() {
+      var params = new URLSearchParams();
+      if (activeQuickFilter) {
+        params.set('quick_filter', activeQuickFilter);
+      } else {
+        var df = document.getElementById('filterDateFrom').value;
+        var dt = document.getElementById('filterDateTo').value;
+        if (df) params.set('date_from', df);
+        if (dt) params.set('date_to', dt);
+      }
+      var svc = document.getElementById('filterService').value;
+      var st = document.getElementById('filterStatus').value;
+      var ps = document.getElementById('filterPayment').value;
+      var cid = document.getElementById('filterCustomer').value;
+      if (svc) params.set('service_type', svc);
+      if (st) params.set('status', st);
+      if (ps) params.set('payment_status', ps);
+      if (cid) params.set('customer_id', cid);
+      return params.toString();
+    }
+
+    /* ═══ ADVANCED BOOKING REPORT ═══ */
+    function loadAdvancedReport() {
+      var params = buildFilterParams();
+      var tbody = document.getElementById('advancedTableBody');
+      tbody.innerHTML = '<tr><td colspan="9" class="table-loading"><i class="bi bi-arrow-repeat spin"></i> Loading report...</td></tr>';
+
+      fetch(DashApp.API_URL + '/admin/reports/bookings?' + params)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          advancedData = data.bookings || [];
+          var summary = data.summary || {};
+          document.getElementById('advTotalBookings').textContent = summary.total_bookings || 0;
+          document.getElementById('advTotalRevenue').textContent = DashApp.formatCurrency(summary.total_revenue || 0);
+          document.getElementById('advCancellations').textContent = summary.total_cancellations || 0;
+          document.getElementById('advPending').textContent = summary.pending_bookings || 0;
+          document.getElementById('advResultCount').textContent = advancedData.length + ' records';
+          advCurrentPage = 1;
+          renderAdvancedTable();
+        })
+        .catch(function() {
+          tbody.innerHTML = '<tr><td colspan="9" class="text-center text-secondary py-5">Failed to load report data</td></tr>';
+        });
+    }
+
+    function renderAdvancedTable() {
+      var tbody = document.getElementById('advancedTableBody');
+      if (!advancedData.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-secondary py-5">No bookings found matching your filters</td></tr>';
+        document.getElementById('advPagination').innerHTML = '';
+        return;
+      }
+      var start = (advCurrentPage - 1) * advPageSize;
+      var page = advancedData.slice(start, start + advPageSize);
+      var statusBadges = { pending:'badge-warning', accepted:'badge-primary', completed:'badge-success', declined:'badge-danger', token_paid:'badge-info', cancelled:'badge-danger' };
+      var payBadges = { pending:'badge-warning', token_paid:'badge-primary', paid:'badge-success', refunded:'badge-info' };
+
+      tbody.innerHTML = page.map(function(b) {
+        var sBadge = statusBadges[b.status] || 'badge-neutral';
+        var pBadge = payBadges[b.payment_status] || 'badge-neutral';
+        var dateStr = b.event_date ? new Date(b.event_date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
+        return '<tr>' +
+          '<td class="font-medium" style="color:var(--brand-600);font-weight:700;">#BMS-' + String(b.id).padStart(4,'0') + '</td>' +
+          '<td class="font-semibold">' + DashApp.escapeHtml(b.customer_name || '') + '</td>' +
+          '<td>' + DashApp.escapeHtml(b.service_type || '') + '</td>' +
+          '<td>' + dateStr + '</td>' +
+          '<td>' + (b.event_time || '—') + '</td>' +
+          '<td class="font-semibold">' + DashApp.formatCurrency(b.total_price || 0) + '</td>' +
+          '<td><span class="badge-v2 ' + pBadge + '">' + (b.payment_status || '—') + '</span></td>' +
+          '<td><span class="badge-v2 ' + sBadge + '">' + b.status + '</span></td>' +
+          '<td>' + DashApp.escapeHtml(b.photographer_name || 'Unassigned') + '</td>' +
+          '</tr>';
+      }).join('');
+      renderPagination();
+    }
+
+    function renderPagination() {
+      var totalPages = Math.ceil(advancedData.length / advPageSize);
+      var pag = document.getElementById('advPagination');
+      if (totalPages <= 1) { pag.innerHTML = ''; return; }
+      var html = '<button class="page-btn" onclick="advGoPage(' + (advCurrentPage - 1) + ')" ' + (advCurrentPage === 1 ? 'disabled' : '') + '><i class="bi bi-chevron-left"></i></button>';
+      for (var i = 1; i <= totalPages; i++) {
+        if (totalPages > 7 && i > 3 && i < totalPages - 2 && Math.abs(i - advCurrentPage) > 1) {
+          if (i === 4) html += '<span class="page-info">...</span>';
+          continue;
+        }
+        html += '<button class="page-btn ' + (i === advCurrentPage ? 'active' : '') + '" onclick="advGoPage(' + i + ')">' + i + '</button>';
+      }
+      html += '<button class="page-btn" onclick="advGoPage(' + (advCurrentPage + 1) + ')" ' + (advCurrentPage === totalPages ? 'disabled' : '') + '><i class="bi bi-chevron-right"></i></button>';
+      html += '<span class="page-info">Page ' + advCurrentPage + ' of ' + totalPages + '</span>';
+      pag.innerHTML = html;
+    }
+
+    function advGoPage(p) {
+      var totalPages = Math.ceil(advancedData.length / advPageSize);
+      if (p < 1 || p > totalPages) return;
+      advCurrentPage = p;
+      renderAdvancedTable();
+    }
+
+    /* ═══ ADVANCED REPORT DOWNLOADS ═══ */
+    function downloadAdvancedExcel() {
+      if (!advancedData.length) { Swal.fire('Info','No data to export.','info'); return; }
+      var rows = advancedData.map(function(b) {
+        return {
+          'Booking ID': 'BMS-' + String(b.id).padStart(4,'0'),
+          'Customer Name': b.customer_name || '',
+          'Customer Email': b.customer_email || '',
+          'Service': b.service_type || '',
+          'Package': b.package_name || '',
+          'Event Date': b.event_date || '',
+          'Event Time': b.event_time || '',
+          'Location': b.location || '',
+          'Amount': b.total_price || 0,
+          'Payment Status': b.payment_status || '',
+          'Booking Status': b.status || '',
+          'Photographer': b.photographer_name || 'Unassigned'
+        };
+      });
+      var ws = XLSX.utils.aoa_to_sheet([
+        ['BookMyShoot'],
+        ['Advanced Booking Report'],
+        ['Generated: ' + new Date().toLocaleString('en-IN')],
+        ['Report Period: ' + (activeQuickFilter || 'Custom / All Time')],
+        ['Total Records: ' + rows.length],
+        []
+      ]);
+      XLSX.utils.sheet_add_json(ws, rows, { origin: 'A7' });
+      var cols = Object.keys(rows[0]);
+      ws['!cols'] = cols.map(function(c){ return { wch: Math.min(Math.max(c.length, Math.max.apply(null, rows.map(function(r){ return String(r[c]||'').length; }))) + 4, 40) }; });
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Booking Report');
+      XLSX.writeFile(wb, 'BookMyShoot_Report_' + new Date().toISOString().split('T')[0] + '.xlsx');
+      Swal.fire({icon:'success',title:'Excel Downloaded!',timer:2000,showConfirmButton:false});
+    }
+
+    function downloadAdvancedCSV() {
+      if (!advancedData.length) { Swal.fire('Info','No data to export.','info'); return; }
+      var params = buildFilterParams();
+      window.open(DashApp.API_URL + '/admin/reports/export?' + params, '_blank');
+      Swal.fire({icon:'success',title:'CSV Downloaded!',timer:2000,showConfirmButton:false});
+    }
+
+    function downloadAdvancedPDF() {
+      if (!advancedData.length) { Swal.fire('Info','No data to export.','info'); return; }
+      var jsPDFCtr = window.jspdf.jsPDF;
+      var doc = new jsPDFCtr('landscape','mm','a4');
+      var startY = pdfHeader(doc, 'Advanced Booking Report');
+      var rows = advancedData.map(function(b) {
+        return [
+          'BMS-' + String(b.id).padStart(4,'0'), b.customer_name || '', b.service_type || '',
+          b.event_date ? new Date(b.event_date).toLocaleDateString('en-IN') : '',
+          b.event_time || '', 'Rs.' + (b.total_price||0).toLocaleString('en-IN'),
+          b.payment_status || '', b.status || '', b.photographer_name || 'Unassigned'
+        ];
+      });
+      doc.autoTable({
+        startY: startY, head: [['Booking ID','Customer','Service','Date','Time','Amount','Payment','Status','Photographer']],
+        body: rows, theme: 'striped',
+        headStyles: { fillColor: [102,126,234], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+        bodyStyles: { fontSize: 7.5 }, alternateRowStyles: { fillColor: [245,247,250] },
+        styles: { cellPadding: 2.5 }, margin: { left: 14, right: 14 }
+      });
+      pdfFooter(doc);
+      doc.save('BookMyShoot_Report_' + new Date().toISOString().split('T')[0] + '.pdf');
+      Swal.fire({icon:'success',title:'PDF Downloaded!',timer:2000,showConfirmButton:false});
+    }
+
+    function printAdvanced() {
+      var section = document.getElementById('reportAdvanced');
+      var pw = window.open('','_blank');
+      pw.document.write('<html><head><title>Print Report</title><style>body{padding:20px;font-family:Inter,sans-serif;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:11px;} th{background:#667eea;color:#fff;} .filter-panel,.section-download-bar,.pagination,.quick-filters,.filter-actions{display:none;} .stat-card-v2{display:inline-block;padding:10px 20px;margin:5px;border:1px solid #ddd;border-radius:8px;} h1{color:#667eea;}</style></head><body><h1>BookMyShoot - Advanced Booking Report</h1><p style="color:#888;">Generated: ' + new Date().toLocaleString('en-IN') + '</p>' + section.innerHTML + '</body></html>');
+      pw.document.close();
+      setTimeout(function(){ pw.print(); pw.close(); }, 500);
+    }
+
+    /* ═══ OTHER REPORT LOADERS ═══ */
+    /* ═══ USERS REPORT (with filters) ═══ */
+    function resetUserFilters() {
+      document.getElementById('filterUserType').value = '';
+      document.getElementById('filterUserSearch').value = '';
+      document.getElementById('filterUserDateFrom').value = '';
+      document.getElementById('filterUserDateTo').value = '';
+      loadUsersReport();
+    }
+
+    function loadUsersReport() {
+      var typeFilter = document.getElementById('filterUserType').value;
+      var searchVal = (document.getElementById('filterUserSearch').value || '').toLowerCase();
+      var dateFrom = document.getElementById('filterUserDateFrom').value;
+      var dateTo = document.getElementById('filterUserDateTo').value;
+      var url = DashApp.API_URL + '/admin/users';
+      if (typeFilter) url += '?user_type=' + typeFilter;
+
+      fetch(url).then(function(r){return r.json();}).then(function(data) {
+        var users = data.users || [];
+
+        // Client-side filters
+        if (searchVal) {
+          users = users.filter(function(u) {
+            return (u.first_name + ' ' + u.last_name).toLowerCase().includes(searchVal) || u.email.toLowerCase().includes(searchVal);
+          });
+        }
+        if (dateFrom) {
+          users = users.filter(function(u) { return u.created_at && u.created_at.split('T')[0] >= dateFrom; });
+        }
+        if (dateTo) {
+          users = users.filter(function(u) { return u.created_at && u.created_at.split('T')[0] <= dateTo; });
+        }
+
+        reportData.users = users;
+
+        // Stats
+        document.getElementById('usersTotalCount').textContent = users.length;
+        document.getElementById('usersCustomerCount').textContent = users.filter(function(u){return u.user_type==='customer';}).length;
+        document.getElementById('usersPhotographerCount').textContent = users.filter(function(u){return u.user_type==='photographer';}).length;
+        document.getElementById('usersAdminCount').textContent = users.filter(function(u){return u.user_type==='admin';}).length;
+        document.getElementById('usersResultCount').textContent = users.length + ' records';
+
+        var tbody = document.getElementById('usersTableBody');
+        if (!users.length) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-5">No users found</td></tr>';
+          return;
+        }
+        tbody.innerHTML = users.map(function(u) {
+          var typeBadge = u.user_type==='admin'?'badge-danger':u.user_type==='photographer'?'badge-primary':'badge-success';
+          return '<tr><td class="font-medium">#'+u.id+'</td><td class="font-semibold">'+DashApp.escapeHtml(u.first_name+' '+u.last_name)+'</td><td>'+DashApp.escapeHtml(u.email)+'</td><td>'+(u.phone||'—')+'</td><td><span class="badge-v2 '+typeBadge+'">'+u.user_type+'</span></td><td>'+DashApp.formatDate(u.created_at)+'</td></tr>';
+        }).join('');
+      });
+    }
+
+    /* ═══ SALES REPORT (with filters) ═══ */
+    var salesQuickFilter = '';
+    function applySalesQuickFilter(value, btn) {
+      salesQuickFilter = value;
+      document.querySelectorAll('#reportSales .quick-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      if (value) {
+        document.getElementById('filterSalesDateFrom').value = '';
+        document.getElementById('filterSalesDateTo').value = '';
+      }
+      loadSalesReport();
+    }
+    function resetSalesFilters() {
+      document.getElementById('filterSalesDateFrom').value = '';
+      document.getElementById('filterSalesDateTo').value = '';
+      document.getElementById('filterSalesPayment').value = '';
+      document.getElementById('filterSalesService').value = '';
+      salesQuickFilter = '';
+      document.querySelectorAll('#reportSales .quick-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelector('#reportSales .quick-btn:last-child').classList.add('active');
+      loadSalesReport();
+    }
+
+    function loadSalesReport() {
+      var params = new URLSearchParams();
+      if (salesQuickFilter) params.set('quick_filter', salesQuickFilter);
+      else {
+        var df = document.getElementById('filterSalesDateFrom').value;
+        var dt = document.getElementById('filterSalesDateTo').value;
+        if (df) params.set('date_from', df);
+        if (dt) params.set('date_to', dt);
+      }
+      var ps = document.getElementById('filterSalesPayment').value;
+      var svc = document.getElementById('filterSalesService').value;
+      if (ps) params.set('payment_status', ps);
+      if (svc) params.set('service_type', svc);
+
+      var tbody = document.getElementById('salesTableBody');
+      tbody.innerHTML = '<tr><td colspan="8" class="table-loading"><i class="bi bi-arrow-repeat spin"></i> Loading...</td></tr>';
+
+      fetch(DashApp.API_URL + '/admin/reports/bookings?' + params.toString())
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var bookings = data.bookings || [];
+          var summary = data.summary || {};
+
+          document.getElementById('salesRevenue').textContent = DashApp.formatCurrency(summary.total_revenue || 0);
+          document.getElementById('salesCompleted').textContent = bookings.filter(function(b){return b.payment_status==='paid';}).length;
+          document.getElementById('salesPending').textContent = bookings.filter(function(b){return b.payment_status==='pending';}).length;
+          document.getElementById('salesTotalBookings').textContent = bookings.length;
+          document.getElementById('salesResultCount').textContent = bookings.length + ' records';
+
+          // Store for download
+          reportData.salesBookings = bookings;
+
+          if (!bookings.length) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-secondary py-5">No sales data found</td></tr>';
+            return;
+          }
+          tbody.innerHTML = bookings.map(function(b){
+            var pBadge = b.payment_status==='paid'?'badge-success':b.payment_status==='token_paid'?'badge-primary':'badge-warning';
+            var dateStr = b.event_date ? new Date(b.event_date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
+            return '<tr><td class="font-medium" style="color:var(--brand-600);font-weight:700;">#BMS-'+String(b.id).padStart(4,'0')+'</td><td class="font-semibold">'+DashApp.escapeHtml(b.customer_name||'')+'</td><td>'+DashApp.escapeHtml(b.service_type||'')+'</td><td class="font-semibold">'+DashApp.formatCurrency(b.total_price||0)+'</td><td>'+DashApp.formatCurrency(b.token_amount||0)+'</td><td>'+DashApp.formatCurrency(b.remaining_amount||0)+'</td><td><span class="badge-v2 '+pBadge+'">'+b.payment_status+'</span></td><td>'+dateStr+'</td></tr>';
+          }).join('');
+        })
+        .catch(function() {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center text-secondary py-5">Failed to load sales data</td></tr>';
+        });
+    }
+
+    /* ═══ PHOTOGRAPHERS REPORT (with filters) ═══ */
+    function resetPhotoFilters() {
+      document.getElementById('filterPhotoStatus').value = '';
+      document.getElementById('filterPhotoSpecialty').value = '';
+      document.getElementById('filterPhotoSearch').value = '';
+      document.getElementById('filterPhotoSort').value = '';
+      loadPhotographersReport();
+    }
+
+    function loadPhotographersReport() {
+      var statusF = document.getElementById('filterPhotoStatus').value;
+      var specF = document.getElementById('filterPhotoSpecialty').value;
+      var searchF = (document.getElementById('filterPhotoSearch').value || '').toLowerCase();
+      var sortF = document.getElementById('filterPhotoSort').value;
+
+      fetch(DashApp.API_URL + '/admin/photographers').then(function(r){return r.json();}).then(function(data) {
+        var photographers = data.photographers || [];
+
+        // Apply filters
+        if (statusF === 'available') photographers = photographers.filter(function(p){return p.is_available;});
+        else if (statusF === 'unavailable') photographers = photographers.filter(function(p){return !p.is_available;});
+        if (specF) photographers = photographers.filter(function(p){return (p.specialty||'').toLowerCase() === specF.toLowerCase();});
+        if (searchF) photographers = photographers.filter(function(p){
+          var name = p.user ? (p.user.first_name + ' ' + p.user.last_name).toLowerCase() : '';
+          return name.includes(searchF);
+        });
+
+        // Sort
+        if (sortF === 'earnings_desc') photographers.sort(function(a,b){return (b.total_earnings||0)-(a.total_earnings||0);});
+        else if (sortF === 'earnings_asc') photographers.sort(function(a,b){return (a.total_earnings||0)-(b.total_earnings||0);});
+        else if (sortF === 'jobs_desc') photographers.sort(function(a,b){return (b.completed_jobs||0)-(a.completed_jobs||0);});
+        else if (sortF === 'jobs_asc') photographers.sort(function(a,b){return (a.completed_jobs||0)-(b.completed_jobs||0);});
+
+        reportData.photographers = photographers;
+
+        // Stats
+        document.getElementById('photoTotalCount').textContent = photographers.length;
+        document.getElementById('photoAvailableCount').textContent = photographers.filter(function(p){return p.is_available;}).length;
+        document.getElementById('photoTotalJobs').textContent = photographers.reduce(function(s,p){return s+(p.completed_jobs||0);}, 0);
+        document.getElementById('photoTotalEarnings').textContent = DashApp.formatCurrency(photographers.reduce(function(s,p){return s+(p.total_earnings||0);}, 0));
+        document.getElementById('photoResultCount').textContent = photographers.length + ' records';
+
+        var tbody = document.getElementById('photographersTableBody');
+        if (!photographers.length) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center text-secondary py-5">No photographers found</td></tr>';
+          return;
+        }
+        tbody.innerHTML = photographers.map(function(p){
+          var name = p.user ? DashApp.escapeHtml(p.user.first_name+' '+p.user.last_name) : 'N/A';
+          var email = p.user ? DashApp.escapeHtml(p.user.email) : '—';
+          var statusBadge = p.is_available ? '<span class="badge-v2 badge-success">Available</span>' : '<span class="badge-v2 badge-warning">Unavailable</span>';
+          return '<tr><td class="font-medium">#'+p.id+'</td><td class="font-semibold">'+name+'</td><td>'+email+'</td><td>'+DashApp.escapeHtml(p.specialty||'—')+'</td><td>'+DashApp.formatCurrency(p.hourly_rate||0)+'/hr</td><td>'+(p.completed_jobs||0)+'</td><td class="font-semibold">'+DashApp.formatCurrency(p.total_earnings||0)+'</td><td>'+statusBadge+'</td></tr>';
+        }).join('');
+      });
+    }
+
+    /* ═══ ACTIVITY REPORT (with filters) ═══ */
+    function resetActFilters() {
+      document.getElementById('filterActRole').value = '';
+      document.getElementById('filterActSearch').value = '';
+      document.getElementById('filterActDateFrom').value = '';
+      document.getElementById('filterActDateTo').value = '';
+      loadActivityReport();
+    }
+
+    function loadActivityReport() {
+      var roleFilter = document.getElementById('filterActRole').value.toLowerCase();
+      var searchFilter = (document.getElementById('filterActSearch').value || '').toLowerCase();
+      var dateFromFilter = document.getElementById('filterActDateFrom').value;
+      var dateToFilter = document.getElementById('filterActDateTo').value;
+
+      fetch(DashApp.API_URL + '/admin/logs').then(function(r){return r.json();}).then(function(data) {
+        reportData.activity = data.logs;
+        var tbody = document.getElementById('activityTableBody');
+        if (data.logs && data.logs.length) {
+          var authLogs = data.logs.filter(function(l){return l.action==='login'||l.action==='logout';}).sort(function(a,b){return new Date(a.timestamp)-new Date(b.timestamp);});
+          var userSessions = {};
+          authLogs.forEach(function(log){
+            var key = log.user_email || 'System';
+            if(!userSessions[key]) userSessions[key]={pending:null,sessions:[],details:log.details||''};
+            if(log.action==='login'){
+              if(userSessions[key].pending) userSessions[key].sessions.push({login:userSessions[key].pending,logout:null});
+              userSessions[key].pending=log;
+            } else {
+              userSessions[key].sessions.push({login:userSessions[key].pending,logout:log});
+              userSessions[key].pending=null;
+            }
+          });
+          Object.values(userSessions).forEach(function(u){if(u.pending){u.sessions.push({login:u.pending,logout:null});u.pending=null;}});
+          var rows = [];
+          Object.entries(userSessions).forEach(function(entry){
+            var email=entry[0], u=entry[1];
+            u.sessions.forEach(function(s){rows.push({email:email,details:u.details,loginTime:s.login?new Date(s.login.timestamp):null,logoutTime:s.logout?new Date(s.logout.timestamp):null,loginLog:s.login,logoutLog:s.logout});});
+          });
+          rows.sort(function(a,b){return (b.loginTime||b.logoutTime||0)-(a.loginTime||a.logoutTime||0);});
+
+          function extractRole(d){if(!d)return '—';var m=d.match(/\b(admin|photographer|customer)\b/i);return m?m[1].charAt(0).toUpperCase()+m[1].slice(1):'—';}
+
+          // Apply filters
+          if (roleFilter) {
+            rows = rows.filter(function(r) {
+              var role = extractRole((r.loginLog&&r.loginLog.details)||(r.logoutLog&&r.logoutLog.details)||'');
+              return role.toLowerCase() === roleFilter;
+            });
+          }
+          if (searchFilter) {
+            rows = rows.filter(function(r) { return r.email.toLowerCase().includes(searchFilter); });
+          }
+          if (dateFromFilter) {
+            rows = rows.filter(function(r) {
+              var d = r.loginTime || r.logoutTime;
+              return d && d.toISOString().split('T')[0] >= dateFromFilter;
+            });
+          }
+          if (dateToFilter) {
+            rows = rows.filter(function(r) {
+              var d = r.loginTime || r.logoutTime;
+              return d && d.toISOString().split('T')[0] <= dateToFilter;
+            });
+          }
+
+          reportData.activityRows = rows;
+
+          // Stats
+          document.getElementById('actTotalSessions').textContent = rows.length;
+          document.getElementById('actActiveNow').textContent = rows.filter(function(r){return r.loginTime && !r.logoutTime;}).length;
+          var uniqueEmails = {};
+          rows.forEach(function(r){uniqueEmails[r.email]=true;});
+          document.getElementById('actUniqueUsers').textContent = Object.keys(uniqueEmails).length;
+          var today = new Date().toISOString().split('T')[0];
+          document.getElementById('actTodayLogins').textContent = rows.filter(function(r){return r.loginTime && r.loginTime.toISOString().split('T')[0]===today;}).length;
+
+          function roleBadge(r){return r==='Admin'?'badge-danger':r==='Photographer'?'badge-primary':r==='Customer'?'badge-success':'badge-neutral';}
+          function calcDur(a,b){if(!a||!b)return '—';var d=Math.floor((b-a)/1000);if(d<60)return d+'s';if(d<3600)return Math.floor(d/60)+'m '+d%60+'s';return Math.floor(d/3600)+'h '+Math.floor(d%3600/60)+'m';}
+          function fmtT(d){return d?d.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}):'<span style="color:var(--text-tertiary);">—</span>';}
+
+          if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-5">No activity logs matching filters</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = rows.map(function(r,i){
+            var role=extractRole((r.loginLog&&r.loginLog.details)||(r.logoutLog&&r.logoutLog.details)||'');
+            return '<tr><td class="font-medium">'+(i+1)+'</td><td class="font-semibold">'+DashApp.escapeHtml(r.email)+'</td><td><span class="badge-v2 '+roleBadge(role)+'">'+role+'</span></td><td>'+(r.loginTime?'<i class="bi bi-box-arrow-in-right" style="color:var(--success-600);margin-right:4px;"></i>'+fmtT(r.loginTime):fmtT(null))+'</td><td>'+(r.logoutTime?'<i class="bi bi-box-arrow-left" style="color:var(--warning-600);margin-right:4px;"></i>'+fmtT(r.logoutTime):(r.loginTime?'<span class="badge-v2 badge-success" style="font-size:0.7rem;">Active Now</span>':fmtT(null)))+'</td><td>'+calcDur(r.loginTime,r.logoutTime)+'</td></tr>';
+          }).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-5">No activity logs</td></tr>';
+        }
+      });
+    }
+
+    /* ═══ CUSTOMER WISE REPORT ═══ */
+    var custDropdownLoaded = false;
+    function loadCustomerDropdown() {
+      if (custDropdownLoaded) return;
+      fetch(DashApp.API_URL + '/admin/users?user_type=customer')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var sel = document.getElementById('filterCustSelect');
+          (data.users || []).forEach(function(u) {
+            var opt = document.createElement('option');
+            opt.value = u.id;
+            opt.textContent = u.first_name + ' ' + u.last_name + ' (' + u.email + ')';
+            sel.appendChild(opt);
+          });
+          custDropdownLoaded = true;
+        });
+    }
+
+    function resetCustFilters() {
+      document.getElementById('filterCustSelect').value = '';
+      document.getElementById('filterCustDateFrom').value = '';
+      document.getElementById('filterCustDateTo').value = '';
+      document.getElementById('filterCustStatus').value = '';
+      document.getElementById('custReportContent').style.display = 'none';
+      document.getElementById('custPlaceholder').style.display = 'block';
+    }
+
+    function loadCustomerReport() {
+      var custId = document.getElementById('filterCustSelect').value;
+      if (!custId) {
+        Swal.fire('Select Customer', 'Please select a customer from the dropdown.', 'warning');
+        return;
+      }
+
+      var params = new URLSearchParams();
+      params.set('customer_id', custId);
+      var df = document.getElementById('filterCustDateFrom').value;
+      var dt = document.getElementById('filterCustDateTo').value;
+      var st = document.getElementById('filterCustStatus').value;
+      if (df) params.set('date_from', df);
+      if (dt) params.set('date_to', dt);
+      if (st) params.set('status', st);
+
+      var tbody = document.getElementById('customerTableBody');
+      tbody.innerHTML = '<tr><td colspan="9" class="table-loading"><i class="bi bi-arrow-repeat spin"></i> Loading...</td></tr>';
+      document.getElementById('custReportContent').style.display = 'block';
+      document.getElementById('custPlaceholder').style.display = 'none';
+
+      fetch(DashApp.API_URL + '/admin/reports/bookings?' + params.toString())
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var bookings = data.bookings || [];
+          var summary = data.summary || {};
+
+          // Get customer name from dropdown
+          var sel = document.getElementById('filterCustSelect');
+          var custName = sel.options[sel.selectedIndex].textContent.split(' (')[0];
+          document.getElementById('custName').textContent = custName;
+          document.getElementById('custTotalBookings').textContent = bookings.length;
+          document.getElementById('custTotalSpent').textContent = DashApp.formatCurrency(summary.total_revenue || 0);
+          document.getElementById('custCompleted').textContent = bookings.filter(function(b){return b.status==='completed';}).length;
+          document.getElementById('custResultCount').textContent = bookings.length + ' records';
+
+          reportData.customerBookings = bookings;
+          reportData.customerName = custName;
+
+          if (!bookings.length) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-secondary py-5">No bookings found for this customer</td></tr>';
+            return;
+          }
+
+          var statusBadges = { pending:'badge-warning', accepted:'badge-primary', completed:'badge-success', declined:'badge-danger', token_paid:'badge-info', cancelled:'badge-danger' };
+          var payBadges = { pending:'badge-warning', token_paid:'badge-primary', paid:'badge-success', refunded:'badge-info' };
+
+          tbody.innerHTML = bookings.map(function(b) {
+            var sBadge = statusBadges[b.status] || 'badge-neutral';
+            var pBadge = payBadges[b.payment_status] || 'badge-neutral';
+            var dateStr = b.event_date ? new Date(b.event_date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
+            return '<tr>' +
+              '<td class="font-medium" style="color:var(--brand-600);font-weight:700;">#BMS-' + String(b.id).padStart(4,'0') + '</td>' +
+              '<td>' + DashApp.escapeHtml(b.service_type || '') + '</td>' +
+              '<td>' + DashApp.escapeHtml(b.package_name || 'Standard') + '</td>' +
+              '<td>' + dateStr + '</td>' +
+              '<td>' + DashApp.escapeHtml(b.location || '—') + '</td>' +
+              '<td class="font-semibold">' + DashApp.formatCurrency(b.total_price || 0) + '</td>' +
+              '<td><span class="badge-v2 ' + pBadge + '">' + (b.payment_status || '—') + '</span></td>' +
+              '<td><span class="badge-v2 ' + sBadge + '">' + b.status + '</span></td>' +
+              '<td>' + DashApp.escapeHtml(b.photographer_name || 'Unassigned') + '</td>' +
+              '</tr>';
+          }).join('');
+        })
+        .catch(function() {
+          tbody.innerHTML = '<tr><td colspan="9" class="text-center text-secondary py-5">Failed to load customer report</td></tr>';
+        });
+    }
+
+    /* ═══ REPORT CONFIG ═══ */
+    function getReportConfig(type) {
+      var configs = {
+        users: {
+          title: 'User Details Report',
+          head: [['ID','Name','Email','Phone','Type','Joined Date']],
+          body: function(){ return (reportData.users||[]).map(function(u){return [u.id,u.first_name+' '+u.last_name,u.email,u.phone||'—',u.user_type,new Date(u.created_at).toLocaleDateString('en-IN')];});},
+          excelCols: ['ID','First Name','Last Name','Email','Phone','Type','Joined Date'],
+          excelRows: function(){ return (reportData.users||[]).map(function(u){return {'ID':u.id,'First Name':u.first_name,'Last Name':u.last_name,'Email':u.email,'Phone':u.phone||'','Type':u.user_type,'Joined Date':new Date(u.created_at).toLocaleDateString('en-IN')};});},
+          csvHeader: 'ID,First Name,Last Name,Email,Phone,Type,Joined Date',
+          csvRows: function(){ return (reportData.users||[]).map(function(u){return u.id+',"'+u.first_name+'","'+u.last_name+'","'+u.email+'","'+(u.phone||'')+'","'+u.user_type+'","'+new Date(u.created_at).toLocaleDateString('en-IN')+'"';});}
+        },
+        sales: {
+          title: 'Sales Report',
+          head: [['Booking ID','Customer','Service','Amount','Token Paid','Remaining','Payment Status','Event Date']],
+          body: function(){ return (reportData.salesBookings||[]).map(function(b){return ['BMS-'+String(b.id).padStart(4,'0'),b.customer_name||'',b.service_type||'','Rs.'+(b.total_price||0).toLocaleString('en-IN'),'Rs.'+(b.token_amount||0).toLocaleString('en-IN'),'Rs.'+(b.remaining_amount||0).toLocaleString('en-IN'),b.payment_status||'',b.event_date?new Date(b.event_date).toLocaleDateString('en-IN'):'—'];});},
+          excelCols: ['Booking ID','Customer','Service','Amount','Token Paid','Remaining','Payment Status','Event Date'],
+          excelRows: function(){ return (reportData.salesBookings||[]).map(function(b){return {'Booking ID':'BMS-'+String(b.id).padStart(4,'0'),'Customer':b.customer_name||'','Service':b.service_type||'','Amount':b.total_price||0,'Token Paid':b.token_amount||0,'Remaining':b.remaining_amount||0,'Payment Status':b.payment_status||'','Event Date':b.event_date?new Date(b.event_date).toLocaleDateString('en-IN'):''};});},
+          csvHeader: 'Booking ID,Customer,Service,Amount,Token Paid,Remaining,Payment Status,Event Date',
+          csvRows: function(){ return (reportData.salesBookings||[]).map(function(b){return '"BMS-'+String(b.id).padStart(4,'0')+'","'+(b.customer_name||'')+'","'+(b.service_type||'')+'",'+( b.total_price||0)+','+(b.token_amount||0)+','+(b.remaining_amount||0)+',"'+(b.payment_status||'')+'","'+(b.event_date?new Date(b.event_date).toLocaleDateString('en-IN'):'')+'"';});}
+        },
+        photographers: {
+          title: 'Photographer Performance Report',
+          head: [['ID','Name','Email','Specialty','Hourly Rate','Total Jobs','Total Earnings','Status']],
+          body: function(){ return (reportData.photographers||[]).map(function(p){return [p.id,p.user?p.user.first_name+' '+p.user.last_name:'N/A',p.user?p.user.email:'—',p.specialty||'','Rs.'+(p.hourly_rate||0).toLocaleString('en-IN'),p.completed_jobs||0,'Rs.'+(p.total_earnings||0).toLocaleString('en-IN'),p.is_available?'Available':'Unavailable'];});},
+          excelCols: ['ID','Name','Email','Specialty','Hourly Rate','Total Jobs','Total Earnings','Status'],
+          excelRows: function(){ return (reportData.photographers||[]).map(function(p){return {'ID':p.id,'Name':p.user?p.user.first_name+' '+p.user.last_name:'N/A','Email':p.user?p.user.email:'—','Specialty':p.specialty||'','Hourly Rate':p.hourly_rate||0,'Total Jobs':p.completed_jobs||0,'Total Earnings':p.total_earnings||0,'Status':p.is_available?'Available':'Unavailable'};});},
+          csvHeader: 'ID,Name,Email,Specialty,Hourly Rate,Total Jobs,Total Earnings,Status',
+          csvRows: function(){ return (reportData.photographers||[]).map(function(p){return p.id+',"'+(p.user?p.user.first_name+' '+p.user.last_name:'N/A')+'","'+(p.user?p.user.email:'—')+'","'+(p.specialty||'')+'",'+( p.hourly_rate||0)+','+(p.completed_jobs||0)+','+(p.total_earnings||0)+',"'+(p.is_available?'Available':'Unavailable')+'"';});}
+        },
+        customer: {
+          title: 'Customer Wise Report — ' + (reportData.customerName || ''),
+          head: [['Booking ID','Service','Package','Event Date','Location','Amount','Payment','Status','Photographer']],
+          body: function(){ return (reportData.customerBookings||[]).map(function(b){return ['BMS-'+String(b.id).padStart(4,'0'),b.service_type||'',b.package_name||'Standard',b.event_date?new Date(b.event_date).toLocaleDateString('en-IN'):'—',b.location||'—','Rs.'+(b.total_price||0).toLocaleString('en-IN'),b.payment_status||'',b.status||'',b.photographer_name||'Unassigned'];});},
+          excelCols: ['Booking ID','Service','Package','Event Date','Location','Amount','Payment Status','Booking Status','Photographer'],
+          excelRows: function(){ return (reportData.customerBookings||[]).map(function(b){return {'Booking ID':'BMS-'+String(b.id).padStart(4,'0'),'Service':b.service_type||'','Package':b.package_name||'Standard','Event Date':b.event_date?new Date(b.event_date).toLocaleDateString('en-IN'):'','Location':b.location||'','Amount':b.total_price||0,'Payment Status':b.payment_status||'','Booking Status':b.status||'','Photographer':b.photographer_name||'Unassigned'};});},
+          csvHeader: 'Booking ID,Service,Package,Event Date,Location,Amount,Payment Status,Booking Status,Photographer',
+          csvRows: function(){ return (reportData.customerBookings||[]).map(function(b){return '"BMS-'+String(b.id).padStart(4,'0')+'","'+(b.service_type||'')+'","'+(b.package_name||'Standard')+'","'+(b.event_date?new Date(b.event_date).toLocaleDateString('en-IN'):'')+'","'+(b.location||'')+'",'+( b.total_price||0)+',"'+(b.payment_status||'')+'","'+(b.status||'')+'","'+(b.photographer_name||'Unassigned')+'"';});}
+        },
+        activity: {
+          title: 'Login / Logout Activity Report',
+          head: [['#','User Email','Role','Login Time','Logout Time','Duration']],
+          body: function(){ return (reportData.activityRows||[]).map(function(r,i){
+            var role=(function(){var m=((r.loginLog&&r.loginLog.details)||(r.logoutLog&&r.logoutLog.details)||'').match(/\b(admin|photographer|customer)\b/i);return m?m[1].charAt(0).toUpperCase()+m[1].slice(1):'—';})();
+            var loginStr=r.loginTime?r.loginTime.toLocaleString('en-IN'):'—';
+            var logoutStr=r.logoutTime?r.logoutTime.toLocaleString('en-IN'):(r.loginTime?'Active Now':'—');
+            var dur=r.loginTime&&r.logoutTime?(function(){var d=Math.floor((r.logoutTime-r.loginTime)/1000);if(d<60)return d+'s';if(d<3600)return Math.floor(d/60)+'m '+(d%60)+'s';return Math.floor(d/3600)+'h '+Math.floor(d%3600/60)+'m';})():'—';
+            return [i+1,r.email,role,loginStr,logoutStr,dur];
+          });},
+          excelCols: ['#','User Email','Role','Login Time','Logout Time','Duration'],
+          excelRows: function(){ return (reportData.activityRows||[]).map(function(r,i){
+            var role=(function(){var m=((r.loginLog&&r.loginLog.details)||(r.logoutLog&&r.logoutLog.details)||'').match(/\b(admin|photographer|customer)\b/i);return m?m[1].charAt(0).toUpperCase()+m[1].slice(1):'—';})();
+            return {'#':i+1,'User Email':r.email,'Role':role,'Login Time':r.loginTime?r.loginTime.toLocaleString('en-IN'):'—','Logout Time':r.logoutTime?r.logoutTime.toLocaleString('en-IN'):(r.loginTime?'Active Now':'—'),'Duration':r.loginTime&&r.logoutTime?Math.floor((r.logoutTime-r.loginTime)/60000)+' min':'—'};
+          });},
+          csvHeader: '#,User Email,Role,Login Time,Logout Time,Duration',
+          csvRows: function(){ return (reportData.activityRows||[]).map(function(r,i){
+            var role=(function(){var m=((r.loginLog&&r.loginLog.details)||(r.logoutLog&&r.logoutLog.details)||'').match(/\b(admin|photographer|customer)\b/i);return m?m[1].charAt(0).toUpperCase()+m[1].slice(1):'—';})();
+            return (i+1)+',"'+r.email+'","'+role+'","'+(r.loginTime?r.loginTime.toLocaleString('en-IN'):'—')+'","'+(r.logoutTime?r.logoutTime.toLocaleString('en-IN'):(r.loginTime?'Active Now':'—'))+'","'+(r.loginTime&&r.logoutTime?Math.floor((r.logoutTime-r.loginTime)/60000)+' min':'—')+'"';
+          });}
+        }
+      };
+      return configs[type];
+    }
+
+    /* ═══ PDF HELPERS ═══ */
+    function pdfHeader(doc, title) {
+      var pageW = doc.internal.pageSize.getWidth();
+      doc.setFillColor(102,126,234); doc.rect(0,0,pageW,32,'F');
+      doc.setTextColor(255); doc.setFontSize(18); doc.setFont('helvetica','bold');
+      doc.text('BookMyShoot',14,15);
+      doc.setFontSize(9); doc.setFont('helvetica','normal');
+      doc.text('Admin Reports',14,23);
+      doc.text('Generated: '+new Date().toLocaleString('en-IN'),pageW-14,23,{align:'right'});
+      doc.setTextColor(51); doc.setFontSize(14); doc.setFont('helvetica','bold');
+      doc.text(title,14,44);
+      doc.setDrawColor(102,126,234); doc.setLineWidth(0.5); doc.line(14,47,pageW-14,47);
+      return 52;
+    }
+
+    function pdfFooter(doc) {
+      var pc = doc.internal.getNumberOfPages();
+      for (var i=1;i<=pc;i++) {
+        doc.setPage(i); doc.setFontSize(8); doc.setTextColor(150);
+        doc.text('BookMyShoot Report  |  Page '+i+' of '+pc, doc.internal.pageSize.getWidth()/2, doc.internal.pageSize.getHeight()-8, {align:'center'});
+      }
+    }
+
+    /* ═══ OTHER REPORT DOWNLOADS ═══ */
+    function downloadReportPDF(type) {
+      var cfg = getReportConfig(type); if(!cfg)return;
+      var rows = cfg.body();
+      if(!rows.length){Swal.fire('Info','No data available. Please view the report first.','info');return;}
+      var jsPDFCtr = window.jspdf.jsPDF;
+      var doc = new jsPDFCtr('landscape','mm','a4');
+      var startY = pdfHeader(doc, cfg.title);
+      doc.autoTable({startY:startY, head:cfg.head, body:rows, theme:'striped',
+        headStyles:{fillColor:[102,126,234],textColor:255,fontStyle:'bold',fontSize:9},
+        bodyStyles:{fontSize:8.5}, alternateRowStyles:{fillColor:[245,247,250]},
+        styles:{cellPadding:3,lineWidth:0.1,lineColor:[220,220,220]}, margin:{left:14,right:14}
+      });
+      pdfFooter(doc);
+      doc.save('BookMyShoot_'+type+'_report_'+new Date().toISOString().split('T')[0]+'.pdf');
+      Swal.fire({icon:'success',title:'PDF Downloaded!',timer:2000,showConfirmButton:false});
+    }
+
+    function downloadReportExcel(type) {
+      var cfg = getReportConfig(type); if(!cfg)return;
+      var rows = cfg.excelRows();
+      if(!rows.length){Swal.fire('Info','No data available.','info');return;}
+      
+      // Create worksheet with title row
+      var ws = XLSX.utils.aoa_to_sheet([['BookMyShoot - ' + cfg.title], ['Generated: ' + new Date().toLocaleString('en-IN')], ['']]);
+      XLSX.utils.sheet_add_json(ws, rows, {skipHeader: true, origin: 3});
+      
+      // Set column widths
+      ws['!cols'] = cfg.excelCols.map(function(c){return {wch:Math.min(Math.max(c.length,Math.max.apply(null,rows.map(function(r){return String(r[c]||'').length;})))+4,40)};});
+      
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, cfg.title.substring(0,31));
+      XLSX.writeFile(wb, 'BookMyShoot_'+type+'_report_'+new Date().toISOString().split('T')[0]+'.xlsx');
+      Swal.fire({icon:'success',title:'Excel Downloaded!',timer:2000,showConfirmButton:false});
+    }
+
+    function downloadReportCSV(type) {
+      var cfg = getReportConfig(type); if(!cfg)return;
+      var rows = cfg.csvRows();
+      if(!rows.length){Swal.fire('Info','No data available.','info');return;}
+      var csv = cfg.csvHeader+'\n'+rows.join('\n');
+      var blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'BookMyShoot_'+type+'_report_'+new Date().toISOString().split('T')[0]+'.csv';
+      a.click(); URL.revokeObjectURL(a.href);
+      Swal.fire({icon:'success',title:'CSV Downloaded!',timer:2000,showConfirmButton:false});
+    }
+
+    function printSection(sectionId) {
+      var section = document.getElementById(sectionId);
+      var pw = window.open('','_blank');
+      pw.document.write('<html><head><title>Print Report</title><style>body{padding:20px;font-family:Inter,sans-serif;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:12px;} th{background:#667eea;color:#fff;} .section-download-bar{display:none;} h1{color:#667eea;}</style></head><body><h1>BookMyShoot Report</h1><p style="color:#888;">Generated: '+new Date().toLocaleString('en-IN')+'</p>'+section.innerHTML+'</body></html>');
+      pw.document.close();
+      setTimeout(function(){pw.print();pw.close();},500);
+    }
+
+    /* ═══ DOWNLOAD ALL ═══ */
+    function loadAllData() {
+      var promises = [];
+      if(!reportData.users) promises.push(fetch(DashApp.API_URL+'/admin/users').then(function(r){return r.json();}).then(function(d){reportData.users=d.users;}));
+      if(!reportData.sales) promises.push(fetch(DashApp.API_URL+'/admin/stats').then(function(r){return r.json();}).then(function(d){reportData.sales=d;}));
+      if(!reportData.photographers) promises.push(fetch(DashApp.API_URL+'/admin/photographers').then(function(r){return r.json();}).then(function(d){reportData.photographers=d.photographers;}));
+      if(!reportData.activityRows) promises.push(fetch(DashApp.API_URL+'/admin/logs').then(function(r){return r.json();}).then(function(d){
+        reportData.activity=d.logs;
+        var authLogs=(d.logs||[]).filter(function(l){return l.action==='login'||l.action==='logout';}).sort(function(a,b){return new Date(a.timestamp)-new Date(b.timestamp);});
+        var sessions={};
+        authLogs.forEach(function(log){var key=log.user_email||'System';if(!sessions[key])sessions[key]={pending:null,s:[],details:log.details||''};if(log.action==='login'){if(sessions[key].pending)sessions[key].s.push({login:sessions[key].pending,logout:null});sessions[key].pending=log;}else{sessions[key].s.push({login:sessions[key].pending,logout:log});sessions[key].pending=null;}});
+        Object.values(sessions).forEach(function(u){if(u.pending){u.s.push({login:u.pending,logout:null});u.pending=null;}});
+        var rows=[];Object.entries(sessions).forEach(function(entry){var email=entry[0],u=entry[1];u.s.forEach(function(s){rows.push({email:email,details:u.details,loginTime:s.login?new Date(s.login.timestamp):null,logoutTime:s.logout?new Date(s.logout.timestamp):null,loginLog:s.login,logoutLog:s.logout});});});
+        rows.sort(function(a,b){return (b.loginTime||b.logoutTime||0)-(a.loginTime||a.logoutTime||0);});
+        reportData.activityRows=rows;
+      }));
+      return Promise.all(promises);
+    }
+
+    function downloadAllPDF() {
+      Swal.fire({title:'Generating...',text:'Preparing all reports PDF',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+      loadAllData().then(function(){
+        var jsPDFCtr = window.jspdf.jsPDF;
+        var doc = new jsPDFCtr('landscape','mm','a4');
+        var types = ['users','sales','photographers','activity'];
+        types.forEach(function(type, idx){
+          if(idx > 0) doc.addPage();
+          var cfg = getReportConfig(type);
+          var startY = pdfHeader(doc, cfg.title);
+          var rows = cfg.body();
+          doc.autoTable({startY:startY,head:cfg.head,body:rows,theme:'striped',
+            headStyles:{fillColor:[102,126,234],textColor:255,fontStyle:'bold',fontSize:9},
+            bodyStyles:{fontSize:8.5},alternateRowStyles:{fillColor:[245,247,250]},
+            styles:{cellPadding:3},margin:{left:14,right:14}
+          });
+        });
+        pdfFooter(doc);
+        doc.save('BookMyShoot_All_Reports_'+new Date().toISOString().split('T')[0]+'.pdf');
+        Swal.fire({icon:'success',title:'All Reports PDF Downloaded!',timer:2000,showConfirmButton:false});
+      });
+    }
+
+    function downloadAllExcel() {
+      Swal.fire({title:'Generating...',text:'Preparing all reports Excel',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+      loadAllData().then(function(){
+        var wb = XLSX.utils.book_new();
+        var types = ['users','sales','photographers','activity'];
+        types.forEach(function(type){
+          var cfg = getReportConfig(type);
+          var rows = cfg.excelRows();
+          // Create worksheet with title
+          var ws = XLSX.utils.aoa_to_sheet([['BookMyShoot - ' + cfg.title], ['Generated: ' + new Date().toLocaleString('en-IN')], ['']]);
+          XLSX.utils.sheet_add_json(ws, rows, {skipHeader: true, origin: 3});
+          ws['!cols'] = cfg.excelCols.map(function(c){return {wch:Math.min(Math.max(c.length,Math.max.apply(null,rows.map(function(r){return String(r[c]||'').length;}).concat([0])))+4,40)};});
+          XLSX.utils.book_append_sheet(wb, ws, cfg.title.substring(0,31));
+        });
+        XLSX.writeFile(wb, 'BookMyShoot_All_Reports_'+new Date().toISOString().split('T')[0]+'.xlsx');
+        Swal.fire({icon:'success',title:'All Reports Excel Downloaded!',timer:2000,showConfirmButton:false});
+      });
+    }
+
+    // Load default report
+    loadAdvancedReport();
+  </script>
+</body>
+</html>

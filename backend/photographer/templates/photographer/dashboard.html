@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Photographer Dashboard — BookMyShoot{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1>Dashboard</h1>
+        <div class="breadcrumb">Welcome back, {{ current_user.first_name }}</div>
+    </div>
+    <div class="topbar-actions">
+        <a href="{{ url_for('photographer.incoming_requests') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="bi bi-inbox me-1"></i> Requests</a>
+    </div>
+</div>
+
+<div class="page-content fade-in">
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Total Requests</h3>
+                    <div class="value" id="c-requests">{{ total_requests }}</div>
+                </div>
+                <div class="stat-icon orange"><i class="bi bi-inbox"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Active Sessions</h3>
+                    <div class="value" id="c-sessions">{{ active_sessions }}</div>
+                </div>
+                <div class="stat-icon blue"><i class="bi bi-camera"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Completed Events</h3>
+                    <div class="value" id="c-completed">{{ completed_events }}</div>
+                </div>
+                <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="stat-info">
+                    <h3>Total Earnings</h3>
+                    <div class="value text-primary">₹{{ total_earnings }}</div>
+                </div>
+                <div class="stat-icon purple"><i class="bi bi-wallet2"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card p-4">
+                <h3 class="h6 fw-bold mb-3">Quick Actions</h3>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <a href="{{ url_for('photographer.manage_packages') }}" class="d-block p-3 rounded-3 text-center" style="background:#f8fafc;border:1px solid var(--card-border);transition:.2s;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 6px 16px rgba(0,0,0,.06)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+                            <i class="bi bi-box-seam d-block fs-4 mb-1" style="color:var(--primary);"></i>
+                            <span class="fw-600 small">Manage Packages</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('photographer.profile') }}" class="d-block p-3 rounded-3 text-center" style="background:#f8fafc;border:1px solid var(--card-border);transition:.2s;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 6px 16px rgba(0,0,0,.06)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+                            <i class="bi bi-person-gear d-block fs-4 mb-1" style="color:var(--primary);"></i>
+                            <span class="fw-600 small">Edit Profile</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('photographer.incoming_requests') }}" class="d-block p-3 rounded-3 text-center" style="background:#f8fafc;border:1px solid var(--card-border);transition:.2s;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 6px 16px rgba(0,0,0,.06)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+                            <i class="bi bi-inbox d-block fs-4 mb-1" style="color:var(--primary);"></i>
+                            <span class="fw-600 small">View Requests</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card p-4 h-100">
+                <h3 class="h6 fw-bold mb-3">Recent Activity</h3>
+                {% if recent_logs %}
+                {% for log in recent_logs %}
+                <div class="d-flex gap-3 mb-3 pb-3 border-bottom">
+                    <div>
+                        <div class="fw-600 small" style="text-transform:capitalize;">{{ log.action.replace('_', ' ') }}</div>
+                        <div class="text-muted" style="font-size:.75rem;">{{ log.details or 'No details' }}</div>
+                        <div class="text-muted" style="font-size:.7rem;">{{ log.timestamp.strftime('%d %b, %H:%M') }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted small mb-0">No recent activity logs found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

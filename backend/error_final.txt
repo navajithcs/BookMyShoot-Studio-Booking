@@ -1,0 +1,25 @@
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 586-149-591
+127.0.0.1 - - [25/Feb/2026 09:36:33] "OPTIONS /api/login HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:36:35] "POST /api/login HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:36:37] "GET /api/bookings/photographer/6 HTTP/1.1" 200 -
+C:\Users\navaj\OneDrive\Desktop\main_project\backend\app.py:823: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  photographer = Photographer.query.get(id)
+127.0.0.1 - - [25/Feb/2026 09:36:37] "GET /api/photographers/6/portfolio HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:36:37] "GET /api/bookings/requests HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:38:46] "OPTIONS /api/login HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:38:46] "POST /api/login HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:39:20] "GET /api/photographers HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:39:20] "GET /api/photographers HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:39:21] "GET /api/photographers HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:39:59] "OPTIONS /api/login HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:39:59] "POST /api/login HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:40:01] "GET /api/bookings/photographer/6 HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:40:02] "GET /api/bookings/requests HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:40:02] "GET /api/photographers/6/portfolio HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:49:08] "GET /api/bookings/requests HTTP/1.1" 200 -
+127.0.0.1 - - [25/Feb/2026 09:49:24] "GET /api/bookings/requests/photographer/1 HTTP/1.1" 404 -

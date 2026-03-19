@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — BookMyShoot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Fill full width — remove max-width constraint */
+    .dash-content {
+      max-width: 100% !important;
+    }
+
+    /* Quick action buttons — stretch to fill row */
+    .quick-actions {
+      display: grid !important;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-4);
+    }
+    .quick-action-btn {
+      justify-content: center;
+      padding: var(--space-4) var(--space-5) !important;
+      font-size: var(--text-base) !important;
+    }
+    .quick-action-btn i {
+      font-size: 1.3rem !important;
+    }
+
+    /* Stat cards — bigger */
+    .stats-grid-v2 {
+      grid-template-columns: repeat(4, 1fr) !important;
+    }
+    .stat-card-v2 {
+      padding: var(--space-6) !important;
+    }
+    .stat-card-v2 .stat-value {
+      font-size: var(--text-2xl) !important;
+    }
+    .stat-card-v2 .stat-label {
+      font-size: var(--text-base) !important;
+    }
+    .stat-card-v2 .stat-icon {
+      width: 48px !important;
+      height: 48px !important;
+      font-size: 1.3rem !important;
+    }
+
+    /* Charts fill width */
+    .charts-grid-v2 {
+      grid-template-columns: 1.6fr 1fr !important;
+    }
+
+    @media (max-width: 1024px) {
+      .quick-actions { grid-template-columns: repeat(2, 1fr) !important; }
+      .stats-grid-v2 { grid-template-columns: repeat(2, 1fr) !important; }
+      .charts-grid-v2 { grid-template-columns: 1fr !important; }
+    }
+    @media (max-width: 480px) {
+      .quick-actions { grid-template-columns: 1fr !important; }
+      .stats-grid-v2 { grid-template-columns: 1fr !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loader -->
+  <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Notification overlay -->
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <div class="dash-layout">
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-logo">
+          <div class="logo-icon">📸</div>
+          <div class="logo-text">
+            BookMyShoot
+            <span class="logo-sub">Admin Panel</span>
+          </div>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Overview</div>
+          <a href="admin-dashboard.html" class="sidebar-link active">
+            <i class="bi bi-grid-1x2-fill"></i> Dashboard
+          </a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Management</div>
+          <a href="admin-users.html" class="sidebar-link">
+            <i class="bi bi-people"></i> Customer Management
+          </a>
+          <a href="admin-photographers.html" class="sidebar-link">
+            <i class="bi bi-camera"></i> Photographer Management
+          </a>
+          <a href="admin-portfolio.html" class="sidebar-link">
+            <i class="bi bi-images"></i> Portfolio
+          </a>
+          <a href="admin-bookings.html" class="sidebar-link">
+            <i class="bi bi-calendar-event"></i> Booking Management
+          </a>
+          <a href="admin-services.html" class="sidebar-link">
+            <i class="bi bi-box-seam"></i> Service & Packages
+          </a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Analytics</div>
+          <a href="admin-reports.html" class="sidebar-link">
+            <i class="bi bi-bar-chart-line"></i> Reports
+          </a>
+          <a href="admin-revenue.html" class="sidebar-link">
+            <i class="bi bi-currency-rupee"></i> Revenue Details
+          </a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Support</div>
+          <a href="admin-refunds.html" class="sidebar-link">
+            <i class="bi bi-arrow-return-left"></i> Refund Requests
+          </a>
+          <a href="admin-feedback.html" class="sidebar-link">
+            <i class="bi bi-chat-square-text"></i> Feedback
+          </a>
+          <a href="admin-support.html" class="sidebar-link">
+            <i class="bi bi-headset"></i> Support Tickets
+          </a>
+        </div>
+
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user" onclick="window.location.href='admin-profile.html'">
+          <div class="sidebar-user-avatar" id="sidebarAvatar">A</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+            <div class="sidebar-user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="sidebar-logout" onclick="DashApp.logout()">
+          <i class="bi bi-box-arrow-left"></i> Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <div class="dash-main">
+      <!-- Topbar -->
+      <header class="dash-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+          <div>
+            <div class="topbar-title">Dashboard</div>
+            <div class="topbar-subtitle">Welcome back, <span id="topbarName">Admin</span></div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <!-- Search -->
+          <div class="search-bar hide-mobile">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="globalSearch" placeholder="Search... (Ctrl+K)">
+          </div>
+
+          <!-- Dark mode -->
+          <button class="theme-toggle" data-tooltip="Toggle theme">
+            <i class="bi bi-moon-fill icon-moon"></i>
+            <i class="bi bi-sun-fill icon-sun"></i>
+          </button>
+
+          <!-- Notifications -->
+          <button class="topbar-icon-btn" id="notifBtn" data-tooltip="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="badge-count" id="notifBadge" style="display:none;">0</span>
+          </button>
+
+          <!-- User dropdown -->
+          <div class="dropdown">
+            <div class="topbar-user" id="userDropdownTrigger">
+              <div class="topbar-user-avatar" id="topbarAvatar">A</div>
+              <span class="topbar-user-name" id="topbarUserName">Admin</span>
+              <i class="bi bi-chevron-down text-sm text-secondary"></i>
+            </div>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="admin-profile.html" class="dropdown-item"><i class="bi bi-person-gear"></i> Profile Settings</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" onclick="DashApp.logout()" style="color:var(--danger-600);">
+                <i class="bi bi-box-arrow-right"></i> Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="dash-content">
+        <!-- Welcome Banner -->
+        <div class="welcome-banner animate-fadeInUp">
+          <h2>Welcome back, <span id="welcomeName">Admin</span>! 👋</h2>
+          <p>Here's what's happening with your platform today.</p>
+          <div class="welcome-actions">
+            <a href="admin-users.html" class="btn-white"><i class="bi bi-people"></i> Manage Users</a>
+            <a href="admin-reports.html" class="btn-outline-white"><i class="bi bi-bar-chart"></i> View Reports</a>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions mb-6">
+          <a href="admin-photographers.html" class="quick-action-btn"><i class="bi bi-camera-fill"></i> Manage Photographers</a>
+          <a href="admin-reports.html" class="quick-action-btn"><i class="bi bi-file-earmark-bar-graph"></i> View Reports</a>
+          <button class="quick-action-btn" onclick="exportDashboardData()"><i class="bi bi-download"></i> Export Data</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid-v2">
+          <div class="stat-card-v2 animate-fadeInUp">
+            <div class="stat-icon success"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-value" id="totalRevenue">₹0</div>
+            <div class="stat-trend up" id="revenueTrend">↑ 0%</div>
+          </div>
+          <div class="stat-card-v2 animate-fadeInUp" style="animation-delay:.05s">
+            <div class="stat-icon brand"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value" id="totalUsers">0</div>
+            <div class="stat-trend flat" id="userBreakdown">0 Customers, 0 Photographers</div>
+          </div>
+          <div class="stat-card-v2 animate-fadeInUp" style="animation-delay:.1s">
+            <div class="stat-icon warning"><i class="bi bi-calendar-check"></i></div>
+            <div class="stat-label">Active Bookings</div>
+            <div class="stat-value" id="activeBookings">0</div>
+            <div class="stat-trend flat">Pending & Accepted</div>
+          </div>
+          <div class="stat-card-v2 animate-fadeInUp" style="animation-delay:.15s">
+            <div class="stat-icon info"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="stat-label">Completed Jobs</div>
+            <div class="stat-value" id="completedJobs">0</div>
+            <div class="stat-trend flat">Lifetime</div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid-v2">
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header">
+              <h3 class="font-semibold text-base m-0">Revenue Overview</h3>
+              <div class="flex gap-2">
+                <button class="btn btn-xs btn-ghost chart-range active" data-range="6m">6M</button>
+                <button class="btn btn-xs btn-ghost chart-range" data-range="1y">1Y</button>
+              </div>
+            </div>
+            <div class="ds-card-body">
+              <canvas id="revenueChart" height="260"></canvas>
+            </div>
+          </div>
+          <div class="ds-card animate-fadeInUp" style="animation-delay:.05s">
+            <div class="ds-card-header">
+              <h3 class="font-semibold text-base m-0">User Distribution</h3>
+            </div>
+            <div class="ds-card-body" style="display:flex;align-items:center;justify-content:center;">
+              <canvas id="userChart" height="220" style="max-width:280px;"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity Table -->
+        <div class="ds-card animate-fadeInUp">
+          <div class="ds-card-header">
+            <h3 class="font-semibold text-base m-0">Recent Bookings</h3>
+            <div class="flex gap-3 items-center">
+              <div class="search-bar" style="max-width:240px;">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="tableSearch" placeholder="Filter bookings..." style="font-size:0.8rem;">
+              </div>
+              <button class="btn btn-sm btn-secondary" onclick="exportBookings()"><i class="bi bi-download"></i> Export</button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="ds-table" id="bookingsTable">
+              <thead>
+                <tr>
+                  <th class="sortable" data-sort="id">ID</th>
+                  <th class="sortable" data-sort="service_type">Service</th>
+                  <th class="sortable" data-sort="event_date">Date</th>
+                  <th class="sortable" data-sort="total_price">Amount</th>
+                  <th class="sortable" data-sort="status">Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentBookingsTable">
+                <tr><td colspan="5" class="text-center text-secondary py-5">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="ds-card-footer flex justify-between items-center">
+            <span class="text-sm text-secondary" id="tableInfo">Showing 0 bookings</span>
+            <div id="tablePagination"></div>
+          </div>
+        </div>
+
+        <!-- Contact Messages -->
+        <div class="ds-card animate-fadeInUp" style="margin-top:var(--space-5);">
+          <div class="ds-card-header">
+            <h3 class="font-semibold text-base m-0"><i class="bi bi-envelope"></i> Contact Messages <span class="badge-v2 badge-primary" id="msgUnreadBadge" style="display:none;margin-left:8px;">0</span></h3>
+          </div>
+          <div class="table-responsive">
+            <table class="ds-table" id="messagesTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Subject</th>
+                  <th>Message</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="messagesBody">
+                <tr><td colspan="7" class="text-center text-secondary py-5">Loading messages...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <aside class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3 class="font-semibold text-base m-0">Notifications</h3>
+      <button class="btn btn-sm btn-ghost" id="notifClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="notif-panel-body" id="notifList">
+      <div class="empty-state">
+        <div class="empty-state-icon">🔔</div>
+        <div class="empty-state-title">No notifications</div>
+        <div class="empty-state-desc">You're all caught up!</div>
+      </div>
+    </div>
+  </aside>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    let allBookings = [];
+    let currentPage = 1;
+    const PAGE_SIZE = 10;
+
+    // Auth
+    const user = DashApp.requireAuth(['admin']);
+    if (user) {
+      const name = user.first_name || 'Admin';
+      const initial = name.charAt(0).toUpperCase();
+      document.getElementById('topbarName').textContent = name;
+      document.getElementById('welcomeName').textContent = name;
+      document.getElementById('topbarAvatar').textContent = initial;
+      document.getElementById('topbarUserName').textContent = name;
+      document.getElementById('sidebarAvatar').textContent = initial;
+      document.getElementById('sidebarUserName').textContent = name;
+    }
+
+    // Init
+    DashApp.init({
+      onSearch: (q) => {
+        filterBookings(q);
+      }
+    });
+
+    // Fetch stats
+    DashApp.showLoader(true);
+    fetch(`${DashApp.API_URL}/admin/stats`)
+      .then(r => r.json())
+      .then(data => {
+        // Animate key metrics
+        const revEl = document.getElementById('totalRevenue');
+        revEl.textContent = DashApp.formatCurrency(data.revenue.total);
+
+        document.getElementById('totalUsers').textContent = data.users.total;
+        document.getElementById('userBreakdown').textContent = `${data.users.customers} Customers, ${data.users.photographers} Photographers`;
+        document.getElementById('activeBookings').textContent = data.bookings.pending + data.bookings.accepted;
+        document.getElementById('completedJobs').textContent = data.bookings.completed;
+
+        // Revenue trend
+        const growth = data.revenue.growth || 0;
+        const trendEl = document.getElementById('revenueTrend');
+        if (growth > 0) {
+          trendEl.className = 'stat-trend up'; trendEl.textContent = `↑ ${growth}% from last month`;
+        } else if (growth < 0) {
+          trendEl.className = 'stat-trend down'; trendEl.textContent = `↓ ${Math.abs(growth)}% from last month`;
+        } else {
+          trendEl.className = 'stat-trend flat'; trendEl.textContent = 'No change from last month';
+        }
+
+        // Charts
+        renderRevenueChart(
+          data.revenue.month_labels || ['Jan','Feb','Mar','Apr','May','Jun'],
+          data.revenue.monthly || [0,0,0,0,0,0]
+        );
+        renderUserChart(data.users.customers, data.users.photographers);
+
+        // Table
+        allBookings = data.recent_activity || [];
+        renderBookings(allBookings);
+      })
+      .catch(err => {
+        console.error(err);
+        DashApp.showToast('Error', 'Could not load dashboard data', 'danger');
+      })
+      .finally(() => DashApp.showLoader(false));
+
+    // Table search filter
+    document.getElementById('tableSearch')?.addEventListener('input', (e) => {
+      filterBookings(e.target.value);
+    });
+
+    function filterBookings(q) {
+      if (!q) { renderBookings(allBookings); return; }
+      const filtered = allBookings.filter(b =>
+        (b.service_type || '').toLowerCase().includes(q.toLowerCase()) ||
+        (b.status || '').toLowerCase().includes(q.toLowerCase()) ||
+        String(b.id).includes(q)
+      );
+      currentPage = 1;
+      renderBookings(filtered);
+    }
+
+    function renderBookings(data) {
+      const tbody = document.getElementById('recentBookingsTable');
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const page = data.slice(start, start + PAGE_SIZE);
+
+      if (!page.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-secondary py-5">No bookings found</td></tr>';
+      } else {
+        tbody.innerHTML = page.map(b => {
+          const badgeClass = {
+            pending: 'badge-warning', accepted: 'badge-success', completed: 'badge-info',
+            declined: 'badge-danger', token_paid: 'badge-primary'
+          }[b.status] || 'badge-neutral';
+          return `<tr>
+            <td class="font-medium">#${b.id}</td>
+            <td>${DashApp.escapeHtml(b.service_type || '—')}</td>
+            <td>${DashApp.formatDate(b.event_date)}</td>
+            <td class="font-semibold">${DashApp.formatCurrency(b.total_price)}</td>
+            <td><span class="badge-v2 ${badgeClass}">${b.status}</span></td>
+          </tr>`;
+        }).join('');
+      }
+
+      document.getElementById('tableInfo').textContent = `Showing ${start + 1}–${Math.min(start + PAGE_SIZE, data.length)} of ${data.length}`;
+      DashApp.createPagination('tablePagination', data.length, currentPage, PAGE_SIZE, (p) => {
+        currentPage = p;
+        renderBookings(data);
+      });
+    }
+
+    function exportBookings() {
+      DashApp.exportCSV(allBookings.map(b => ({
+        ID: b.id, Service: b.service_type, Date: b.event_date,
+        Amount: b.total_price, Status: b.status
+      })), 'bookings_export.csv');
+    }
+
+    function exportDashboardData() {
+      exportBookings();
+    }
+
+    // Revenue chart
+    function renderRevenueChart(labels, monthlyData) {
+      const ctx = document.getElementById('revenueChart').getContext('2d');
+      const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+      gradient.addColorStop(0, 'rgba(99,102,241,0.2)');
+      gradient.addColorStop(1, 'rgba(99,102,241,0)');
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Revenue (₹)',
+            data: monthlyData,
+            borderColor: '#6366f1',
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2,
+            pointBackgroundColor: '#6366f1',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#1f2937',
+              titleColor: '#f3f4f6',
+              bodyColor: '#d1d5db',
+              borderColor: '#374151',
+              borderWidth: 1,
+              cornerRadius: 8,
+              padding: 12,
+              callbacks: {
+                label: (c) => '₹' + c.parsed.y.toLocaleString('en-IN')
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(0,0,0,.05)' },
+              ticks: { font: { size: 11 }, callback: v => '₹' + (v/1000) + 'k' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 11 } }
+            }
+          }
+        }
+      });
+    }
+
+    // User distribution chart
+    function renderUserChart(customers, photographers) {
+      const ctx = document.getElementById('userChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Customers', 'Photographers'],
+          datasets: [{
+            data: [customers, photographers],
+            backgroundColor: ['#6366f1', '#a78bfa'],
+            borderWidth: 0,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { padding: 16, usePointStyle: true, pointStyleWidth: 10, font: { size: 12 } }
+            }
+          }
+        }
+      });
+    }
+
+    // ── Contact Messages ──
+    function loadContactMessages() {
+      fetch(`${DashApp.API_URL}/contact-messages`)
+        .then(r => r.json())
+        .then(data => {
+          const msgs = data.messages || [];
+          const unread = data.unread || 0;
+          const badge = document.getElementById('msgUnreadBadge');
+          if (unread > 0) { badge.style.display = ''; badge.textContent = unread + ' new'; }
+          else { badge.style.display = 'none'; }
+
+          const tbody = document.getElementById('messagesBody');
+          if (!msgs.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-secondary py-5">No messages yet</td></tr>';
+            return;
+          }
+          tbody.innerHTML = msgs.map(m => {
+            const name = DashApp.escapeHtml((m.first_name || '') + ' ' + (m.last_name || '')).trim();
+            const readClass = m.is_read ? '' : 'font-semibold';
+            const badgeCls = m.is_read ? 'badge-neutral' : 'badge-primary';
+            const badgeText = m.is_read ? 'Read' : 'New';
+            const shortMsg = DashApp.escapeHtml((m.message || '').substring(0, 80)) + (m.message && m.message.length > 80 ? '…' : '');
+            return `<tr class="${readClass}">
+              <td>${name || '—'}</td>
+              <td>${DashApp.escapeHtml(m.email)}</td>
+              <td>${DashApp.escapeHtml(m.subject || '—')}</td>
+              <td style="max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${DashApp.escapeHtml(m.message)}">${shortMsg}</td>
+              <td>${DashApp.formatDate(m.created_at)}</td>
+              <td><span class="badge-v2 ${badgeCls}">${badgeText}</span></td>
+              <td class="text-right">
+                <div class="flex gap-1 justify-end">
+                  <button class="btn btn-xs btn-ghost" title="View" onclick="viewMessage(${m.id})"><i class="bi bi-eye"></i></button>
+                  ${!m.is_read ? `<button class="btn btn-xs btn-ghost" title="Mark read" onclick="markMsgRead(${m.id})"><i class="bi bi-check2"></i></button>` : ''}
+                  <button class="btn btn-xs btn-ghost" title="Delete" style="color:var(--danger-600);" onclick="deleteMsg(${m.id})"><i class="bi bi-trash"></i></button>
+                </div>
+              </td>
+            </tr>`;
+          }).join('');
+        })
+        .catch(err => console.error('Error loading messages:', err));
+    }
+
+    function viewMessage(id) {
+      fetch(`${DashApp.API_URL}/contact-messages`)
+        .then(r => r.json())
+        .then(data => {
+          const m = (data.messages || []).find(x => x.id === id);
+          if (!m) return;
+          Swal.fire({
+            title: m.subject || 'No Subject',
+            html: `<div style="text-align:left;">
+              <p><strong>From:</strong> ${DashApp.escapeHtml(m.first_name + ' ' + (m.last_name || ''))}</p>
+              <p><strong>Email:</strong> ${DashApp.escapeHtml(m.email)}</p>
+              <p><strong>Date:</strong> ${DashApp.formatDate(m.created_at)}</p>
+              <hr style="margin:12px 0;border:none;border-top:1px solid #e5e7eb;">
+              <p style="white-space:pre-wrap;">${DashApp.escapeHtml(m.message)}</p>
+            </div>`,
+            confirmButtonColor: '#6366f1',
+            width: 500
+          });
+          if (!m.is_read) markMsgRead(id);
+        });
+    }
+
+    function markMsgRead(id) {
+      fetch(`${DashApp.API_URL}/contact-messages/${id}/read`, { method: 'PUT', headers: { 'Content-Type': 'application/json' } })
+        .then(() => loadContactMessages());
+    }
+
+    function deleteMsg(id) {
+      Swal.fire({ title: 'Delete message?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Delete', confirmButtonColor: '#dc2626' }).then(r => {
+        if (r.isConfirmed) {
+          fetch(`${DashApp.API_URL}/contact-messages/${id}`, { method: 'DELETE' })
+            .then(() => { DashApp.showToast('Deleted', 'Message removed', 'success'); loadContactMessages(); });
+        }
+      });
+    }
+
+    // Load messages on page load
+    loadContactMessages();
+  </script>
+</body>
+</html>

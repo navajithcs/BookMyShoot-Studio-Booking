@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photographer Dashboard — BookMyShoot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ── Full-width dashboard override ── */
+    .dash-content {
+      max-width: 100% !important;
+      padding: var(--space-8) var(--space-10) !important;
+    }
+
+    /* ── Welcome Banner – larger ── */
+    .welcome-banner {
+      padding: var(--space-10) var(--space-12) !important;
+      margin-bottom: var(--space-6) !important;
+      border-radius: var(--radius-2xl);
+    }
+    .welcome-banner h2 {
+      font-size: 2rem !important;
+    }
+    .welcome-banner p {
+      font-size: var(--text-lg) !important;
+      max-width: 700px !important;
+    }
+    .welcome-banner .btn-white,
+    .welcome-banner .btn-outline-white {
+      padding: 14px 32px !important;
+      font-size: var(--text-base) !important;
+      border-radius: var(--radius-lg) !important;
+    }
+
+    /* ── Stat cards – bigger icons, values, padding ── */
+    .stat-card-v2 {
+      padding: var(--space-8) !important;
+    }
+    .stat-card-v2 .stat-icon {
+      width: 60px !important;
+      height: 60px !important;
+      font-size: 1.6rem !important;
+      margin-bottom: var(--space-5) !important;
+      border-radius: var(--radius-xl) !important;
+    }
+    .stat-card-v2 .stat-value {
+      font-size: 2.5rem !important;
+    }
+    .stat-card-v2 .stat-label {
+      font-size: var(--text-base) !important;
+      margin-bottom: var(--space-2) !important;
+    }
+
+    /* ── All buttons – bigger ── */
+    .btn, .btn-sm, .btn-xs {
+      padding: 10px 20px !important;
+      font-size: var(--text-sm) !important;
+    }
+    .btn-sm {
+      padding: 10px 22px !important;
+      font-size: var(--text-sm) !important;
+    }
+
+    /* ── DS Card headers – bigger text ── */
+    .ds-card-header h3 {
+      font-size: var(--text-lg) !important;
+    }
+
+    /* ── Content grid (Requests + Chart) – fill width ── */
+    .content-grid-2 {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: var(--space-6);
+    }
+
+    /* ── Requests grid – larger cards ── */
+    .request-card {
+      background: var(--surface-primary);
+      border: 1px solid var(--border-secondary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      transition: all var(--duration-normal) var(--ease-default);
+    }
+    .request-card:hover {
+      border-color: var(--brand-200);
+      box-shadow: var(--shadow-md);
+    }
+    .request-info { margin-bottom: var(--space-4); }
+    .request-name { font-weight: 600; color: var(--text-primary); font-size: var(--text-base); }
+    .request-meta { font-size: var(--text-sm); color: var(--text-secondary); margin-top: 4px; }
+    .request-price { font-weight: 700; color: var(--text-primary); font-size: var(--text-xl); margin-top: var(--space-3); }
+    .request-notes { font-size: var(--text-sm); color: var(--text-tertiary); margin-top: var(--space-2); font-style: italic; }
+    .request-actions {
+      display: flex;
+      gap: var(--space-3);
+      margin-top: var(--space-4);
+    }
+    .request-actions .btn {
+      padding: 10px 24px !important;
+      font-size: var(--text-sm) !important;
+      flex: 1;
+    }
+
+    .requests-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: var(--space-5);
+    }
+
+    /* ── Portfolio grid – bigger thumbnails ── */
+    .portfolio-grid-v2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: var(--space-4);
+    }
+    .portfolio-thumb {
+      position: relative;
+      aspect-ratio: 4/3;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border-secondary);
+      cursor: pointer;
+      background: var(--surface-tertiary);
+    }
+    .portfolio-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .3s, filter .3s;
+    }
+    .portfolio-thumb:hover img {
+      transform: scale(1.06);
+      filter: brightness(0.85);
+    }
+    .portfolio-thumb .thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .portfolio-thumb:hover .thumb-overlay { opacity: 1; }
+
+    /* ── Table – bigger rows ── */
+    .ds-table th,
+    .ds-table td {
+      padding: 14px 18px !important;
+      font-size: var(--text-sm) !important;
+    }
+    .ds-table th {
+      font-size: var(--text-base) !important;
+      font-weight: 700 !important;
+    }
+
+    /* ── Spacing utilities ── */
+    .mb-6 { margin-bottom: var(--space-8) !important; }
+
+    @media (max-width: 1024px) {
+      .content-grid-2 { grid-template-columns: 1fr; }
+      .dash-content { padding: var(--space-6) !important; }
+    }
+    @media (max-width: 768px) {
+      .stats-grid-v2 { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid-v2 { grid-template-columns: 1fr !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loader -->
+  <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <div class="dash-layout">
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="sidebar-header">
+        <a href="photographer-dashboard.html" class="sidebar-logo">
+          <div class="logo-icon">📸</div>
+          <div class="logo-text">
+            BookMyShoot
+            <span class="logo-sub">Photographer</span>
+          </div>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Overview</div>
+          <a href="photographer-dashboard.html" class="sidebar-link active">
+            <i class="bi bi-grid-1x2-fill"></i> Dashboard
+          </a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Work</div>
+          <a href="photographer-requests.html" class="sidebar-link">
+            <i class="bi bi-chat-dots"></i> Incoming Requests
+            <span class="link-badge" id="sidebarRequestBadge" style="display:none;">0</span>
+          </a>
+          <a href="photographer-sessions.html" class="sidebar-link">
+            <i class="bi bi-calendar-check"></i> Accepted Sessions
+          </a>
+          <a href="photographer-packages.html" class="sidebar-link">
+            <i class="bi bi-box-seam"></i> Manage Packages
+          </a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Finance</div>
+          <a href="photographer-earnings.html" class="sidebar-link">
+            <i class="bi bi-wallet2"></i> Earnings
+          </a>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Profile</div>
+          <a href="photographer-portfolio.html" class="sidebar-link">
+            <i class="bi bi-images"></i> Portfolio
+          </a>
+          <a href="photographer-profile.html" class="sidebar-link">
+            <i class="bi bi-person-circle"></i> My Profile
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user" onclick="window.location.href='photographer-profile.html'">
+          <div class="sidebar-user-avatar" id="sidebarAvatar">P</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">Photographer</div>
+            <div class="sidebar-user-role">Photographer</div>
+          </div>
+        </div>
+        <button class="sidebar-logout" onclick="doLogout()">
+          <i class="bi bi-box-arrow-left"></i> Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <div class="dash-main">
+      <!-- Topbar -->
+      <header class="dash-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+          <div>
+            <div class="topbar-title">Dashboard</div>
+            <div class="topbar-subtitle">Welcome back, <span id="topbarName">Photographer</span></div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="theme-toggle" data-tooltip="Toggle theme">
+            <i class="bi bi-moon-fill icon-moon"></i>
+            <i class="bi bi-sun-fill icon-sun"></i>
+          </button>
+          <button class="topbar-icon-btn" id="notifBtn" data-tooltip="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="badge-count" id="notifBadge" style="display:none;">0</span>
+          </button>
+          <div class="dropdown">
+            <div class="topbar-user" id="userDropdownTrigger">
+              <div class="topbar-user-avatar" id="topbarAvatar">P</div>
+              <span class="topbar-user-name" id="topbarUserName">Profile</span>
+              <i class="bi bi-chevron-down text-sm text-secondary"></i>
+            </div>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="photographer-profile.html" class="dropdown-item"><i class="bi bi-person"></i> My Profile</a>
+              <a href="photographer-portfolio.html" class="dropdown-item"><i class="bi bi-images"></i> Portfolio</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" onclick="doLogout()" style="color:var(--danger-600);">
+                <i class="bi bi-box-arrow-right"></i> Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="dash-content">
+        <!-- Welcome Banner -->
+        <div class="welcome-banner animate-fadeInUp">
+          <h2>Welcome back, <span id="welcomeName">Photographer</span>! 📷</h2>
+          <p>Stay on top of your requests, sessions, and earnings.</p>
+          <div class="welcome-actions">
+            <a href="photographer-requests.html" class="btn-white"><i class="bi bi-chat-dots"></i> View Requests</a>
+            <a href="photographer-portfolio.html" class="btn-outline-white"><i class="bi bi-images"></i> Manage Portfolio</a>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid-v2" style="grid-template-columns: repeat(4, 1fr); gap: var(--space-6); margin-bottom: var(--space-6);">
+          <div class="stat-card-v2 animate-fadeInUp">
+            <div class="stat-icon brand"><i class="bi bi-chat-dots"></i></div>
+            <div class="stat-label">Total Requests</div>
+            <div class="stat-value" id="totalRequests">0</div>
+          </div>
+          <div class="stat-card-v2 animate-fadeInUp" style="animation-delay:.04s">
+            <div class="stat-icon success"><i class="bi bi-check-circle"></i></div>
+            <div class="stat-label">Accepted</div>
+            <div class="stat-value" id="acceptedBookings">0</div>
+          </div>
+          <div class="stat-card-v2 animate-fadeInUp" style="animation-delay:.08s">
+            <div class="stat-icon info"><i class="bi bi-flag"></i></div>
+            <div class="stat-label">Completed</div>
+            <div class="stat-value" id="completedEvents">0</div>
+          </div>
+          <div class="stat-card-v2 animate-fadeInUp" style="animation-delay:.12s">
+            <div class="stat-icon danger"><i class="bi bi-x-circle"></i></div>
+            <div class="stat-label">Cancelled</div>
+            <div class="stat-value" id="cancelled">0</div>
+          </div>
+        </div>
+        <div class="stats-grid-v2" style="grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin-bottom: var(--space-6);">
+          <div class="stat-card-v2 animate-fadeInUp" style="animation-delay:.16s">
+            <div class="stat-icon brand"><i class="bi bi-wallet2"></i></div>
+            <div class="stat-label">Total Earnings</div>
+            <div class="stat-value" id="totalEarnings">₹0</div>
+          </div>
+          <div class="stat-card-v2 animate-fadeInUp" style="animation-delay:.2s">
+            <div class="stat-icon warning"><i class="bi bi-calendar-month"></i></div>
+            <div class="stat-label">Monthly Earnings</div>
+            <div class="stat-value" id="monthlyEarnings">₹0</div>
+          </div>
+          <div class="stat-card-v2 animate-fadeInUp" style="animation-delay:.24s">
+            <div class="stat-icon success"><i class="bi bi-calendar3"></i></div>
+            <div class="stat-label">Upcoming</div>
+            <div class="stat-value" id="upcomingEvents">0</div>
+          </div>
+        </div>
+
+        <!-- Requests + Earnings Chart -->
+        <div class="content-grid-2 mb-6">
+          <div class="ds-card animate-fadeInUp">
+            <div class="ds-card-header">
+              <h3 class="font-semibold text-base m-0">Incoming Requests</h3>
+              <a href="photographer-requests.html" class="btn btn-xs btn-ghost text-brand">View all →</a>
+            </div>
+            <div class="ds-card-body" id="requestsContainer">
+              <div class="requests-grid" id="requestsGrid"></div>
+            </div>
+          </div>
+          <div class="ds-card animate-fadeInUp" style="animation-delay:.05s">
+            <div class="ds-card-header">
+              <h3 class="font-semibold text-base m-0">Earnings Trend</h3>
+              <a href="photographer-earnings.html" class="btn btn-xs btn-ghost text-brand">Details →</a>
+            </div>
+            <div class="ds-card-body">
+              <canvas id="earningsChart" height="240"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accepted Sessions Table -->
+        <div class="ds-card animate-fadeInUp mb-6">
+          <div class="ds-card-header">
+            <h3 class="font-semibold text-base m-0">Accepted Sessions</h3>
+            <a href="photographer-sessions.html" class="btn btn-xs btn-ghost text-brand">Manage →</a>
+          </div>
+          <div class="table-responsive">
+            <table class="ds-table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Service</th>
+                  <th>Date</th>
+                  <th>Balance</th>
+                  <th>Status</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="sessionTableBody">
+                <tr><td colspan="6" class="text-center py-5 text-secondary">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Portfolio Manager -->
+        <div class="ds-card animate-fadeInUp">
+          <div class="ds-card-header">
+            <h3 class="font-semibold text-base m-0">Portfolio</h3>
+            <div class="flex gap-2">
+              <button class="btn btn-sm btn-primary" onclick="openUploadModal()"><i class="bi bi-upload"></i> Upload</button>
+              <a href="photographer-portfolio.html" class="btn btn-sm btn-secondary"><i class="bi bi-collection"></i> Full Manager</a>
+            </div>
+          </div>
+          <div class="ds-card-body">
+            <div class="portfolio-grid-v2" id="portfolioGrid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <aside class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3 class="font-semibold text-base m-0">Notifications</h3>
+      <button class="btn btn-sm btn-ghost" id="notifClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="notif-panel-body" id="notifList">
+      <div class="empty-state">
+        <div class="empty-state-icon">🔔</div>
+        <div class="empty-state-title">No notifications</div>
+      </div>
+    </div>
+  </aside>
+
+  <script src="js/dashboard.js"></script>
+  <script>
+    const API_URL = DashApp.API_URL;
+    let pendingRequests = [];
+    let acceptedSessions = [];
+    let portfolioItems = [];
+    let user = null;
+
+    function doLogout() {
+      Swal.fire({ title: 'Logout?', icon: 'question', showCancelButton: true, confirmButtonText: 'Yes, logout', confirmButtonColor: '#6366f1' }).then(r => {
+        if (r.isConfirmed) DashApp.logout();
+      });
+    }
+
+    // ── Fetch real data from API ──
+    async function loadDashboardData() {
+      if (!user || !user.photographer_id) return;
+      const pid = user.photographer_id;
+
+      try {
+        const [requestsRes, bookingsRes, portfolioRes] = await Promise.all([
+          fetch(`${API_URL}/bookings/requests/photographer/${pid}`).then(r => r.json()).catch(() => ({ bookings: [] })),
+          fetch(`${API_URL}/bookings/photographer/${pid}`).then(r => r.json()).catch(() => ({ bookings: [] })),
+          fetch(`${API_URL}/photographers/${pid}/portfolio`).then(r => r.json()).catch(() => ({ portfolio: [] }))
+        ]);
+
+        pendingRequests = (requestsRes.bookings || []).filter(b => b.status === 'pending');
+        const allBookings = bookingsRes.bookings || [];
+        // Also include direct pending requests (customer chose this photographer specifically)
+        const directPending = allBookings.filter(b => b.status === 'pending');
+        directPending.forEach(dp => {
+          if (!pendingRequests.find(p => p.id === dp.id)) pendingRequests.push(dp);
+        });
+        acceptedSessions = allBookings.filter(b => b.status === 'accepted' || b.status === 'token_paid' || b.status === 'completed');
+        const completedBookings = allBookings.filter(b => b.status === 'completed');
+        const declinedBookings = allBookings.filter(b => b.status === 'declined');
+        const upcomingBookings = allBookings.filter(b => {
+          if (b.status === 'completed' || b.status === 'declined') return false;
+          return b.event_date && new Date(b.event_date) >= new Date();
+        });
+
+        portfolioItems = portfolioRes.portfolio || [];
+
+        // Update stats
+        document.getElementById('totalRequests').textContent = pendingRequests.length + allBookings.length;
+        document.getElementById('acceptedBookings').textContent = acceptedSessions.length;
+        document.getElementById('completedEvents').textContent = completedBookings.length;
+        document.getElementById('cancelled').textContent = declinedBookings.length;
+        document.getElementById('upcomingEvents').textContent = upcomingBookings.length;
+
+        // Update request badge
+        const badge = document.getElementById('sidebarRequestBadge');
+        const topBadge = document.getElementById('notifBadge');
+        if (pendingRequests.length > 0) {
+          badge.style.display = ''; badge.textContent = pendingRequests.length;
+          topBadge.style.display = ''; topBadge.textContent = pendingRequests.length;
+        }
+
+        // Earnings
+        let totalEarnings = 0, monthlyEarnings = 0;
+        const now = new Date();
+        allBookings.forEach(b => {
+          if (['completed', 'token_paid', 'paid'].includes(b.status)) {
+            const price = b.total_price || b.price || 0;
+            totalEarnings += price;
+            if (b.event_date) {
+              const d = new Date(b.event_date);
+              if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) monthlyEarnings += price;
+            }
+          }
+        });
+        document.getElementById('totalEarnings').textContent = DashApp.formatCurrency(totalEarnings);
+        document.getElementById('monthlyEarnings').textContent = DashApp.formatCurrency(monthlyEarnings);
+
+        renderRequests();
+        renderSessions();
+        renderPortfolio();
+        renderCharts(allBookings);
+      } catch (err) {
+        console.error('Error loading dashboard data:', err);
+        DashApp.showToast('Load Error', 'Could not load dashboard data.', 'danger');
+      }
+    }
+
+    // ── Render incoming requests ──
+    function renderRequests() {
+      const grid = document.getElementById('requestsGrid');
+      if (!pendingRequests.length) {
+        grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">No pending requests</div><div class="empty-state-desc">New booking requests will appear here.</div></div>';
+        return;
+      }
+      grid.innerHTML = pendingRequests.map((r, i) => {
+        const name = r.customer ? `${r.customer.first_name} ${r.customer.last_name}` : `Customer #${r.customer_id}`;
+        const date = DashApp.formatDate(r.event_date);
+        const price = r.total_price || r.price || 0;
+        const service = r.service_type || 'Photoshoot';
+        return `
+        <div class="request-card animate-fadeInUp" style="animation-delay:${i * .04}s">
+          <div class="flex justify-between items-start">
+            <div class="request-info">
+              <div class="request-name">${DashApp.escapeHtml(name)}</div>
+              <div class="request-meta">${date} · ${DashApp.escapeHtml(service)}</div>
+            </div>
+            <span class="badge-v2 badge-warning">Pending</span>
+          </div>
+          <div class="request-price">${DashApp.formatCurrency(price)}</div>
+          ${r.notes ? `<div class="request-notes">"${DashApp.escapeHtml(r.notes)}"</div>` : ''}
+          <div class="request-actions">
+            <button class="btn btn-sm btn-success flex-1" onclick="handleRequest(${r.id},'accept')"><i class="bi bi-check-lg"></i> Accept</button>
+            <button class="btn btn-sm btn-outline-danger flex-1" onclick="handleRequest(${r.id},'decline')"><i class="bi bi-x-lg"></i> Decline</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── Accept / Decline ──
+    function handleRequest(id, action) {
+      const verb = action === 'accept' ? 'Accept' : 'Decline';
+      Swal.fire({ title: `${verb} this booking?`, icon: 'question', showCancelButton: true, confirmButtonText: verb, confirmButtonColor: action === 'accept' ? '#16a34a' : '#dc2626' }).then(async (result) => {
+        if (!result.isConfirmed) return;
+        try {
+          DashApp.showLoader(true);
+          const url = action === 'accept' ? `${API_URL}/bookings/${id}/accept` : `${API_URL}/bookings/${id}/status`;
+          const body = action === 'accept'
+            ? { photographer_id: user.photographer_id }
+            : { status: 'declined', photographer_id: user.photographer_id };
+          const res = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || `Failed to ${action}`);
+          DashApp.showToast('Success', `Booking ${verb.toLowerCase()}ed!`, 'success');
+          await loadDashboardData();
+        } catch (err) {
+          DashApp.showToast('Error', err.message, 'danger');
+        } finally {
+          DashApp.showLoader(false);
+        }
+      });
+    }
+
+    // ── Sessions table ──
+    function renderSessions() {
+      const body = document.getElementById('sessionTableBody');
+      if (!acceptedSessions.length) {
+        body.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-secondary">No active sessions yet.</td></tr>';
+        return;
+      }
+      body.innerHTML = acceptedSessions.map(s => {
+        const name = s.customer ? `${s.customer.first_name} ${s.customer.last_name}` : `Customer #${s.customer_id}`;
+        const price = s.total_price || s.price || 0;
+        const tokenPaid = s.token_amount || Math.round(price * 0.2);
+        const balance = price - tokenPaid;
+
+        let badgeClass, badgeText, actionBtn;
+
+        if (s.status === 'completed') {
+          badgeClass = 'badge-success';
+          badgeText = 'Completed';
+          actionBtn = `<span class="btn btn-xs" style="background:#10b981;color:#fff;cursor:default;opacity:.85;pointer-events:none;"><i class="bi bi-check-circle-fill"></i> Balance Paid</span>`;
+        } else if (s.status === 'token_paid') {
+          badgeClass = 'badge-primary';
+          badgeText = 'Token Paid';
+          actionBtn = `<button class="btn btn-xs btn-success" onclick="markWorkComplete(${s.id})"><i class="bi bi-check2-all"></i> Work Complete</button>`;
+        } else {
+          badgeClass = 'badge-warning';
+          badgeText = 'Awaiting Token';
+          actionBtn = `<span class="btn btn-xs btn-outline-secondary" style="cursor:default;opacity:.6;pointer-events:none;"><i class="bi bi-hourglass-split"></i> Awaiting Payment</span>`;
+        }
+
+        return `<tr>
+          <td class="font-medium">${DashApp.escapeHtml(name)}</td>
+          <td>${s.service_type || 'Photoshoot'}</td>
+          <td>${DashApp.formatDate(s.event_date)}</td>
+          <td class="font-semibold">${DashApp.formatCurrency(s.status === 'completed' ? 0 : (s.status === 'token_paid' ? balance : price))}</td>
+          <td><span class="badge-v2 ${badgeClass}">${badgeText}</span></td>
+          <td class="text-right">${actionBtn}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function markWorkComplete(id) {
+      const result = await Swal.fire({
+        title: 'Mark Work as Complete?',
+        html: '<p style="margin:0;color:#6b7280;">This confirms you have completed the photoshoot session and the customer has paid the remaining balance.</p>',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-check2-all"></i> Yes, Work Complete',
+        confirmButtonColor: '#10b981',
+        cancelButtonText: 'Cancel'
+      });
+      if (!result.isConfirmed) return;
+
+      try {
+        DashApp.showLoader(true);
+        const res = await fetch(`${API_URL}/bookings/${id}/work-complete`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photographer_id: user.photographer_id })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to complete');
+
+        DashApp.showLoader(false);
+
+        // Show congratulatory popup
+        const pName = data.photographer_name || user.first_name || 'Photographer';
+        await Swal.fire({
+          icon: 'success',
+          title: '🎉 Good Job!',
+          html: `
+            <div style="text-align:center;">
+              <div style="font-size:3rem;margin-bottom:12px;">📸🏆✨</div>
+              <h2 style="color:#10b981;font-size:1.4rem;margin:0 0 8px;">${DashApp.escapeHtml(pName)}</h2>
+              <p style="color:#6b7280;font-size:.95rem;margin:0;">You've successfully completed the session!<br>Balance payment has been recorded.</p>
+              <div style="background:#f0fdf4;border-radius:12px;padding:14px 20px;margin-top:16px;border:1px solid #bbf7d0;">
+                <span style="font-weight:700;color:#065f46;">Session Completed & Balance Paid ✅</span>
+              </div>
+            </div>
+          `,
+          confirmButtonText: 'Continue',
+          confirmButtonColor: '#10b981',
+          timer: 6000,
+          timerProgressBar: true
+        });
+
+        await loadDashboardData();
+      } catch (err) {
+        DashApp.showLoader(false);
+        DashApp.showToast('Error', err.message, 'danger');
+      }
+    }
+
+    // ── Portfolio ──
+    function renderPortfolio() {
+      const grid = document.getElementById('portfolioGrid');
+      if (!portfolioItems.length) {
+        grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📷</div><div class="empty-state-title">No portfolio items</div><div class="empty-state-desc">Upload photos to showcase your work.</div></div>';
+        return;
+      }
+      grid.innerHTML = portfolioItems.map(p => `
+        <div class="portfolio-thumb">
+          <img src="http://localhost:5000${p.image_url}" alt="${DashApp.escapeHtml(p.caption || 'Portfolio')}" loading="lazy">
+          <div class="thumb-overlay">
+            <button class="btn btn-xs btn-secondary" onclick="viewImage('http://localhost:5000${p.image_url}')"><i class="bi bi-eye"></i></button>
+            <button class="btn btn-xs btn-danger" onclick="deletePortfolioItem(${p.id})"><i class="bi bi-trash"></i></button>
+          </div>
+        </div>`).join('');
+    }
+
+    function viewImage(url) { Swal.fire({ imageUrl: url, imageHeight: 400, showConfirmButton: false, background: 'transparent', backdrop: 'rgba(0,0,0,.85)' }); }
+
+    function deletePortfolioItem(id) {
+      Swal.fire({ title: 'Delete photo?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Delete', confirmButtonColor: '#dc2626' }).then(async (result) => {
+        if (!result.isConfirmed) return;
+        try {
+          const res = await fetch(`${API_URL}/portfolio/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+          if (!res.ok) throw new Error('Delete failed');
+          DashApp.showToast('Deleted', 'Photo removed from portfolio.', 'success');
+          await loadDashboardData();
+        } catch (err) {
+          DashApp.showToast('Error', err.message, 'danger');
+        }
+      });
+    }
+
+    function openUploadModal() {
+      Swal.fire({ title: 'Upload Photo', text: 'Open the Portfolio Manager to upload new photos.', icon: 'info', confirmButtonText: 'Open Portfolio', showCancelButton: true, confirmButtonColor: '#6366f1' }).then(r => {
+        if (r.isConfirmed) window.location.href = 'photographer-portfolio.html';
+      });
+    }
+
+    // ── Earnings chart ──
+    function renderCharts(allBookings) {
+      const canvas = document.getElementById('earningsChart');
+      if (!canvas || typeof Chart === 'undefined') return;
+      const ctx = canvas.getContext('2d');
+
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const earningsByMonth = new Array(12).fill(0);
+      (allBookings || []).forEach(b => {
+        if (['completed', 'token_paid', 'paid'].includes(b.status)) {
+          const d = b.event_date ? new Date(b.event_date) : null;
+          if (d && d.getFullYear() === new Date().getFullYear()) {
+            earningsByMonth[d.getMonth()] += (b.total_price || b.price || 0);
+          }
+        }
+      });
+
+      const now = new Date();
+      const labels = [], data = [];
+      for (let i = 5; i >= 0; i--) {
+        const idx = (now.getMonth() - i + 12) % 12;
+        labels.push(months[idx]);
+        data.push(earningsByMonth[idx]);
+      }
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+      gradient.addColorStop(0, 'rgba(99,102,241,0.2)');
+      gradient.addColorStop(1, 'rgba(99,102,241,0)');
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Earnings (₹)', data,
+            borderColor: '#6366f1', backgroundColor: gradient,
+            fill: true, tension: 0.4, borderWidth: 2,
+            pointRadius: 4, pointBackgroundColor: '#6366f1', pointBorderColor: '#fff', pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1f2937', cornerRadius: 8, padding: 12, callbacks: { label: c => '₹' + c.parsed.y.toLocaleString('en-IN') } } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' }, ticks: { font: { size: 11 }, callback: v => '₹' + (v / 1000) + 'k' } },
+            x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+          }
+        }
+      });
+    }
+
+    // ── Auth & Init ──
+    function initAuth() {
+      user = DashApp.getUser();
+      if (!user) { window.location.href = 'login.html'; return false; }
+      if (!user.photographer_id) { window.location.href = 'index.html'; return false; }
+      const name = user.first_name || 'Photographer';
+      const initial = name.charAt(0).toUpperCase();
+      document.getElementById('topbarName').textContent = name;
+      document.getElementById('welcomeName').textContent = name;
+      document.getElementById('topbarAvatar').textContent = initial;
+      document.getElementById('topbarUserName').textContent = name;
+      document.getElementById('sidebarAvatar').textContent = initial;
+      document.getElementById('sidebarUserName').textContent = name;
+      return true;
+    }
+
+    async function init() {
+      DashApp.showLoader(true);
+      DashApp.init();
+      try {
+        await loadDashboardData();
+      } catch (err) {
+        console.error('Dashboard init error:', err);
+      } finally {
+        DashApp.showLoader(false);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (initAuth()) init();
+      else DashApp.showLoader(false);
+    });
+  </script>
+</body>
+</html>

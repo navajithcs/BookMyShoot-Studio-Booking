@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}My Orders — BookMyShoot{% endblock %}
+
+{% block extra_js %}
+<script>
+    function payToken(bookingId, amount) {
+        // Show loading state
+        Swal.fire({
+            title: 'Initializing Payment...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Create Razorpay Order
+        fetch('/api/payment/create-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ booking_id: bookingId })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                const options = {
+                    "key": data.key_id,
+                    "amount": data.amount,
+                    "currency": "INR",
+                    "name": "BookMyShoot",
+                    "description": "Token Payment for Booking #" + bookingId,
+                    "order_id": data.order_id,
+                    "handler": function (response) {
+                        verifyPayment(response, bookingId);
+                    },
+                    "prefill": {
+                        "name": data.customer_name,
+                        "email": data.customer_email
+                    },
+                    "theme": {
+                        "color": "#4f46e5"
+                    }
+                };
+
+                Swal.close();
+                const rzp1 = new Razorpay(options);
+                rzp1.open();
+            })
+            .catch(error => {
+                Swal.fire('Error', error.message || 'Failed to initialize payment', 'error');
+            });
+    }
+
+    function verifyPayment(razorResponse, bookingId) {
+        Swal.fire({
+            title: 'Verifying Payment...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch('/api/payment/verify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                razorpay_order_id: razorResponse.razorpay_order_id,
+                razorpay_payment_id: razorResponse.razorpay_payment_id,
+                razorpay_signature: razorResponse.razorpay_signature,
+                booking_id: bookingId
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Payment Successful!',
+                        text: 'Your booking is now confirmed.',
+                        confirmButtonText: 'Great!'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Verification Failed', data.error || 'Payment could not be verified', 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Something went wrong during verification', 'error');
+            });
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1>My Bookings</h1>
+        <div class="breadcrumb">Track status & manage payments</div>
+    </div>
+</div>
+
+<div class="page-content fade-in">
+<div class="card overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Function Details</th>
+                    <th>Photographer</th>
+                    <th>Status</th>
+                    <th>Payment</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if bookings %}
+                {% for b in bookings %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="fw-bold text-dark">{{ b.service_type | capitalize }}</div>
+                        <div class="small text-muted">📅 {{ b.event_date.strftime('%d %b, %Y') }}</div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="{{ url_for('uploaded_profile_file', filename=b.photographer.user.profile_image.split('/')[-1]) if b.photographer.user.profile_image else 'https://via.placeholder.com/40' }}"
+                                class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                            <div>
+                                <div class="fw-medium text-dark">{{ b.photographer.user.first_name }} {{
+                                    b.photographer.user.last_name }}</div>
+                                <div class="text-muted small">{{ b.photographer.specialty }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if b.status == 'pending' %}
+                        <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill">Pending
+                            Approval</span>
+                        {% elif b.status == 'accepted' %}
+                        <span class="badge bg-info bg-opacity-10 text-info px-3 py-2 rounded-pill">Accepted</span>
+                        {% elif b.status == 'token_paid' %}
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">Token
+                            Paid</span>
+                        {% elif b.status == 'completed' %}
+                        <span
+                            class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">Completed</span>
+                        {% else %}
+                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill">{{ b.status |
+                            capitalize }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if b.payment_status == 'pending' %}
+                        <div class="text-warning small fw-bold">₹{{ b.total_price }} (Unpaid)</div>
+                        {% elif b.payment_status == 'token_paid' %}
+                        <div class="text-primary small fw-bold">Token Received</div>
+                        <div class="text-muted small">Balance: ₹{{ b.remaining_amount }}</div>
+                        {% else %}
+                        <div class="text-success small fw-bold">Fully Paid</div>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        {% if b.status == 'accepted' %}
+                        <button class="btn btn-sm btn-primary rounded-pill px-4 fw-bold"
+                            onclick="payToken('{{ b.id }}', '{{ b.token_amount }}')">
+                            Pay Token (₹{{ b.token_amount }})
+                        </button>
+                        {% elif b.status == 'pending' %}
+                        <button class="btn btn-link text-danger p-0 small">Cancel</button>
+                        {% else %}
+                        <button class="btn btn-sm btn-outline-dark border-0">View Bill</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        No bookings found. <a href="{{ url_for('customer.search') }}" class="fw-bold">Book your first
+                            shoot!</a>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+{% endblock %}

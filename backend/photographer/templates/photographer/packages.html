@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Manage Packages — BookMyShoot{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1>Manage Packages</h1>
+        <div class="breadcrumb">Create and manage service offerings</div>
+    </div>
+    <div class="topbar-actions">
+        <button class="btn btn-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addPackageModal"><i class="bi bi-plus-lg me-1"></i> New Package</button>
+    </div>
+</div>
+
+<div class="page-content fade-in">
+<div class="row g-4">
+    {% if packages %}
+    {% for p in packages %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 overflow-hidden package-card">
+            {% if p.image_url %}
+            <img src="{{ url_for('uploaded_profile_file', filename=p.image_url.split('/')[-1]) }}" class="w-100"
+                style="height: 180px; object-fit: cover;">
+            {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                <span class="fs-1">📦</span>
+            </div>
+            {% endif %}
+
+            <div class="p-4">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="fw-bold mb-0">{{ p.name }}</h5>
+                    <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-3">₹{{ p.price }}</span>
+                </div>
+                <div class="badge bg-secondary bg-opacity-10 text-secondary mb-3">{{ p.category.name if p.category else
+                    'General' }}</div>
+                <p class="text-muted small mb-4">{{ p.description or 'No description provided.' }}</p>
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-dark w-100 rounded-3">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger w-100 rounded-3">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <div class="card py-5">
+            <i class="fs-1 d-block mb-3">🎁</i>
+            <h4 class="text-muted">You haven't added any packages yet.</h4>
+            <button class="btn btn-primary mt-3 px-4" data-bs-toggle="modal" data-bs-target="#addPackageModal">Add Your
+                First Package</button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+</div>
+
+<!-- Add Package Modal -->
+<div class="modal fade" id="addPackageModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold">Add New Package</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('photographer.add_package') }}" method="POST" enctype="multipart/form-data">
+                {{ form.csrf_token }}
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Package Name</label>
+                        {{ form.name(class="form-control rounded-3", placeholder="e.g., Premium Wedding Photography") }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Category</label>
+                        <select name="category_id" class="form-select rounded-3">
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Price (₹)</label>
+                        {{ form.price(class="form-control rounded-3", placeholder="5000") }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Description</label>
+                        {{ form.description(class="form-control rounded-3", rows="3", placeholder="What's included in
+                        this package?") }}
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-bold small">Sample Image</label>
+                        {{ form.sample_image(class="form-control rounded-3") }}
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 p-4">
+                    <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-bold shadow-sm">Create
+                        Package</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .package-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .package-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+    }
+</style>
+{% endblock %}

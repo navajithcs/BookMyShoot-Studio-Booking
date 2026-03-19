@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Profile — BookMyShoot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <style>
+    .dash-content { max-width: 900px !important; }
+
+    .profile-banner {
+      background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+      border-radius: var(--radius-xl);
+      padding: 40px 36px 30px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: var(--space-6);
+    }
+    .profile-banner::before {
+      content: '';
+      position: absolute;
+      top: -40%; right: -10%;
+      width: 300px; height: 300px;
+      background: rgba(255,255,255,.07);
+      border-radius: 50%;
+    }
+    .profile-banner-inner {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      position: relative;
+      z-index: 1;
+    }
+    .profile-avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .profile-avatar {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.6rem;
+      font-weight: 700;
+      color: #fff;
+      border: 3px solid rgba(255,255,255,.4);
+      overflow: hidden;
+    }
+    .profile-avatar img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .avatar-edit-btn {
+      position: absolute;
+      bottom: 2px; right: 2px;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: #fff;
+      color: var(--brand-600);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .9rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+      transition: transform .2s;
+    }
+    .avatar-edit-btn:hover { transform: scale(1.1); }
+    .profile-banner-info h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+    .profile-banner-info p {
+      opacity: .85;
+      font-size: .95rem;
+      margin: 0;
+    }
+    .profile-banner-info .role-badge {
+      display: inline-block;
+      margin-top: 8px;
+      background: rgba(255,255,255,.2);
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: .82rem;
+      font-weight: 600;
+      backdrop-filter: blur(6px);
+    }
+
+    .profile-section {
+      background: var(--surface-primary);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-xl);
+      padding: 28px 32px;
+      margin-bottom: var(--space-5);
+      transition: box-shadow .2s;
+    }
+    .profile-section:hover {
+      box-shadow: var(--shadow-lg);
+    }
+    .profile-section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-primary);
+    }
+    .profile-section-icon {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+    .profile-section-icon.brand   { background: var(--brand-50);   color: var(--brand-600); }
+    .profile-section-icon.warning { background: var(--warning-50); color: var(--warning-600); }
+    .profile-section-icon.danger  { background: var(--danger-50);  color: var(--danger-600); }
+    .profile-section-icon.success { background: var(--success-50); color: var(--success-600); }
+    .profile-section-icon.info    { background: var(--info-50);    color: var(--info-600); }
+
+    [data-theme="dark"] .profile-section-icon.brand   { background: rgba(99,102,241,.15); }
+    [data-theme="dark"] .profile-section-icon.warning  { background: rgba(245,158,11,.15); }
+    [data-theme="dark"] .profile-section-icon.danger   { background: rgba(239,68,68,.15); }
+    [data-theme="dark"] .profile-section-icon.success  { background: rgba(34,197,94,.15); }
+    [data-theme="dark"] .profile-section-icon.info     { background: rgba(59,130,246,.15); }
+
+    .profile-section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .profile-section-desc {
+      font-size: .85rem;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .form-grid.full { grid-template-columns: 1fr; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group label {
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .form-group input, .form-group select {
+      padding: 11px 14px;
+      border: 1.5px solid var(--border-primary);
+      border-radius: var(--radius-lg);
+      font-size: .92rem;
+      font-family: inherit;
+      background: var(--surface-secondary);
+      color: var(--text-primary);
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: var(--brand-500);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+    }
+    .form-group input.error {
+      border-color: var(--danger-500);
+      box-shadow: 0 0 0 3px rgba(239,68,68,.1);
+    }
+    .form-group input.success {
+      border-color: var(--success-500);
+    }
+    .field-error-msg {
+      font-size: .8rem;
+      color: var(--danger-500);
+      margin-top: 4px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 10px 22px;
+      border-radius: var(--radius-lg);
+      font-size: .9rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      transition: all .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--brand-500), var(--brand-600));
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) { box-shadow: 0 4px 14px rgba(99,102,241,.35); transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1.5px solid var(--border-primary);
+    }
+    .btn-ghost:hover { background: var(--surface-secondary); }
+    .btn-danger-outline {
+      background: transparent;
+      color: var(--danger-600);
+      border: 1.5px solid var(--danger-200);
+    }
+    .btn-danger-outline:hover { background: var(--danger-50); }
+    .btn-danger-solid {
+      background: var(--danger-500);
+      color: #fff;
+    }
+    .btn-danger-solid:hover:not(:disabled) { background: var(--danger-600); box-shadow: 0 4px 14px rgba(239,68,68,.3); }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-secondary);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--text-tertiary); font-size: .88rem; }
+    .info-value { font-weight: 600; color: var(--text-primary); font-size: .92rem; }
+
+    .danger-zone {
+      border-color: var(--danger-200);
+    }
+    .danger-zone .profile-section-header {
+      border-color: var(--danger-100);
+    }
+
+    .password-strength {
+      height: 4px;
+      border-radius: 4px;
+      background: var(--border-primary);
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .password-strength-bar {
+      height: 100%;
+      width: 0;
+      border-radius: 4px;
+      transition: width .3s, background .3s;
+    }
+    .password-strength-text {
+      font-size: .78rem;
+      margin-top: 4px;
+      color: var(--text-tertiary);
+    }
+
+    .avatar-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .avatar-actions .btn { font-size: .82rem; padding: 7px 14px; }
+
+    /* Hidden file input */
+    #avatarInput { display: none; }
+
+    @media (max-width: 640px) {
+      .profile-banner-inner { flex-direction: column; text-align: center; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-actions { flex-direction: column; }
+      .form-actions .btn { width: 100%; justify-content: center; }
+      .dash-content { padding: var(--space-4) !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loader -->
+  <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Notification overlay -->
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <div class="dash-layout">
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-logo">
+          <div class="logo-icon">📸</div>
+          <div class="logo-text">
+            BookMyShoot
+            <span class="logo-sub">Admin Panel</span>
+          </div>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Overview</div>
+          <a href="admin-dashboard.html" class="sidebar-link">
+            <i class="bi bi-grid-1x2-fill"></i> Dashboard
+          </a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Management</div>
+          <a href="admin-users.html" class="sidebar-link">
+            <i class="bi bi-people"></i> Customer Management
+          </a>
+          <a href="admin-photographers.html" class="sidebar-link">
+            <i class="bi bi-camera"></i> Photographer Management
+          </a>
+          <a href="admin-portfolio.html" class="sidebar-link">
+            <i class="bi bi-images"></i> Portfolio
+          </a>
+          <a href="admin-bookings.html" class="sidebar-link">
+            <i class="bi bi-calendar-event"></i> Booking Management
+          </a>
+          <a href="admin-services.html" class="sidebar-link">
+            <i class="bi bi-box-seam"></i> Service & Packages
+          </a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Analytics</div>
+          <a href="admin-reports.html" class="sidebar-link">
+            <i class="bi bi-bar-chart-line"></i> Reports
+          </a>
+          <a href="admin-revenue.html" class="sidebar-link">
+            <i class="bi bi-currency-rupee"></i> Revenue Details
+          </a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Support</div>
+          <a href="admin-refunds.html" class="sidebar-link">
+            <i class="bi bi-arrow-return-left"></i> Refund Requests
+          </a>
+          <a href="admin-feedback.html" class="sidebar-link">
+            <i class="bi bi-chat-square-text"></i> Feedback
+          </a>
+          <a href="admin-support.html" class="sidebar-link">
+            <i class="bi bi-headset"></i> Support Tickets
+          </a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-label">Account</div>
+          <a href="admin-profile.html" class="sidebar-link active">
+            <i class="bi bi-person-gear"></i> Profile Settings
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user" onclick="window.location.href='admin-profile.html'">
+          <div class="sidebar-user-avatar" id="sidebarAvatar">A</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+            <div class="sidebar-user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="sidebar-logout" onclick="DashApp.logout()">
+          <i class="bi bi-box-arrow-left"></i> Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <div class="dash-main">
+      <!-- Topbar -->
+      <header class="dash-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+          <div>
+            <div class="topbar-title">Profile Settings</div>
+            <div class="topbar-subtitle">Manage your account, <span id="topbarName">Admin</span></div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="search-bar hide-mobile">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="globalSearch" placeholder="Search... (Ctrl+K)">
+          </div>
+          <button class="theme-toggle" data-tooltip="Toggle theme">
+            <i class="bi bi-moon-fill icon-moon"></i>
+            <i class="bi bi-sun-fill icon-sun"></i>
+          </button>
+          <button class="topbar-icon-btn" id="notifBtn" data-tooltip="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="badge-count" id="notifBadge" style="display:none;">0</span>
+          </button>
+          <div class="dropdown">
+            <div class="topbar-user" id="userDropdownTrigger">
+              <div class="topbar-user-avatar" id="topbarAvatar">A</div>
+              <span class="topbar-user-name" id="topbarUserName">Admin</span>
+              <i class="bi bi-chevron-down text-sm text-secondary"></i>
+            </div>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="admin-profile.html" class="dropdown-item"><i class="bi bi-person-gear"></i> Profile</a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" onclick="DashApp.logout()" style="color:var(--danger-600);">
+                <i class="bi bi-box-arrow-right"></i> Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="dash-content">
+
+        <!-- Profile Banner -->
+        <div class="profile-banner animate-fadeInUp">
+          <div class="profile-banner-inner">
+            <div class="profile-avatar-wrap">
+              <div class="profile-avatar" id="profileAvatar">A</div>
+              <button class="avatar-edit-btn" onclick="document.getElementById('avatarInput').click()" title="Change photo">
+                <i class="bi bi-camera-fill"></i>
+              </button>
+              <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/gif,image/webp">
+            </div>
+            <div class="profile-banner-info">
+              <h2 id="profileFullName">Admin User</h2>
+              <p id="profileEmail">admin@example.com</p>
+              <span class="role-badge"><i class="bi bi-shield-check"></i> Administrator</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Avatar Actions (below banner) -->
+        <div class="avatar-actions" id="avatarActions" style="display: none; margin-bottom: var(--space-5);">
+          <button class="btn btn-ghost" onclick="removeAvatar()"><i class="bi bi-trash"></i> Remove Photo</button>
+        </div>
+
+        <!-- Personal Information -->
+        <div class="profile-section animate-fadeInUp" style="animation-delay: .05s;">
+          <div class="profile-section-header">
+            <div class="profile-section-icon brand"><i class="bi bi-person"></i></div>
+            <div>
+              <div class="profile-section-title">Personal Information</div>
+              <div class="profile-section-desc">Update your name, email and phone number</div>
+            </div>
+          </div>
+          <form id="profileForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" placeholder="Enter first name" required>
+              </div>
+              <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" placeholder="Enter last name" required>
+              </div>
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="Enter email" required>
+              </div>
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" placeholder="Enter phone number">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-ghost" onclick="resetProfileForm()">Cancel</button>
+              <button type="submit" class="btn btn-primary" id="saveProfileBtn">
+                <i class="bi bi-check2"></i> Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Change Password -->
+        <div class="profile-section animate-fadeInUp" style="animation-delay: .1s;">
+          <div class="profile-section-header">
+            <div class="profile-section-icon warning"><i class="bi bi-lock"></i></div>
+            <div>
+              <div class="profile-section-title">Change Password</div>
+              <div class="profile-section-desc">Ensure your account stays secure</div>
+            </div>
+          </div>
+          <form id="passwordForm">
+            <div class="form-grid">
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="currentPassword">Current Password</label>
+                <input type="password" id="currentPassword" placeholder="Enter current password" required>
+              </div>
+              <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <input type="password" id="newPassword" placeholder="Enter new password" required>
+                <div class="password-strength"><div class="password-strength-bar" id="pwStrengthBar"></div></div>
+                <div class="password-strength-text" id="pwStrengthText"></div>
+              </div>
+              <div class="form-group">
+                <label for="confirmPassword">Confirm New Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm new password" required>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-ghost" onclick="document.getElementById('passwordForm').reset(); clearPwStrength();">Cancel</button>
+              <button type="submit" class="btn btn-primary" id="changePwBtn">
+                <i class="bi bi-shield-lock"></i> Update Password
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Account Info -->
+        <div class="profile-section animate-fadeInUp" style="animation-delay: .15s;">
+          <div class="profile-section-header">
+            <div class="profile-section-icon info"><i class="bi bi-info-circle"></i></div>
+            <div>
+              <div class="profile-section-title">Account Information</div>
+              <div class="profile-section-desc">Details about your account</div>
+            </div>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Account ID</span>
+            <span class="info-value" id="infoId">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Account Type</span>
+            <span class="info-value"><i class="bi bi-shield-check" style="color:var(--brand-500);"></i> Administrator</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Member Since</span>
+            <span class="info-value" id="infoCreated">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Last Updated</span>
+            <span class="info-value" id="infoUpdated">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Account Status</span>
+            <span class="info-value" style="color: var(--success-600);"><i class="bi bi-check-circle-fill"></i> Active</span>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="profile-section danger-zone animate-fadeInUp" style="animation-delay: .2s;">
+          <div class="profile-section-header">
+            <div class="profile-section-icon danger"><i class="bi bi-exclamation-triangle"></i></div>
+            <div>
+              <div class="profile-section-title" style="color: var(--danger-600);">Danger Zone</div>
+              <div class="profile-section-desc">Irreversible actions — proceed with caution</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Delete Account</div>
+              <div style="font-size: .85rem; color: var(--text-tertiary);">Permanently delete your admin account. This action cannot be undone.</div>
+            </div>
+            <button class="btn btn-danger-outline" onclick="confirmDeleteAccount()">
+              <i class="bi bi-trash3"></i> Delete Account
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <aside class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3 class="font-semibold text-base m-0">Notifications</h3>
+      <button class="btn btn-sm btn-ghost" id="notifClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="notif-panel-body" id="notifList">
+      <div class="empty-state">
+        <div class="empty-state-icon">🔔</div>
+        <div class="empty-state-title">No notifications</div>
+        <div class="empty-state-desc">You're all caught up!</div>
+      </div>
+    </div>
+  </aside>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/dashboard.js"></script>
+  <script>
+    const API = DashApp.API_URL;
+    let currentUser = null;
+
+    // ── Auth ──
+    const user = DashApp.requireAuth(['admin']);
+    if (user) {
+      currentUser = user;
+      populateUI(user);
+      fetchLatestUser(user.id);
+    }
+    DashApp.init();
+
+    function populateUI(u) {
+      const name = `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Admin';
+      const initial = (u.first_name || 'A').charAt(0).toUpperCase();
+
+      document.getElementById('topbarName').textContent = u.first_name || 'Admin';
+      document.getElementById('topbarAvatar').textContent = initial;
+      document.getElementById('topbarUserName').textContent = u.first_name || 'Admin';
+      document.getElementById('sidebarAvatar').textContent = initial;
+      document.getElementById('sidebarUserName').textContent = u.first_name || 'Admin';
+
+      document.getElementById('profileFullName').textContent = name;
+      document.getElementById('profileEmail').textContent = u.email || '';
+
+      // Avatar
+      const avatarEl = document.getElementById('profileAvatar');
+      if (u.profile_image) {
+        avatarEl.innerHTML = `<img src="${API.replace('/api','')}/uploads/profiles/${u.profile_image}" alt="Avatar">`;
+        document.getElementById('avatarActions').style.display = 'flex';
+      } else {
+        avatarEl.textContent = initial;
+        document.getElementById('avatarActions').style.display = 'none';
+      }
+
+      // Form fields
+      document.getElementById('firstName').value = u.first_name || '';
+      document.getElementById('lastName').value = u.last_name || '';
+      document.getElementById('email').value = u.email || '';
+      document.getElementById('phone').value = u.phone || '';
+
+      // Account info
+      document.getElementById('infoId').textContent = '#' + u.id;
+      document.getElementById('infoCreated').textContent = u.created_at ? DashApp.formatDate(u.created_at) : '—';
+      document.getElementById('infoUpdated').textContent = u.updated_at ? DashApp.formatDate(u.updated_at) : '—';
+    }
+
+    function fetchLatestUser(userId) {
+      fetch(`${API}/user/${userId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.user) {
+            currentUser = data.user;
+            localStorage.setItem('user', JSON.stringify(data.user));
+            populateUI(data.user);
+          }
+        })
+        .catch(() => {});
+    }
+
+    function updateLocalUser(userData) {
+      currentUser = userData;
+      localStorage.setItem('user', JSON.stringify(userData));
+      populateUI(userData);
+    }
+
+    // ── Profile Form ──
+    document.getElementById('profileForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('saveProfileBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Saving...';
+
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+
+      // Basic validation
+      if (!firstName || firstName.length < 2) {
+        showFieldError('firstName', 'First name must be at least 2 characters');
+        resetBtn(btn, '<i class="bi bi-check2"></i> Save Changes');
+        return;
+      }
+      if (!lastName || lastName.length < 1) {
+        showFieldError('lastName', 'Last name is required');
+        resetBtn(btn, '<i class="bi bi-check2"></i> Save Changes');
+        return;
+      }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showFieldError('email', 'Enter a valid email address');
+        resetBtn(btn, '<i class="bi bi-check2"></i> Save Changes');
+        return;
+      }
+      if (phone && !/^\d{10}$/.test(phone.replace(/[\s\-+()]/g, '').slice(-10))) {
+        showFieldError('phone', 'Enter a valid 10-digit phone number');
+        resetBtn(btn, '<i class="bi bi-check2"></i> Save Changes');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/user/update-profile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: currentUser.id,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            phone: phone
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          DashApp.showToast('Error', data.error || 'Failed to update profile', 'danger');
+        } else {
+          updateLocalUser(data.user);
+          DashApp.showToast('Success', 'Profile updated successfully!', 'success');
+        }
+      } catch (err) {
+        DashApp.showToast('Error', 'Network error. Please try again.', 'danger');
+      }
+      resetBtn(btn, '<i class="bi bi-check2"></i> Save Changes');
+    });
+
+    function resetProfileForm() {
+      if (currentUser) populateUI(currentUser);
+      clearAllFieldErrors();
+    }
+
+    // ── Change Password ──
+    document.getElementById('newPassword').addEventListener('input', function() {
+      updatePasswordStrength(this.value);
+    });
+
+    document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('changePwBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Updating...';
+
+      const currentPw = document.getElementById('currentPassword').value;
+      const newPw = document.getElementById('newPassword').value;
+      const confirmPw = document.getElementById('confirmPassword').value;
+
+      if (!currentPw) {
+        showFieldError('currentPassword', 'Enter your current password');
+        resetBtn(btn, '<i class="bi bi-shield-lock"></i> Update Password');
+        return;
+      }
+      if (newPw.length < 6) {
+        showFieldError('newPassword', 'Password must be at least 6 characters');
+        resetBtn(btn, '<i class="bi bi-shield-lock"></i> Update Password');
+        return;
+      }
+      if (newPw !== confirmPw) {
+        showFieldError('confirmPassword', 'Passwords do not match');
+        resetBtn(btn, '<i class="bi bi-shield-lock"></i> Update Password');
+        return;
+      }
+      if (currentPw === newPw) {
+        showFieldError('newPassword', 'New password must be different from current');
+        resetBtn(btn, '<i class="bi bi-shield-lock"></i> Update Password');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/user/change-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: currentUser.id,
+            current_password: currentPw,
+            new_password: newPw
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          DashApp.showToast('Error', data.error || 'Failed to change password', 'danger');
+        } else {
+          DashApp.showToast('Success', 'Password changed successfully!', 'success');
+          document.getElementById('passwordForm').reset();
+          clearPwStrength();
+        }
+      } catch (err) {
+        DashApp.showToast('Error', 'Network error. Please try again.', 'danger');
+      }
+      resetBtn(btn, '<i class="bi bi-shield-lock"></i> Update Password');
+    });
+
+    // ── Avatar Upload ──
+    document.getElementById('avatarInput').addEventListener('change', async function() {
+      const file = this.files[0];
+      if (!file) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+        DashApp.showToast('Error', 'Image must be under 5MB', 'danger');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('user_id', currentUser.id);
+      formData.append('avatar', file);
+
+      try {
+        const res = await fetch(`${API}/user/upload-avatar`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          DashApp.showToast('Error', data.error || 'Upload failed', 'danger');
+        } else {
+          updateLocalUser(data.user);
+          DashApp.showToast('Success', 'Profile photo updated!', 'success');
+        }
+      } catch (err) {
+        DashApp.showToast('Error', 'Upload failed. Please try again.', 'danger');
+      }
+      this.value = '';
+    });
+
+    async function removeAvatar() {
+      const result = await Swal.fire({
+        title: 'Remove Profile Photo?',
+        text: 'Your profile photo will be removed.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Remove',
+        confirmButtonColor: '#ef4444'
+      });
+      if (!result.isConfirmed) return;
+
+      try {
+        const res = await fetch(`${API}/user/remove-avatar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: currentUser.id })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          DashApp.showToast('Error', data.error || 'Failed to remove photo', 'danger');
+        } else {
+          updateLocalUser(data.user);
+          DashApp.showToast('Success', 'Profile photo removed', 'success');
+        }
+      } catch (err) {
+        DashApp.showToast('Error', 'Failed to remove photo', 'danger');
+      }
+    }
+
+    // ── Delete Account ──
+    async function confirmDeleteAccount() {
+      const step1 = await Swal.fire({
+        title: 'Delete Admin Account?',
+        html: `<p style="color:#666;">This will <strong>permanently delete</strong> your admin account and all associated data.</p>
+               <p style="color:#ef4444; font-weight:600; margin-top:12px;">⚠️ This action cannot be undone!</p>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, I understand',
+        confirmButtonColor: '#ef4444',
+        cancelButtonText: 'Cancel'
+      });
+      if (!step1.isConfirmed) return;
+
+      const step2 = await Swal.fire({
+        title: 'Enter Your Password',
+        text: 'To confirm deletion, enter your current password:',
+        input: 'password',
+        inputPlaceholder: 'Your password',
+        inputAttributes: { autocomplete: 'current-password' },
+        showCancelButton: true,
+        confirmButtonText: 'Delete Permanently',
+        confirmButtonColor: '#ef4444',
+        inputValidator: (val) => {
+          if (!val) return 'Password is required';
+        }
+      });
+      if (!step2.isConfirmed) return;
+
+      try {
+        const res = await fetch(`${API}/user/delete-account`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: currentUser.id, password: step2.value })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          DashApp.showToast('Error', data.error || 'Failed to delete account', 'danger');
+        } else {
+          await Swal.fire({
+            title: 'Account Deleted',
+            text: 'Your admin account has been permanently deleted.',
+            icon: 'success',
+            timer: 2500,
+            showConfirmButton: false
+          });
+          localStorage.removeItem('user');
+          window.location.href = 'login.html';
+        }
+      } catch (err) {
+        DashApp.showToast('Error', 'Failed to delete account', 'danger');
+      }
+    }
+
+    // ── Password Strength ──
+    function updatePasswordStrength(pw) {
+      const bar = document.getElementById('pwStrengthBar');
+      const text = document.getElementById('pwStrengthText');
+      if (!pw) { bar.style.width = '0'; text.textContent = ''; return; }
+
+      let score = 0;
+      if (pw.length >= 6) score++;
+      if (pw.length >= 8) score++;
+      if (/[A-Z]/.test(pw)) score++;
+      if (/[0-9]/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+      const levels = [
+        { width: '20%', color: 'var(--danger-500)', label: 'Very weak' },
+        { width: '40%', color: '#f97316', label: 'Weak' },
+        { width: '60%', color: 'var(--warning-500)', label: 'Fair' },
+        { width: '80%', color: '#84cc16', label: 'Strong' },
+        { width: '100%', color: 'var(--success-500)', label: 'Very strong' }
+      ];
+      const lvl = levels[Math.min(score, levels.length) - 1] || levels[0];
+      bar.style.width = lvl.width;
+      bar.style.background = lvl.color;
+      text.textContent = lvl.label;
+      text.style.color = lvl.color;
+    }
+
+    function clearPwStrength() {
+      document.getElementById('pwStrengthBar').style.width = '0';
+      document.getElementById('pwStrengthText').textContent = '';
+    }
+
+    // ── Field Error Helpers ──
+    function showFieldError(fieldId, msg) {
+      const el = document.getElementById(fieldId);
+      el.classList.add('error');
+      el.classList.remove('success');
+      let errEl = el.parentElement.querySelector('.field-error-msg');
+      if (!errEl) {
+        errEl = document.createElement('div');
+        errEl.className = 'field-error-msg';
+        el.parentElement.appendChild(errEl);
+      }
+      errEl.textContent = msg;
+      el.focus();
+      el.addEventListener('input', function handler() {
+        el.classList.remove('error');
+        if (errEl) errEl.remove();
+        el.removeEventListener('input', handler);
+      }, { once: true });
+    }
+
+    function clearAllFieldErrors() {
+      document.querySelectorAll('.field-error-msg').forEach(e => e.remove());
+      document.querySelectorAll('input.error').forEach(e => e.classList.remove('error'));
+    }
+
+    function resetBtn(btn, html) {
+      btn.disabled = false;
+      btn.innerHTML = html;
+    }
+
+    // Spin animation
+    const style = document.createElement('style');
+    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin .6s linear infinite;}';
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

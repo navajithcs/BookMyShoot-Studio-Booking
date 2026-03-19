@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% set hide_sidebar = true %}
+{% set hide_nav = true %}
+{% block title %}403 — Access Denied{% endblock %}
+
+{% block main_class %}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-center" style="min-height:100vh;background:var(--bg);">
+    <div class="text-center fade-in" style="max-width:440px;">
+        <div style="font-size:5rem;font-weight:800;color:var(--danger);line-height:1;">403</div>
+        <h2 class="fw-bold mt-3 mb-2">Access Denied</h2>
+        <p class="text-muted mb-4">You don't have permission to access this resource.</p>
+        <a href="/" class="btn btn-primary rounded-pill px-4 py-2 fw-600">Go Home</a>
+    </div>
+</div>
+{% endblock %}

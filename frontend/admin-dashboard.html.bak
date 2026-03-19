@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — BookMyShoot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <a href="admin-dashboard.html" class="sidebar-brand">BookMyShoot Admin</a>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="admin-dashboard.html" class="nav-item active">Dashboard</a>
+            <a href="admin-users.html" class="nav-item">Customer Management</a>
+            <a href="admin-photographers.html" class="nav-item">Photographers</a>
+            <a href="admin-portfolio.html" class="nav-item">Portfolio Management</a>
+            <a href="admin-reports.html" class="nav-item">Reports</a>
+            <a href="#" onclick="logout()" class="nav-item">Logout</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <div class="page-header">
+            <h1 class="page-title">Dashboard Overview</h1>
+        </div>
+
+        <!-- KEY METRICS -->
+        <div class="stats-grid">
+            <div class="stat-card" style="border-color: var(--success);">
+                <h3>Total Revenue</h3>
+                <div class="value" id="totalRevenue">₹0</div>
+                <div class="trend">↑ 12.5% from last month</div>
+            </div>
+            <div class="stat-card" style="border-color: var(--primary);">
+                <h3>Total Users</h3>
+                <div class="value" id="totalUsers">0</div>
+                <div class="trend" id="userBreakdown" style="color: #64748b;">(0 Customers, 0 Photographers)</div>
+            </div>
+            <div class="stat-card" style="border-color: var(--warning);">
+                <h3>Active Bookings</h3>
+                <div class="value" id="activeBookings">0</div>
+                <div class="trend" style="color: var(--warning);">Pending & Accepted</div>
+            </div>
+            <div class="stat-card" style="border-color: var(--secondary);">
+                <h3>Completed Jobs</h3>
+                <div class="value" id="completedJobs">0</div>
+                <div class="trend">Lifetime</div>
+            </div>
+        </div>
+
+        <!-- CHARTS -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3 class="section-title">Revenue Overview</h3>
+                <canvas id="revenueChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3 class="section-title">User Distribution</h3>
+                <canvas id="userChart"></canvas>
+            </div>
+        </div>
+
+        <!-- RECENT ACTIVITY -->
+        <div class="admin-table-container">
+            <h3
+                style="padding: 20px; margin: 0; border-bottom: 1px solid #f1f5f9; font-size: 1.1rem; font-weight: 600;">
+                Recent Bookings</h3>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Service</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="recentBookingsTable">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <script>
+        // Auth Check
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || user.user_type !== 'admin') {
+            window.location.href = 'login.html';
+        }
+
+        // Logout
+        function logout() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                fetch('http://localhost:5000/api/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: user.id })
+                }).then(() => {
+                    localStorage.removeItem('user');
+                    window.location.href = 'index.html';
+                });
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Fetch Stats
+        fetch('http://localhost:5000/api/admin/stats')
+            .then(res => res.json())
+            .then(data => {
+                // Update Key Metrics
+                document.getElementById('totalRevenue').textContent = '₹' + data.revenue.total.toLocaleString();
+                document.getElementById('totalUsers').textContent = data.users.total;
+                document.getElementById('userBreakdown').textContent = `(${data.users.customers} Customers, ${data.users.photographers} Photographers)`;
+                document.getElementById('activeBookings').textContent = data.bookings.pending + data.bookings.accepted;
+                document.getElementById('completedJobs').textContent = data.bookings.completed;
+                
+                // Update growth trend
+                const trendEl = document.querySelector('.stat-card .trend');
+                const growth = data.revenue.growth;
+                if (growth > 0) trendEl.textContent = `↑ ${growth}% from last month`;
+                else if (growth < 0) trendEl.textContent = `↓ ${Math.abs(growth)}% from last month`;
+                else trendEl.textContent = 'No change from last month';
+
+                // Render Charts with real data
+                renderRevenueChart(data.revenue.month_labels || ['Jan','Feb','Mar','Apr','May','Jun'], data.revenue.monthly || [0,0,0,0,0,0]);
+                renderUserChart(data.users.customers, data.users.photographers);
+
+                // Render Table
+                const tableBody = document.getElementById('recentBookingsTable');
+                tableBody.innerHTML = data.recent_activity.map(b => `
+          <tr>
+            <td>#${b.id}</td>
+            <td>${b.service_type}</td>
+            <td>${b.event_date}</td>
+            <td>₹${b.total_price}</td>
+            <td><span class="status-badge status-${b.status}">${b.status}</span></td>
+          </tr>
+        `).join('');
+            })
+            .catch(err => console.error(err));
+
+        // Chart: Revenue (Real Data from API)
+        function renderRevenueChart(labels, monthlyData) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: monthlyData,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Chart: Users
+        function renderUserChart(customers, photographers) {
+            const ctx = document.getElementById('userChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Customers', 'Photographers'],
+                    datasets: [{
+                        data: [customers, photographers],
+                        backgroundColor: ['#667eea', '#764ba2'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

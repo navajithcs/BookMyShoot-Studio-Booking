@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photographer Dashboard — BookMyShoot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+    }
+
+    .dashboard-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dashboard-header h1 {
+      font-size: 1.8rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .user-avatar {
+      width: 45px;
+      height: 45px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    .logout-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .dashboard-container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .stat-card h3 {
+      color: #666;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+
+    .stat-card.pending .value {
+      color: #f59e0b;
+    }
+
+    .stat-card.accepted .value {
+      color: #10b981;
+    }
+
+    .stat-card.completed .value {
+      color: #667eea;
+    }
+
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #1a1a1a;
+    }
+
+    .bookings-grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .booking-card {
+      background: white;
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .booking-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+
+    .booking-id {
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    .booking-status {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .booking-status.pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .booking-status.accepted {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .booking-status.declined {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .booking-status.completed {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .booking-status.request {
+      background: #fef3c7;
+      color: #92400e;
+      font-weight: 600;
+    }
+
+    .request-card {
+      border: 2px solid #f59e0b;
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    }
+
+    .booking-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .detail-item label {
+      display: block;
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .detail-item span {
+      font-weight: 500;
+      color: #1a1a1a;
+    }
+
+    .booking-price {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 20px;
+    }
+
+    .booking-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      font-size: 0.95rem;
+    }
+
+    .btn-accept {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-accept:hover {
+      background: #059669;
+    }
+
+    .btn-decline {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-decline:hover {
+      background: #dc2626;
+    }
+
+    .btn-complete {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-complete:hover {
+      background: #5a67d8;
+    }
+
+    .no-bookings {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+
+    .no-bookings h3 {
+      margin-bottom: 10px;
+    }
+
+    .empty-state {
+      background: white;
+      border-radius: 16px;
+      padding: 50px;
+      text-align: center;
+    }
+
+    .empty-state h3 {
+      color: #1a1a1a;
+      margin-bottom: 10px;
+    }
+
+    .empty-state p {
+      color: #666;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 10px;
+      color: white;
+      font-weight: 500;
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+    }
+
+    .notification.success {
+      background: #10b981;
+    }
+
+    .notification.error {
+      background: #ef4444;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="dashboard-header">
+    <h1>📷 Photographer Dashboard</h1>
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">P</div>
+      <span id="photographerName">Photographer</span>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="dashboard-container">
+    <div class="stats-grid">
+      <div class="stat-card pending">
+        <h3>Pending Requests</h3>
+        <div class="value" id="pendingCount">0</div>
+      </div>
+      <div class="stat-card accepted">
+        <h3>Accepted Jobs</h3>
+        <div class="value" id="acceptedCount">0</div>
+      </div>
+      <div class="stat-card completed">
+        <h3>Completed Jobs</h3>
+        <div class="value" id="completedCount">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Total Earnings</h3>
+        <div class="value" id="totalEarnings">₹0</div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Booking Requests</h2>
+    <div id="bookingsContainer" class="bookings-grid">
+      <!-- Bookings will be loaded here -->
+    </div>
+
+    <!-- Portfolio Section -->
+    <h2 class="section-title" style="margin-top: 40px;">My Portfolio</h2>
+    <div class="portfolio-upload-section"
+      style="background: white; padding: 20px; border-radius: 16px; margin-bottom: 20px; display: flex; gap: 15px; align-items: center;">
+      <input type="file" id="portfolioInput" accept="image/*" style="display: none;" onchange="handleFileSelect(this)">
+      <button class="btn btn-complete" onclick="document.getElementById('portfolioInput').click()">+ Add Photo</button>
+      <input type="text" id="portfolioCaption" placeholder="Caption (optional)"
+        style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; flex-grow: 1;">
+      <button class="btn btn-accept" onclick="uploadPortfolioItem()">Upload</button>
+    </div>
+
+    <div id="portfolioGrid" class="portfolio-grid"
+      style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+      <!-- Portfolio items will be loaded here -->
+    </div>
+  </div>
+
+  <script>
+    // Check if user is logged in as photographer
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!user.user_type || user.user_type !== 'photographer') {
+      window.location.href = 'login.html';
+    }
+
+    // Display user info
+    document.getElementById('photographerName').textContent = user.first_name || 'Photographer';
+    document.getElementById('userAvatar').textContent = (user.first_name || 'P').charAt(0).toUpperCase();
+
+    // Load bookings
+    function loadBookings() {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!user || !user.photographer_id) {
+        console.error('User not logged in or missing photographer_id');
+        return;
+      }
+
+      // Load both assigned bookings and available requests (filtered by specialty)
+      Promise.all([
+        fetch(`http://localhost:5000/api/bookings/photographer/${user.photographer_id}`).then(res => res.json()),
+        fetch(`http://localhost:5000/api/bookings/requests/photographer/${user.photographer_id}`).then(res => res.json())
+      ])
+        .then(([assignedData, requestsData]) => {
+          const assignedBookings = assignedData.bookings || [];
+          const availableRequests = requestsData.bookings || [];
+          renderBookings(assignedBookings, availableRequests);
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById('bookingsContainer').innerHTML = '<p>Error loading bookings.</p>';
+        });
+    }
+
+    function renderBookings(assignedBookings, availableRequests) {
+      const container = document.getElementById('bookingsContainer');
+      
+      const allBookings = [
+        ...availableRequests.map(b => ({...b, isRequest: true})),
+        ...assignedBookings.map(b => ({...b, isRequest: false}))
+      ];
+
+      if (allBookings.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h3>No Booking Requests Yet</h3>
+            <p>When customers book sessions, they will appear here.</p>
+          </div>
+        `;
+        updateStats(0, 0, 0, 0);
+        return;
+      }
+
+      container.innerHTML = allBookings.map(booking => `
+        <div class="booking-card ${booking.isRequest ? 'request-card' : ''}" data-id="${booking.id}">
+          <div class="booking-header">
+            <span class="booking-id">#${booking.id}</span>
+            <span class="booking-status ${booking.isRequest ? 'request' : booking.status}">
+              ${booking.isRequest ? 'Available Request' : booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+            </span>
+          </div>
+          <div class="booking-details">
+            <div class="detail-item">
+              <label>${booking.isRequest ? 'Customer Name' : 'Customer Name'}</label>
+              <span>${booking.customer ? `${booking.customer.first_name} ${booking.customer.last_name}` : 'Customer'}</span>
+            </div>
+            <div class="detail-item">
+              <label>Service Type</label>
+              <span>${booking.service_type}</span>
+            </div>
+            <div class="detail-item">
+              <label>Event Date</label>
+              <span>${booking.event_date}</span>
+            </div>
+            <div class="detail-item">
+              <label>Location</label>
+              <span>${booking.location || 'Not specified'}</span>
+            </div>
+             <div class="detail-item">
+              <label>Notes</label>
+              <span>${booking.notes || '-'}</span>
+            </div>
+          </div>
+          <div class="booking-price">
+            Total: ₹${booking.total_price}
+            <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">
+              Status: ${getPaymentStatusLabel(booking.payment_status)}
+              ${booking.remaining_amount > 0 ? `(Pending: ₹${booking.remaining_amount})` : '(Fully Paid)'}
+            </div>
+          </div>
+          <div class="booking-actions">
+            ${booking.isRequest ? `
+              <button class="btn btn-accept" onclick="acceptRequest(${booking.id})">Accept This Job</button>
+            ` : ''}
+            ${!booking.isRequest && booking.status === 'pending' ? `
+              <button class="btn btn-accept" onclick="acceptBooking(${booking.id})">Accept</button>
+              <button class="btn btn-decline" onclick="declineBooking(${booking.id})">Decline</button>
+            ` : ''}
+            ${!booking.isRequest && booking.status === 'accepted' ? `
+              <button class="btn btn-complete" onclick="completeBooking(${booking.id})">Mark as Completed</button>
+            ` : ''}
+            ${(!booking.isRequest && (booking.status === 'accepted' || booking.status === 'completed')) && booking.payment_status !== 'paid' ? `
+               <button class="btn btn-complete" style="background-color: #f59e0b;" onclick="markPaid(${booking.id})">Mark Paid (Cash)</button>
+            ` : ''}
+            ${!booking.isRequest && booking.status === 'completed' ? `
+              <button class="btn btn-accept" disabled style="opacity: 0.7">Job Completed ✓</button>
+            ` : ''}
+            ${!booking.isRequest && booking.status === 'declined' ? `
+              <button class="btn btn-decline" disabled style="opacity: 0.7">Declined ✗</button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+
+      // Update stats
+      const pending = assignedBookings.filter(b => b.status === 'pending').length;
+      const accepted = assignedBookings.filter(b => b.status === 'accepted').length;
+      const completed = assignedBookings.filter(b => b.status === 'completed').length;
+      const earnings = assignedBookings
+        .filter(b => b.status === 'completed')
+        .reduce((sum, b) => sum + parseFloat(b.total_price), 0);
+
+      updateStats(pending + availableRequests.length, accepted, completed, earnings);
+    }
+
+    function updateStats(pending, accepted, completed, earnings) {
+      document.getElementById('pendingCount').textContent = pending;
+      document.getElementById('acceptedCount').textContent = accepted;
+      document.getElementById('completedCount').textContent = completed;
+      document.getElementById('totalEarnings').textContent = '₹' + earnings.toLocaleString();
+    }
+
+    function acceptRequest(id) {
+      const user = JSON.parse(localStorage.getItem('user'));
+      fetch(`http://localhost:5000/api/bookings/${id}/accept`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photographer_id: user.photographer_id })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            showNotification(data.error, 'error');
+          } else {
+            showNotification('Booking accepted successfully!', 'success');
+            loadBookings();
+          }
+        })
+        .catch(err => showNotification('Error accepting request', 'error'));
+    }
+
+    function acceptBooking(id) {
+      updateBookingStatus(id, 'accepted');
+    }
+
+    function declineBooking(id) {
+      updateBookingStatus(id, 'declined');
+    }
+
+    function completeBooking(id) {
+      updateBookingStatus(id, 'completed');
+    }
+
+    function updateBookingStatus(id, status) {
+      fetch(`http://localhost:5000/api/bookings/${id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: status })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            showNotification(data.error, 'error');
+          } else {
+            showNotification(`Booking ${status} successfully!`, 'success');
+            loadBookings();
+          }
+        })
+        .catch(err => showNotification('Error updating status', 'error'));
+    }
+
+    function showNotification(message, type) {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 3000);
+    }
+
+    function logout() {
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
+    }
+
+    function getPaymentStatusLabel(status) {
+      if (status === 'paid') return '<span style="color: green;">Paid</span>';
+      if (status === 'token_paid') return '<span style="color: orange;">Token Paid</span>';
+      return '<span style="color: red;">Pending</span>';
+    }
+
+    function markPaid(id) {
+      if (!confirm("Confirm that you have received the remaining amount in CASH/OFFLINE?")) return;
+
+      fetch(`http://localhost:5000/api/bookings/${id}/mark_paid`, {
+        method: 'PUT'
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) showNotification(data.error, 'error');
+          else {
+            showNotification('Payment marked as received', 'success');
+            loadBookings();
+          }
+        })
+        .catch(err => showNotification('Error updating payment', 'error'));
+    }
+
+    // Portfolio Functions
+    let selectedFile = null;
+
+    function handleFileSelect(input) {
+      if (input.files && input.files[0]) {
+        selectedFile = input.files[0];
+        document.querySelector('.portfolio-upload-section button').textContent = selectedFile.name;
+      }
+    }
+
+    function loadPortfolio() {
+      const user = JSON.parse(localStorage.getItem('user'));
+      fetch(`http://localhost:5000/api/photographers/${user.photographer_id}/portfolio`)
+        .then(res => res.json())
+        .then(data => {
+          const grid = document.getElementById('portfolioGrid');
+          if (!data.portfolio || data.portfolio.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666;">No photos in portfolio yet.</p>';
+            return;
+          }
+          grid.innerHTML = data.portfolio.map(item => `
+                <div class="portfolio-item" style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    <img src="http://localhost:5000${item.image_url}" style="width: 100%; height: 200px; object-fit: cover;" alt="${item.caption || 'Portfolio Image'}">
+                    ${item.caption ? `<div style="padding: 10px; background: white; font-size: 0.9rem;">${item.caption}</div>` : ''}
+                    <button onclick="deletePortfolioItem(${item.id})" style="position: absolute; top: 10px; right: 10px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">×</button>
+                </div>
+            `).join('');
+        });
+    }
+
+    function uploadPortfolioItem() {
+      if (!selectedFile) {
+        showNotification('Please select an image first', 'error');
+        return;
+      }
+
+      const user = JSON.parse(localStorage.getItem('user'));
+      const caption = document.getElementById('portfolioCaption').value;
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+      formData.append('photographer_id', user.photographer_id);
+      formData.append('caption', caption);
+
+      fetch('http://localhost:5000/api/portfolio', {
+        method: 'POST',
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) throw new Error(data.error);
+          showNotification('Image uploaded successfully', 'success');
+          selectedFile = null;
+          document.getElementById('portfolioInput').value = '';
+          document.getElementById('portfolioCaption').value = '';
+          document.querySelector('.portfolio-upload-section button').textContent = '+ Add Photo';
+          loadPortfolio();
+        })
+        .catch(err => showNotification(err.message || 'Upload failed', 'error'));
+    }
+
+    function deletePortfolioItem(id) {
+      if (!confirm('Delete this image?')) return;
+
+      fetch(`http://localhost:5000/api/portfolio/${id}`, {
+        method: 'DELETE'
+      })
+        .then(res => {
+          if (res.ok) {
+            showNotification('Image deleted', 'success');
+            loadPortfolio();
+          } else {
+            showNotification('Failed to delete', 'error');
+          }
+        });
+    }
+
+    // Load on page load
+    loadBookings();
+    loadPortfolio();
+  </script>
+</body>
+
+</html>
