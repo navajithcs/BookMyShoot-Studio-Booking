@@ -1,4 +1,0 @@
-  File "<string>", line 1
-    import os, razorpay, sys; from dotenv import load_dotenv; load_dotenv('backend/.env'); client = razorpay.Client(auth=(os.getenv('RAZORPAY_KEY_ID'), os.getenv('RAZORPAY_KEY_SECRET'))); try: client.payment.refund('pay_SOG8Kp3vTfIsbC', {'amount': 200000}) except Exception as e: print('ERROR:', str(e), file=sys.stderr)
-                                                                                                                                                                                            ^^^
-SyntaxError: invalid syntax
