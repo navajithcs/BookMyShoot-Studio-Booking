@@ -99,7 +99,10 @@
     .spin { animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
+<<<<<<< HEAD
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+=======
+>>>>>>> fba2361 (Initial commit)
 </head>
 <body>
   <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
@@ -806,8 +809,12 @@
     function printAdvanced() {
       var section = document.getElementById('reportAdvanced');
       var pw = window.open('','_blank');
+<<<<<<< HEAD
       pw.document.write('<html><head><title>Print Report</title><style>body{padding:20px;font-family:Inter,sans-serif;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:11px;} th{background:#667eea;color:#fff;} .filter-panel,.section-download-bar,.pagination,.quick-filters,.filter-actions{display:none;} .stat-card-v2{display:inline-block;padding:10px 20px;margin:5px;border:1px solid #ddd;border-radius:8px;} h1{color:#667eea;}</style>  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head><body><h1>BookMyShoot - Advanced Booking Report</h1><p style="color:#888;">Generated: ' + new Date().toLocaleString('en-IN') + '</p>' + section.innerHTML + '</body></html>');
+=======
+      pw.document.write('<html><head><title>Print Report</title><style>body{padding:20px;font-family:Inter,sans-serif;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:11px;} th{background:#667eea;color:#fff;} .filter-panel,.section-download-bar,.pagination,.quick-filters,.filter-actions{display:none;} .stat-card-v2{display:inline-block;padding:10px 20px;margin:5px;border:1px solid #ddd;border-radius:8px;} h1{color:#667eea;}</style></head><body><h1>BookMyShoot - Advanced Booking Report</h1><p style="color:#888;">Generated: ' + new Date().toLocaleString('en-IN') + '</p>' + section.innerHTML + '</body></html>');
+>>>>>>> fba2361 (Initial commit)
       pw.document.close();
       setTimeout(function(){ pw.print(); pw.close(); }, 500);
     }
@@ -1322,8 +1329,12 @@
     function printSection(sectionId) {
       var section = document.getElementById(sectionId);
       var pw = window.open('','_blank');
+<<<<<<< HEAD
       pw.document.write('<html><head><title>Print Report</title><style>body{padding:20px;font-family:Inter,sans-serif;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:12px;} th{background:#667eea;color:#fff;} .section-download-bar{display:none;} h1{color:#667eea;}</style>  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head><body><h1>BookMyShoot Report</h1><p style="color:#888;">Generated: '+new Date().toLocaleString('en-IN')+'</p>'+section.innerHTML+'</body></html>');
+=======
+      pw.document.write('<html><head><title>Print Report</title><style>body{padding:20px;font-family:Inter,sans-serif;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:12px;} th{background:#667eea;color:#fff;} .section-download-bar{display:none;} h1{color:#667eea;}</style></head><body><h1>BookMyShoot Report</h1><p style="color:#888;">Generated: '+new Date().toLocaleString('en-IN')+'</p>'+section.innerHTML+'</body></html>');
+>>>>>>> fba2361 (Initial commit)
       pw.document.close();
       setTimeout(function(){pw.print();pw.close();},500);
     }

@@ -1290,6 +1290,7 @@ nav a.active::after {
 }
 
 /* FOOTER */
+<<<<<<< HEAD
 .footer {
   background: #0f172a;
   color: #e5e7eb;
@@ -1370,6 +1371,108 @@ nav a.active::after {
   color: #6b7280;
 }
 
+=======
+footer {
+  text-align: center;
+  padding: 60px 5% 30px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text-light);
+  background: #fafafa;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 60px 20px;
+  background: linear-gradient(180deg, #fafbfc 0%, #f5f5f5 100%);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.footer-logo {
+  font-size: 32px;
+  font-weight: 700;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.footer-links {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.footer-links a {
+  color: var(--text-light);
+  text-decoration: none;
+  transition: var(--transition);
+  position: relative;
+  padding: 4px 0;
+}
+
+.footer-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent-gradient);
+  transition: width 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: var(--accent);
+}
+
+.footer-links a:hover::after {
+  width: 100%;
+}
+
+.footer-social {
+  display: flex;
+  gap: 16px;
+}
+
+.footer-social a {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  text-decoration: none;
+  background: white;
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.footer-social a:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.footer-bottom {
+  margin-top: 0;
+  padding: 24px;
+  background: #f8f9fa;
+  color: var(--text-light);
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 14px;
+}
+
+
+>>>>>>> fba2361 (Initial commit)
 /* AUTH / LOGIN */
 .auth-navbar {
   background: #ffffff;
@@ -1804,6 +1907,7 @@ body:not(.loaded)::before {
   .forgot-link {
     align-self: flex-end;
   }
+<<<<<<< HEAD
 }
 
 /* Scroll Animations */
@@ -1819,3 +1923,6 @@ body:not(.loaded)::before {
   transform: translateY(0);
 }
 
+=======
+}
+>>>>>>> fba2361 (Initial commit)

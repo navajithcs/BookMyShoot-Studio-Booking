@@ -1525,8 +1525,11 @@
       margin-bottom: 20px;
     }
   </style>
+<<<<<<< HEAD
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+=======
+>>>>>>> fba2361 (Initial commit)
 </head>
 
 <body>
@@ -1738,6 +1741,7 @@
 
                   <div class="search-grid" style="margin-bottom:16px;">
                     <div class="form-group">
+<<<<<<< HEAD
                       <label for="searchState">State <span class="required">*</span></label>
                       <select id="searchState" onchange="updateDistricts('searchState', 'searchDistrict')" required>
                         <option value="">Select State</option>
@@ -1747,6 +1751,51 @@
                       <label for="searchDistrict">District / City <span class="required">*</span></label>
                       <select id="searchDistrict" required>
                         <option value="">Select District</option>
+=======
+                      <label for="searchDistrict">District / City <span class="required">*</span></label>
+                      <input type="text" id="searchDistrict" placeholder="e.g., Ernakulam" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="searchState">State <span class="required">*</span></label>
+                      <select id="searchState" required>
+                        <option value="">Select State</option>
+                        <option value="Andhra Pradesh">Andhra Pradesh</option>
+                        <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                        <option value="Assam">Assam</option>
+                        <option value="Bihar">Bihar</option>
+                        <option value="Chhattisgarh">Chhattisgarh</option>
+                        <option value="Goa">Goa</option>
+                        <option value="Gujarat">Gujarat</option>
+                        <option value="Haryana">Haryana</option>
+                        <option value="Himachal Pradesh">Himachal Pradesh</option>
+                        <option value="Jharkhand">Jharkhand</option>
+                        <option value="Karnataka">Karnataka</option>
+                        <option value="Kerala">Kerala</option>
+                        <option value="Madhya Pradesh">Madhya Pradesh</option>
+                        <option value="Maharashtra">Maharashtra</option>
+                        <option value="Manipur">Manipur</option>
+                        <option value="Meghalaya">Meghalaya</option>
+                        <option value="Mizoram">Mizoram</option>
+                        <option value="Nagaland">Nagaland</option>
+                        <option value="Odisha">Odisha</option>
+                        <option value="Punjab">Punjab</option>
+                        <option value="Rajasthan">Rajasthan</option>
+                        <option value="Sikkim">Sikkim</option>
+                        <option value="Tamil Nadu">Tamil Nadu</option>
+                        <option value="Telangana">Telangana</option>
+                        <option value="Tripura">Tripura</option>
+                        <option value="Uttar Pradesh">Uttar Pradesh</option>
+                        <option value="Uttarakhand">Uttarakhand</option>
+                        <option value="West Bengal">West Bengal</option>
+                        <option value="Delhi">Delhi (NCT)</option>
+                        <option value="Chandigarh">Chandigarh</option>
+                        <option value="Puducherry">Puducherry</option>
+                        <option value="Jammu and Kashmir">Jammu & Kashmir</option>
+                        <option value="Ladakh">Ladakh</option>
+                        <option value="Lakshadweep">Lakshadweep</option>
+                        <option value="Andaman and Nicobar">Andaman & Nicobar</option>
+                        <option value="Dadra Nagar Haveli and Daman Diu">Dadra & Nagar Haveli and Daman & Diu</option>
+>>>>>>> fba2361 (Initial commit)
                       </select>
                     </div>
                     <div class="form-group">
@@ -1885,6 +1934,7 @@
             </div>
           </div>
 
+<<<<<<< HEAD
           <div class="form-row full" style="margin-bottom: 12px;">
             <div class="form-group">
               <button type="button" class="btn-secondary" onclick="detectLocation()" style="width: 100%; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
@@ -1896,6 +1946,8 @@
             </div>
           </div>
 
+=======
+>>>>>>> fba2361 (Initial commit)
           <!-- Address Line -->
           <div class="form-row full" style="margin-bottom: 4px;">
             <div class="form-group">
@@ -1905,6 +1957,7 @@
             </div>
           </div>
 
+<<<<<<< HEAD
           <!-- State + District -->
           <div class="form-row" style="margin-bottom: 4px;">
             <div class="form-group">
@@ -1926,10 +1979,61 @@
           <!-- Pincode -->
           <div class="form-row full" style="margin-bottom: 4px;">
             <div class="form-group">
+=======
+          <!-- Pincode + State -->
+          <div class="form-row" style="margin-bottom: 4px;">
+            <div class="form-group">
+>>>>>>> fba2361 (Initial commit)
               <label for="pincode">PIN Code *</label>
               <input type="text" id="pincode" maxlength="6" placeholder="e.g., 682001" required
                 style="padding: 14px 16px; border: 2px solid #e5e5e5; border-radius: 12px; font-size: 0.95em; font-family: inherit; background: #fafbfc;">
             </div>
+<<<<<<< HEAD
+=======
+            <div class="form-group">
+              <label for="state">State *</label>
+              <select id="state" required
+                style="padding: 14px 16px; border: 2px solid #e5e5e5; border-radius: 12px; font-size: 0.95em; font-family: inherit; background: #fafbfc;">
+                <option value="">Select State</option>
+                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                <option value="Assam">Assam</option>
+                <option value="Bihar">Bihar</option>
+                <option value="Chhattisgarh">Chhattisgarh</option>
+                <option value="Goa">Goa</option>
+                <option value="Gujarat">Gujarat</option>
+                <option value="Haryana">Haryana</option>
+                <option value="Himachal Pradesh">Himachal Pradesh</option>
+                <option value="Jharkhand">Jharkhand</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Kerala">Kerala</option>
+                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="Manipur">Manipur</option>
+                <option value="Meghalaya">Meghalaya</option>
+                <option value="Mizoram">Mizoram</option>
+                <option value="Nagaland">Nagaland</option>
+                <option value="Odisha">Odisha</option>
+                <option value="Punjab">Punjab</option>
+                <option value="Rajasthan">Rajasthan</option>
+                <option value="Sikkim">Sikkim</option>
+                <option value="Tamil Nadu">Tamil Nadu</option>
+                <option value="Telangana">Telangana</option>
+                <option value="Tripura">Tripura</option>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="Uttarakhand">Uttarakhand</option>
+                <option value="West Bengal">West Bengal</option>
+                <option value="Delhi">Delhi (NCT)</option>
+                <option value="Chandigarh">Chandigarh</option>
+                <option value="Puducherry">Puducherry</option>
+                <option value="Jammu and Kashmir">Jammu & Kashmir</option>
+                <option value="Ladakh">Ladakh</option>
+                <option value="Lakshadweep">Lakshadweep</option>
+                <option value="Andaman and Nicobar">Andaman & Nicobar</option>
+                <option value="Dadra Nagar Haveli and Daman Diu">Dadra & Nagar Haveli and Daman & Diu</option>
+              </select>
+            </div>
+>>>>>>> fba2361 (Initial commit)
           </div>
 
           <!-- Country + Contact Number -->
@@ -1989,6 +2093,7 @@
   </div>
 
   <!-- FOOTER -->
+<<<<<<< HEAD
   <footer class="footer">
   <div class="footer-container">
 
@@ -2041,6 +2146,31 @@
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+=======
+  <footer>
+    <div class="footer-content">
+      <div class="footer-logo">BookMyShoot</div>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="index.html#about">About</a>
+        <a href="index.html#services">Services</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="footer-social">
+        <a href="#">📘</a>
+        <a href="#">📸</a>
+        <a href="#">🐦</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2026 BookMyShoot | BCA Final Project
+      <br>Developed by Navajith C S
+    </div>
+  </footer>
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+>>>>>>> fba2361 (Initial commit)
   <script src="js/main.js"></script>
   <script src="js/modal.js"></script>
   <script src="js/validate.js"></script>
@@ -2069,6 +2199,7 @@
 
     let selectedPackage = null;
 
+<<<<<<< HEAD
     // Leaflet Maps and Geolocation logic
     let mapInstance = null;
     let mapMarker = null;
@@ -2197,6 +2328,8 @@
       }
     }
 
+=======
+>>>>>>> fba2361 (Initial commit)
     // Initialize
     document.addEventListener('DOMContentLoaded', function () {
       initAuth();
@@ -2243,6 +2376,7 @@
       const authNav = document.getElementById('authNav');
 
       if (user) {
+<<<<<<< HEAD
         let avatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.first_name || 'User') + '&background=667eea&color=fff';
         if (user.profile_image) {
           avatarUrl = user.profile_image.startsWith('http') ? user.profile_image : `${API_URL.replace('/api', '')}/uploads/profiles/${user.profile_image}`;
@@ -2253,6 +2387,10 @@
             <img src="${avatarUrl}" alt="Profile" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; margin-right: 6px; vertical-align: middle; display: inline-block; pointer-events: none;">
             ${user.first_name}
           </a>
+=======
+        authNav.innerHTML = `
+          <a href="#" class="user-btn" onclick="showProfile(); return false;">👤 ${user.first_name}</a>
+>>>>>>> fba2361 (Initial commit)
           <a href="#" class="logout-btn" onclick="logout(); return false;">Logout</a>
         `;
 
@@ -2262,7 +2400,11 @@
         document.getElementById('email').value = user.email || '';
         document.getElementById('phone').value = user.phone || '';
       } else {
+<<<<<<< HEAD
                   authNav.innerHTML = `
+=======
+        authNav.innerHTML = `
+>>>>>>> fba2361 (Initial commit)
           <a href="login.html" class="login-btn">Login</a>
           <a href="register.html" class="register-btn">Sign Up</a>
         `;
@@ -2663,12 +2805,18 @@
         const addressLine = document.getElementById('addressLine').value.trim();
         const pincode = document.getElementById('pincode').value.trim();
         const state = document.getElementById('state').value;
+<<<<<<< HEAD
         const district = document.getElementById('district').value || '';
         const lat = document.getElementById('lat').value || '';
         const lon = document.getElementById('lon').value || '';
         const country = document.getElementById('country').value;
         const contactNumber = document.getElementById('contactNumber').value.trim();
         const fullLocation = [addressLine, district, state, pincode, country].filter(Boolean).join(', ');
+=======
+        const country = document.getElementById('country').value;
+        const contactNumber = document.getElementById('contactNumber').value.trim();
+        const fullLocation = [addressLine, state, pincode, country].filter(Boolean).join(', ');
+>>>>>>> fba2361 (Initial commit)
 
         const bookingData = {
           customer_id: user.id,
@@ -2679,12 +2827,18 @@
           location: fullLocation,
           location_type: locationType,
           address_line: addressLine,
+<<<<<<< HEAD
           district: district,
           pincode: pincode,
           state: state,
           country: country,
           latitude: lat,
           longitude: lon,
+=======
+          pincode: pincode,
+          state: state,
+          country: country,
+>>>>>>> fba2361 (Initial commit)
           contact_number: contactNumber,
           notes: document.getElementById('notes').value,
           total_price: PACKAGES[selectedPackage].basePrice,
@@ -3300,6 +3454,7 @@
         'searchAddressLine': 'addressLine',
         'searchPincode': 'pincode',
         'searchState': 'state',
+<<<<<<< HEAD
         'searchDistrict': 'district',
         'searchCountry': 'country',
         'searchContactPhone': 'contactNumber'
@@ -3321,6 +3476,15 @@
             if (src === 'searchState') updateDistricts('state', 'district');
           }
         }
+=======
+        'searchCountry': 'country',
+        'searchContactPhone': 'contactNumber'
+      };
+      for (const [src, dest] of Object.entries(searchFieldMap)) {
+        const srcEl = document.getElementById(src);
+        const dstEl = document.getElementById(dest);
+        if (srcEl && dstEl && srcEl.value) dstEl.value = srcEl.value;
+>>>>>>> fba2361 (Initial commit)
       }
       // Trigger location preview in booking modal if address was prefilled
       if (typeof updateLocationPreview === 'function') updateLocationPreview();

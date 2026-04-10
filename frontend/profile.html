@@ -474,7 +474,10 @@
       .quick-actions { grid-template-columns: 1fr; }
     }
   </style>
+<<<<<<< HEAD
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+=======
+>>>>>>> fba2361 (Initial commit)
 </head>
 <body>
 
@@ -828,6 +831,7 @@
 <div class="toast" id="toast"></div>
 
 <!-- FOOTER -->
+<<<<<<< HEAD
 <footer class="footer">
   <div class="footer-container">
 
@@ -875,6 +879,18 @@
     <p>© 2026 BookMyShoot | BCA Final Project</p>
     <p>Developed by Navajith C S</p>
   </div>
+=======
+<footer>
+  <div class="footer-content">
+    <div class="footer-logo">BookMyShoot</div>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="index.html#services">Services</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </div>
+  <div class="footer-bottom">&copy; 2026 BookMyShoot | BCA Final Project <br>Developed by Navajith C S</div>
+>>>>>>> fba2361 (Initial commit)
 </footer>
 
 <script src="js/main.js"></script>
@@ -1445,7 +1461,12 @@ function capitalize(s) {
 function initAuth() {
   var authNav = document.getElementById('authNav');
   if (user) {
+<<<<<<< HEAD
     authNav.innerHTML = '<a href="profile.html" class="user-btn">👤 ' + (user.first_name || 'Profile') + '</a><a href="#" class="logout-btn" onclick="logout(); return false;">Logout</a>';
+=======
+    authNav.innerHTML = '<a href="profile.html" class="user-btn">\uD83D\uDC64 ' + (user.first_name || 'Profile') + '</a>' +
+      '<a href="#" class="logout-btn" onclick="logout(); return false;">Logout</a>';
+>>>>>>> fba2361 (Initial commit)
   } else {
     authNav.innerHTML = '<a href="login.html" class="login-btn">Login</a>' +
       '<a href="register.html" class="register-btn">Sign Up</a>';

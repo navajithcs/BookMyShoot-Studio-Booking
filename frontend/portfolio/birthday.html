@@ -52,7 +52,10 @@
     @media (max-width: 900px) { .album-gallery { columns: 2; } .album-hero h1 { font-size: 2.2em; } }
     @media (max-width: 600px) { .album-gallery { columns: 1; } .album-hero h1 { font-size: 1.8em; } .album-stats { gap: 20px; } }
   </style>
+<<<<<<< HEAD
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+=======
+>>>>>>> fba2361 (Initial commit)
 </head>
 <body>
 
@@ -154,6 +157,7 @@
   <div class="lightbox-counter" id="lightboxCounter"></div>
 </div>
 
+<<<<<<< HEAD
 <footer class="footer">
   <div class="footer-container">
 
@@ -201,6 +205,19 @@
     <p>© 2026 BookMyShoot | BCA Final Project</p>
     <p>Developed by Navajith C S</p>
   </div>
+=======
+<footer>
+  <div class="footer-content">
+    <div class="footer-logo"><i class="bi bi-camera-fill" style="color:#667eea;margin-right:8px;"></i>BookMyShoot</div>
+    <div class="footer-links">
+      <a href="../index.html">Home</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#services">Services</a>
+      <a href="../contact.html">Contact</a>
+    </div>
+  </div>
+  <div class="footer-bottom">&copy; 2026 BookMyShoot | BCA Final Project<br>Developed by Navajith C S</div>
+>>>>>>> fba2361 (Initial commit)
 </footer>
 
 <script src="../js/main.js"></script>
@@ -208,9 +225,16 @@
   const user = JSON.parse(localStorage.getItem('user') || 'null');
   const authNav = document.getElementById('authNav');
   if (user) {
+<<<<<<< HEAD
     authNav.innerHTML = '<a href="#" class="user-btn" onclick="showProfile(); return false;">👤 ' + user.first_name + '</a><a href="#" class="logout-btn" onclick="logout(); return false;">Logout</a>';
   } else {
               authNav.innerHTML = `<a href="../login.html" class="login-btn"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+=======
+    authNav.innerHTML = `<a href="#" class="user-btn" onclick="showProfile(); return false;"><i class="bi bi-person-circle"></i> ${user.first_name}</a>
+      <a href="#" class="logout-btn" onclick="logout(); return false;"><i class="bi bi-box-arrow-right"></i> Logout</a>`;
+  } else {
+    authNav.innerHTML = `<a href="../login.html" class="login-btn"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+>>>>>>> fba2361 (Initial commit)
       <a href="../register.html" class="register-btn"><i class="bi bi-person-plus"></i> Sign Up</a>`;
   }
   const photos = document.querySelectorAll('.album-photo img');

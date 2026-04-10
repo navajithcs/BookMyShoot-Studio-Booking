@@ -298,7 +298,10 @@
       animation: fadeInUp 0.6s ease-out 0.3s both;
     }
   </style>
+<<<<<<< HEAD
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+=======
+>>>>>>> fba2361 (Initial commit)
 </head>
 <body>
 
@@ -428,6 +431,7 @@
 </section>
 
 <!-- FOOTER -->
+<<<<<<< HEAD
 <footer class="footer">
   <div class="footer-container">
 
@@ -474,6 +478,26 @@
   <div class="footer-bottom">
     <p>© 2026 BookMyShoot | BCA Final Project</p>
     <p>Developed by Navajith C S</p>
+=======
+<footer>
+  <div class="footer-content">
+    <div class="footer-logo">BookMyShoot</div>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#services">Services</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <div class="footer-social">
+      <a href="#">📘</a>
+      <a href="#">📸</a>
+      <a href="#">🐦</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2026 BookMyShoot | BCA Final Project  
+    <br>Developed by Navajith C S
+>>>>>>> fba2361 (Initial commit)
   </div>
 </footer>
 
@@ -486,6 +510,7 @@
     const authNav = document.getElementById('authNav');
     
     if (user) {
+<<<<<<< HEAD
                 authNav.innerHTML = `
         <a href="#" class="user-btn" onclick="showProfile(); return false;">
             <img src="${avatarUrl}" alt="Profile" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; margin-right: 6px; vertical-align: middle; display: inline-block; pointer-events: none;">
@@ -495,6 +520,14 @@
       `;
     } else {
                 authNav.innerHTML = `
+=======
+      authNav.innerHTML = `
+        <a href="#" class="user-btn" onclick="showProfile(); return false;">👤 ${user.first_name}</a>
+        <a href="#" class="logout-btn" onclick="logout(); return false;">Logout</a>
+      `;
+    } else {
+      authNav.innerHTML = `
+>>>>>>> fba2361 (Initial commit)
         <a href="login.html" class="login-btn">Login</a>
         <a href="register.html" class="register-btn">Sign Up</a>
       `;

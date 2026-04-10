@@ -87,6 +87,7 @@
     .action-btn.secondary:hover {
       background: rgba(255,255,255,0.3);
     }
+<<<<<<< HEAD
   
     /* PRICING ALIGNMENT FIX */
     .pricing-grid {
@@ -110,6 +111,9 @@
     }
 </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+=======
+  </style>
+>>>>>>> fba2361 (Initial commit)
 </head>
 <body>
 <header class="navbar">
@@ -166,6 +170,7 @@
     <a href="../booking.html?service=engagement" class="cta-btn">Schedule Session</a>
   </div>
 </section>
+<<<<<<< HEAD
 <footer class="footer">
   <div class="footer-container">
 
@@ -213,6 +218,19 @@
     <p>© 2026 BookMyShoot | BCA Final Project</p>
     <p>Developed by Navajith C S</p>
   </div>
+=======
+<footer>
+  <div class="footer-content">
+    <div class="footer-logo">BookMyShoot</div>
+    <div class="footer-links">
+      <a href="../index.html">Home</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#services">Services</a>
+      <a href="../contact.html">Contact</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 BookMyShoot | BCA Final Project <br>Developed by Navajith C S</div>
+>>>>>>> fba2361 (Initial commit)
 </footer>
 <script src="../js/main.js"></script>
 <script>
@@ -231,7 +249,12 @@
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     const authNav = document.getElementById('authNav');
     if (user) {
+<<<<<<< HEAD
       authNav.innerHTML = '<a href="#" class="user-btn" onclick="showProfile(); return false;">👤 ' + user.first_name + '</a><a href="#" class="logout-btn" onclick="logout(); return false;">Logout</a>'; } else {
+=======
+      authNav.innerHTML = '<a href="#" class="user-btn" onclick="showProfile(); return false;">👤 ' + user.first_name + '</a><a href="#" class="logout-btn" onclick="logout(); return false;">Logout</a>';
+    } else {
+>>>>>>> fba2361 (Initial commit)
       authNav.innerHTML = '<a href="../login.html" class="login-btn">Login</a><a href="../register.html" class="register-btn">Sign Up</a>';
     }
     // Load packages from API

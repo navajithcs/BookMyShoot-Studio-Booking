@@ -1,4 +1,21 @@
 // Enhanced scroll reveal for elements with class 'reveal'
+<<<<<<< HEAD
+=======
+function revealOnScroll() {
+  const reveals = document.querySelectorAll('.reveal');
+  const windowH = window.innerHeight;
+  reveals.forEach((el, index) => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < windowH - 100) { 
+      setTimeout(() => {
+        el.classList.add('visible');
+      }, index * 100);
+    }
+  });
+}
+
+// Add fade-in animation to sections on scroll
+>>>>>>> fba2361 (Initial commit)
 function animateSections() {
   const sections = document.querySelectorAll('section:not(.hero)');
   const windowH = window.innerHeight;
@@ -14,16 +31,33 @@ function animateSections() {
 
 // Scroll event listeners
 window.addEventListener('scroll', () => {
+<<<<<<< HEAD
+=======
+  revealOnScroll();
+>>>>>>> fba2361 (Initial commit)
   animateSections();
   updateNavbarBackground();
 });
 
 window.addEventListener('load', () => {
+<<<<<<< HEAD
+=======
+  revealOnScroll();
+>>>>>>> fba2361 (Initial commit)
   animateSections();
   document.body.classList.add('loaded');
 });
 
+<<<<<<< HEAD
 // Navbar background on scroll ... existing code follows ...
+=======
+// Add loading animation
+window.addEventListener('load', () => {
+  document.body.classList.add('loaded');
+});
+
+// Navbar background on scroll
+>>>>>>> fba2361 (Initial commit)
 function updateNavbarBackground() {
   const navbar = document.getElementById('mainNavbar');
   if (navbar) {
@@ -49,6 +83,7 @@ function validatePhoneNumber(phone) {
   return phoneRegex.test(phone.replace(/\s/g, ''));
 }
 
+<<<<<<< HEAD
 // Format path depending on subdirectories
 function getRootPrefix() {
   const path = window.location.pathname;
@@ -66,13 +101,28 @@ function showProfile() {
     window.location.href = pfx + 'admin-dashboard.html';
   } else {
     window.location.href = pfx + 'profile.html';
+=======
+// Show profile information
+function showProfile() {
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (user && user.user_type === 'photographer') {
+    window.location.href = 'photographer-dashboard.html';
+  } else if (user && user.user_type === 'admin') {
+    window.location.href = 'admin-dashboard.html';
+  } else {
+    window.location.href = 'profile.html';
+>>>>>>> fba2361 (Initial commit)
   }
 }
 
 // Logout function
 function logout() {
   localStorage.removeItem('user');
+<<<<<<< HEAD
   window.location.href = getRootPrefix() + 'index.html';
+=======
+  window.location.href = 'index.html';
+>>>>>>> fba2361 (Initial commit)
 }
 
 // Toggle mobile menu
@@ -98,7 +148,10 @@ function animateCounters() {
   const counters = document.querySelectorAll('.stat-number');
   counters.forEach(counter => {
     const target = parseInt(counter.textContent.replace(/\D/g, ''));
+<<<<<<< HEAD
     if (isNaN(target)) return;
+=======
+>>>>>>> fba2361 (Initial commit)
     const duration = 2000;
     const increment = target / (duration / 16);
     let current = 0;
@@ -124,6 +177,7 @@ const observerOptions = {
 };
 
 const observer = new IntersectionObserver((entries) => {
+<<<<<<< HEAD
   let delay = 0;
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -135,6 +189,14 @@ const observer = new IntersectionObserver((entries) => {
       }, delay);
       delay += 150; // Stagger effect
       observer.unobserve(entry.target);
+=======
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      if (entry.target.classList.contains('stat-number')) {
+        animateCounters();
+      }
+>>>>>>> fba2361 (Initial commit)
     }
   });
 }, observerOptions);
@@ -154,6 +216,7 @@ window.addEventListener('scroll', () => {
     hero.style.backgroundPositionY = scrolled * 0.5 + 'px';
   }
 });
+<<<<<<< HEAD
 
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof lucide !== 'undefined') {
@@ -161,3 +224,5 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+=======
+>>>>>>> fba2361 (Initial commit)
