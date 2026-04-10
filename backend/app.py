@@ -48,9 +48,8 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
 csrf.init_app(app)
-cors.init_app(app, resources={r"/api/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5000", "http://127.0.0.1:5000"]}}, supports_credentials=True)
-
-
+import re
+cors.init_app(app, resources={r"/api/*": {"origins": re.compile(r"https?://(localhost|127\.0\.0\.1)(:\d+)?")}}, supports_credentials=True)
 @app.before_request
 def enforce_csrf_for_non_api_routes():
     if request.path.startswith('/api/'):
@@ -3223,6 +3222,7 @@ def bad_request_error(error):
         return jsonify({'error': 'Bad request'}), 400
     return render_template('errors/400.html'), 400
 
+# ==================== SERVICE PACKAGES ====================
 
 # ─── Contact Form ───────────────────────────────────────────────────────
 @app.route('/api/contact', methods=['POST'])

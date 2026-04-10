@@ -216,7 +216,29 @@
       transform: translateY(-3px);
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
-  </style>
+  
+    /* PRICING ALIGNMENT FIX */
+    .pricing-grid {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+    .pricing-card {
+      display: flex !important;
+      flex-direction: column;
+      height: 100%;
+      flex: 1 1 250px;
+    }
+    .pricing-features {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .pricing-card .book-btn, .book-btn.margin-auto {
+      margin-top: auto !important;
+    }
+</style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 
@@ -236,6 +258,11 @@
 <section class="service-hero">
   <h1>💒 Wedding Photography</h1>
   <p>Capture your special day with stunning, timeless wedding photography that tells your love story</p>
+
+  <div style="margin-top: 30px;">
+    <a href="../index.html#portfolio" class="cta-btn" style="background: rgba(255,255,255,0.15); color: white; border: 2px solid white; margin-right: 15px; box-shadow: none;"><i class="bi bi-images"></i> View Portfolio</a>
+    <a href="../booking.html?service=wedding" class="cta-btn" style="box-shadow: 0 4px 15px rgba(0,0,0,0.1);"><i class="bi bi-calendar-check"></i> Book Now</a>
+  </div>
 </section>
 
 <!-- SERVICE CONTENT -->
@@ -275,6 +302,26 @@
     </div>
   </div>
 
+  
+  <!-- REVIEWS -->
+  <div class="reviews-section" style="margin-bottom: 60px;">
+    <h2 style="text-align: center; margin-bottom: 30px; font-size: 2em; color: #1a1a1a;">What Our Clients Say</h2>
+    <div class="reviews-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+      <div class="review-card" style="background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
+        <div style="color: #f59e0b; margin-bottom: 15px; font-size: 1.2rem;"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+        <p style="font-style: italic; color: #666; margin-bottom: 20px; line-height: 1.6;">"Absolutely stunning photos! The team captured every beautiful moment perfectly. The attention to detail and professionalism were outstanding. Highly recommended!"</p>
+        <div style="font-weight: 600; color: #1a1a1a;">- Priya & Rahul</div>
+        <div style="font-size: 0.85rem; color: #999;">Verified Client</div>
+      </div>
+      <div class="review-card" style="background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
+        <div style="color: #f59e0b; margin-bottom: 15px; font-size: 1.2rem;"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+        <p style="font-style: italic; color: #666; margin-bottom: 20px; line-height: 1.6;">"Very professional and extremely patient. The quality of the final edited images exceeded all our expectations. We will definitely book again!"</p>
+        <div style="font-weight: 600; color: #1a1a1a;">- Ananya S.</div>
+        <div style="font-size: 0.85rem; color: #999;">Verified Client</div>
+      </div>
+    </div>
+  </div>
+
   <!-- CTA -->
   <div class="cta-section">
     <h2>Ready to Book Your Wedding Photography?</h2>
@@ -284,19 +331,52 @@
 </section>
 
 <!-- FOOTER -->
-<footer>
-  <div class="footer-content">
-    <div class="footer-logo">BookMyShoot</div>
-    <div class="footer-links">
-      <a href="../index.html">Home</a>
-      <a href="../index.html#about">About</a>
-      <a href="../index.html#services">Services</a>
-      <a href="../contact.html">Contact</a>
+<footer class="footer">
+  <div class="footer-container">
+
+    <!-- Logo & About -->
+    <div class="footer-col">
+      <h2 class="footer-logo">📷 BookMyShoot</h2>
+      <p class="footer-desc">
+        Capture your best moments with professional photography services.
+      </p>
     </div>
+
+    <!-- Quick Links -->
+    <div class="footer-col">
+      <h3>Quick Links</h3>
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../index.html#about">About</a></li>
+        <li><a href="../index.html#services">Services</a></li>
+        <li><a href="../index.html#portfolio">Portfolio</a></li>
+      </ul>
+    </div>
+
+    <!-- Contact -->
+    <div class="footer-col">
+      <h3>Contact</h3>
+      <p>Email: contact@bookmyshoot.com</p>
+      <p>Phone: +91 98765 43210</p>
+      <p>Location: Kerala, India</p>
+    </div>
+
+    <!-- Social Media -->
+    <div class="footer-col">
+      <h3>Follow Us</h3>
+      <div class="social-icons">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-x-twitter"></i></a>
+        <a href="#"><i class="fab fa-youtube"></i></a>
+      </div>
+    </div>
+
   </div>
+
   <div class="footer-bottom">
-    © 2026 BookMyShoot | BCA Final Project  
-    <br>Developed by Navajith C S
+    <p>© 2026 BookMyShoot | BCA Final Project</p>
+    <p>Developed by Navajith C S</p>
   </div>
 </footer>
 
@@ -307,12 +387,15 @@
     const authNav = document.getElementById('authNav');
     
     if (user) {
-      authNav.innerHTML = `
-        <a href="#" class="user-btn" onclick="showProfile(); return false;">👤 ${user.first_name}</a>
+                authNav.innerHTML = `
+        <a href="#" class="user-btn" onclick="showProfile(); return false;">
+            <img src="${avatarUrl}" alt="Profile" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; margin-right: 6px; vertical-align: middle; display: inline-block; pointer-events: none;">
+            ${user.first_name}
+          </a>
         <a href="#" class="logout-btn" onclick="logout(); return false;">Logout</a>
       `;
     } else {
-      authNav.innerHTML = `
+                authNav.innerHTML = `
         <a href="../login.html" class="login-btn">Login</a>
         <a href="../register.html" class="register-btn">Sign Up</a>
       `;

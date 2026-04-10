@@ -1525,6 +1525,8 @@
       margin-bottom: 20px;
     }
   </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 
 <body>
@@ -1736,49 +1738,15 @@
 
                   <div class="search-grid" style="margin-bottom:16px;">
                     <div class="form-group">
-                      <label for="searchDistrict">District / City <span class="required">*</span></label>
-                      <input type="text" id="searchDistrict" placeholder="e.g., Ernakulam" required>
+                      <label for="searchState">State <span class="required">*</span></label>
+                      <select id="searchState" onchange="updateDistricts('searchState', 'searchDistrict')" required>
+                        <option value="">Select State</option>
+                      </select>
                     </div>
                     <div class="form-group">
-                      <label for="searchState">State <span class="required">*</span></label>
-                      <select id="searchState" required>
-                        <option value="">Select State</option>
-                        <option value="Andhra Pradesh">Andhra Pradesh</option>
-                        <option value="Arunachal Pradesh">Arunachal Pradesh</option>
-                        <option value="Assam">Assam</option>
-                        <option value="Bihar">Bihar</option>
-                        <option value="Chhattisgarh">Chhattisgarh</option>
-                        <option value="Goa">Goa</option>
-                        <option value="Gujarat">Gujarat</option>
-                        <option value="Haryana">Haryana</option>
-                        <option value="Himachal Pradesh">Himachal Pradesh</option>
-                        <option value="Jharkhand">Jharkhand</option>
-                        <option value="Karnataka">Karnataka</option>
-                        <option value="Kerala">Kerala</option>
-                        <option value="Madhya Pradesh">Madhya Pradesh</option>
-                        <option value="Maharashtra">Maharashtra</option>
-                        <option value="Manipur">Manipur</option>
-                        <option value="Meghalaya">Meghalaya</option>
-                        <option value="Mizoram">Mizoram</option>
-                        <option value="Nagaland">Nagaland</option>
-                        <option value="Odisha">Odisha</option>
-                        <option value="Punjab">Punjab</option>
-                        <option value="Rajasthan">Rajasthan</option>
-                        <option value="Sikkim">Sikkim</option>
-                        <option value="Tamil Nadu">Tamil Nadu</option>
-                        <option value="Telangana">Telangana</option>
-                        <option value="Tripura">Tripura</option>
-                        <option value="Uttar Pradesh">Uttar Pradesh</option>
-                        <option value="Uttarakhand">Uttarakhand</option>
-                        <option value="West Bengal">West Bengal</option>
-                        <option value="Delhi">Delhi (NCT)</option>
-                        <option value="Chandigarh">Chandigarh</option>
-                        <option value="Puducherry">Puducherry</option>
-                        <option value="Jammu and Kashmir">Jammu & Kashmir</option>
-                        <option value="Ladakh">Ladakh</option>
-                        <option value="Lakshadweep">Lakshadweep</option>
-                        <option value="Andaman and Nicobar">Andaman & Nicobar</option>
-                        <option value="Dadra Nagar Haveli and Daman Diu">Dadra & Nagar Haveli and Daman & Diu</option>
+                      <label for="searchDistrict">District / City <span class="required">*</span></label>
+                      <select id="searchDistrict" required>
+                        <option value="">Select District</option>
                       </select>
                     </div>
                     <div class="form-group">
@@ -1917,6 +1885,17 @@
             </div>
           </div>
 
+          <div class="form-row full" style="margin-bottom: 12px;">
+            <div class="form-group">
+              <button type="button" class="btn-secondary" onclick="detectLocation()" style="width: 100%; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                📍 Use My Current Location
+              </button>
+              <div id="map" style="height: 250px; border-radius:12px; margin-bottom:10px; border: 1px solid #e5e5e5; display: none;"></div>
+              <input type="hidden" id="lat" name="lat">
+              <input type="hidden" id="lon" name="lon">
+            </div>
+          </div>
+
           <!-- Address Line -->
           <div class="form-row full" style="margin-bottom: 4px;">
             <div class="form-group">
@@ -1926,55 +1905,30 @@
             </div>
           </div>
 
-          <!-- Pincode + State -->
+          <!-- State + District -->
           <div class="form-row" style="margin-bottom: 4px;">
+            <div class="form-group">
+              <label for="state">State *</label>
+              <select id="state" onchange="updateDistricts('state', 'district')" required
+                style="padding: 14px 16px; border: 2px solid #e5e5e5; border-radius: 12px; font-size: 0.95em; font-family: inherit; background: #fafbfc;">
+                <option value="">Select State</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="district">District / City *</label>
+              <select id="district" required
+                style="padding: 14px 16px; border: 2px solid #e5e5e5; border-radius: 12px; font-size: 0.95em; font-family: inherit; background: #fafbfc;">
+                <option value="">Select District</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Pincode -->
+          <div class="form-row full" style="margin-bottom: 4px;">
             <div class="form-group">
               <label for="pincode">PIN Code *</label>
               <input type="text" id="pincode" maxlength="6" placeholder="e.g., 682001" required
                 style="padding: 14px 16px; border: 2px solid #e5e5e5; border-radius: 12px; font-size: 0.95em; font-family: inherit; background: #fafbfc;">
-            </div>
-            <div class="form-group">
-              <label for="state">State *</label>
-              <select id="state" required
-                style="padding: 14px 16px; border: 2px solid #e5e5e5; border-radius: 12px; font-size: 0.95em; font-family: inherit; background: #fafbfc;">
-                <option value="">Select State</option>
-                <option value="Andhra Pradesh">Andhra Pradesh</option>
-                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
-                <option value="Assam">Assam</option>
-                <option value="Bihar">Bihar</option>
-                <option value="Chhattisgarh">Chhattisgarh</option>
-                <option value="Goa">Goa</option>
-                <option value="Gujarat">Gujarat</option>
-                <option value="Haryana">Haryana</option>
-                <option value="Himachal Pradesh">Himachal Pradesh</option>
-                <option value="Jharkhand">Jharkhand</option>
-                <option value="Karnataka">Karnataka</option>
-                <option value="Kerala">Kerala</option>
-                <option value="Madhya Pradesh">Madhya Pradesh</option>
-                <option value="Maharashtra">Maharashtra</option>
-                <option value="Manipur">Manipur</option>
-                <option value="Meghalaya">Meghalaya</option>
-                <option value="Mizoram">Mizoram</option>
-                <option value="Nagaland">Nagaland</option>
-                <option value="Odisha">Odisha</option>
-                <option value="Punjab">Punjab</option>
-                <option value="Rajasthan">Rajasthan</option>
-                <option value="Sikkim">Sikkim</option>
-                <option value="Tamil Nadu">Tamil Nadu</option>
-                <option value="Telangana">Telangana</option>
-                <option value="Tripura">Tripura</option>
-                <option value="Uttar Pradesh">Uttar Pradesh</option>
-                <option value="Uttarakhand">Uttarakhand</option>
-                <option value="West Bengal">West Bengal</option>
-                <option value="Delhi">Delhi (NCT)</option>
-                <option value="Chandigarh">Chandigarh</option>
-                <option value="Puducherry">Puducherry</option>
-                <option value="Jammu and Kashmir">Jammu & Kashmir</option>
-                <option value="Ladakh">Ladakh</option>
-                <option value="Lakshadweep">Lakshadweep</option>
-                <option value="Andaman and Nicobar">Andaman & Nicobar</option>
-                <option value="Dadra Nagar Haveli and Daman Diu">Dadra & Nagar Haveli and Daman & Diu</option>
-              </select>
             </div>
           </div>
 
@@ -2035,29 +1989,58 @@
   </div>
 
   <!-- FOOTER -->
-  <footer>
-    <div class="footer-content">
-      <div class="footer-logo">BookMyShoot</div>
-      <div class="footer-links">
-        <a href="index.html">Home</a>
-        <a href="index.html#about">About</a>
-        <a href="index.html#services">Services</a>
-        <a href="contact.html">Contact</a>
-      </div>
-      <div class="footer-social">
-        <a href="#">📘</a>
-        <a href="#">📸</a>
-        <a href="#">🐦</a>
+  <footer class="footer">
+  <div class="footer-container">
+
+    <!-- Logo & About -->
+    <div class="footer-col">
+      <h2 class="footer-logo">📷 BookMyShoot</h2>
+      <p class="footer-desc">
+        Capture your best moments with professional photography services.
+      </p>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="footer-col">
+      <h3>Quick Links</h3>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="index.html#about">About</a></li>
+        <li><a href="index.html#services">Services</a></li>
+        <li><a href="index.html#portfolio">Portfolio</a></li>
+      </ul>
+    </div>
+
+    <!-- Contact -->
+    <div class="footer-col">
+      <h3>Contact</h3>
+      <p>Email: contact@bookmyshoot.com</p>
+      <p>Phone: +91 98765 43210</p>
+      <p>Location: Kerala, India</p>
+    </div>
+
+    <!-- Social Media -->
+    <div class="footer-col">
+      <h3>Follow Us</h3>
+      <div class="social-icons">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-x-twitter"></i></a>
+        <a href="#"><i class="fab fa-youtube"></i></a>
       </div>
     </div>
-    <div class="footer-bottom">
-      © 2026 BookMyShoot | BCA Final Project
-      <br>Developed by Navajith C S
-    </div>
-  </footer>
+
+  </div>
+
+  <div class="footer-bottom">
+    <p>© 2026 BookMyShoot | BCA Final Project</p>
+    <p>Developed by Navajith C S</p>
+  </div>
+</footer>
 
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="js/main.js"></script>
   <script src="js/modal.js"></script>
   <script src="js/validate.js"></script>
@@ -2085,6 +2068,134 @@
     let PACKAGES = {};
 
     let selectedPackage = null;
+
+    // Leaflet Maps and Geolocation logic
+    let mapInstance = null;
+    let mapMarker = null;
+
+    function initMap() {
+      const mapEl = document.getElementById('map');
+      if (!mapInstance) {
+        mapInstance = L.map('map').setView([10.8505, 76.2711], 7); // Kerala default
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+        }).addTo(mapInstance);
+
+        mapInstance.on('click', async function(e) {
+          const lat = e.latlng.lat;
+          const lon = e.latlng.lng;
+          setMapLocation(lat, lon);
+        });
+      }
+      setTimeout(() => mapInstance.invalidateSize(), 150);
+    }
+
+    async function setMapLocation(lat, lon) {
+      if (mapMarker) mapInstance.removeLayer(mapMarker);
+      mapMarker = L.marker([lat, lon]).addTo(mapInstance);
+      document.getElementById('lat').value = lat;
+      document.getElementById('lon').value = lon;
+
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+        const data = await res.json();
+        
+        if (data && data.address) {
+          const state = data.address.state;
+          const district = data.address.county || data.address.state_district || data.address.city;
+
+          let stateEl = document.getElementById('state');
+          if (stateEl && state) {
+            // Find option matching state partially
+            const sOptions = Array.from(stateEl.options);
+            const stateMatch = sOptions.find(o => state.includes(o.value) || o.value.includes(state));
+            if (stateMatch) stateEl.value = stateMatch.value;
+            
+            updateDistricts('state', 'district');
+
+            setTimeout(() => {
+               const districtEl = document.getElementById('district');
+               if (districtEl && district) {
+                 const cleanedDistrict = district.replace(' District', '').trim();
+                 const options = Array.from(districtEl.options);
+                 const matchedOpt = options.find(o => o.value === cleanedDistrict || (o.value && cleanedDistrict.includes(o.value)));
+                 if (matchedOpt) districtEl.value = matchedOpt.value;
+               }
+            }, 300);
+          }
+        }
+      } catch (err) {
+        console.error("Geocoding error: ", err);
+      }
+    }
+
+    function detectLocation() {
+      const mapEl = document.getElementById('map');
+      mapEl.style.display = 'block';
+      initMap();
+
+      if (navigator.geolocation) {
+        Swal.fire({ title: 'Detecting Location...', text: 'Please allow location access in your browser.', allowOutsideClick: false, showConfirmButton: false });
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+          Swal.close();
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          mapInstance.setView([lat, lon], 12);
+          setMapLocation(lat, lon);
+        }, (err) => {
+          Swal.fire({ icon: 'error', title: 'Location Error', text: err.message });
+        });
+      }
+    }
+
+    // Dynamic State & District Dropdowns
+    let indiaDataCache = {};
+    fetch("https://raw.githubusercontent.com/sab99r/Indian-States-And-Districts/master/states-and-districts.json")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.states) {
+          data.states.forEach(item => {
+            indiaDataCache[item.state] = item.districts;
+          });
+        }
+        populateStateDropdown('searchState');
+        populateStateDropdown('state');
+      })
+      .catch(err => console.error("Error fetching states:", err));
+
+    function populateStateDropdown(elementId) {
+      const stateDropdown = document.getElementById(elementId);
+      if (!stateDropdown) return;
+      const firstOpt = stateDropdown.options[0];
+      stateDropdown.innerHTML = '';
+      if (firstOpt) stateDropdown.appendChild(firstOpt);
+
+      Object.keys(indiaDataCache).forEach(state => {
+        let option = document.createElement("option");
+        option.value = state;
+        option.textContent = state;
+        stateDropdown.appendChild(option);
+      });
+    }
+
+    function updateDistricts(stateElementId, districtElementId) {
+      const state = document.getElementById(stateElementId).value;
+      const districtDropdown = document.getElementById(districtElementId);
+      if (!districtDropdown) return;
+
+      const firstOptText = districtDropdown.options[0] ? districtDropdown.options[0].textContent : 'Select District';
+      districtDropdown.innerHTML = `<option value="">${firstOptText}</option>`;
+
+      if (indiaDataCache[state]) {
+        const cities = indiaDataCache[state].filter(d => Boolean(d));
+        cities.forEach(city => {
+          let option = document.createElement("option");
+          option.value = city;
+          option.textContent = city;
+          districtDropdown.appendChild(option);
+        });
+      }
+    }
 
     // Initialize
     document.addEventListener('DOMContentLoaded', function () {
@@ -2132,8 +2243,16 @@
       const authNav = document.getElementById('authNav');
 
       if (user) {
+        let avatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.first_name || 'User') + '&background=667eea&color=fff';
+        if (user.profile_image) {
+          avatarUrl = user.profile_image.startsWith('http') ? user.profile_image : `${API_URL.replace('/api', '')}/uploads/profiles/${user.profile_image}`;
+        }
+
         authNav.innerHTML = `
-          <a href="#" class="user-btn" onclick="showProfile(); return false;">👤 ${user.first_name}</a>
+          <a href="#" class="user-btn" onclick="showProfile(); return false;">
+            <img src="${avatarUrl}" alt="Profile" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; margin-right: 6px; vertical-align: middle; display: inline-block; pointer-events: none;">
+            ${user.first_name}
+          </a>
           <a href="#" class="logout-btn" onclick="logout(); return false;">Logout</a>
         `;
 
@@ -2143,7 +2262,7 @@
         document.getElementById('email').value = user.email || '';
         document.getElementById('phone').value = user.phone || '';
       } else {
-        authNav.innerHTML = `
+                  authNav.innerHTML = `
           <a href="login.html" class="login-btn">Login</a>
           <a href="register.html" class="register-btn">Sign Up</a>
         `;
@@ -2544,9 +2663,12 @@
         const addressLine = document.getElementById('addressLine').value.trim();
         const pincode = document.getElementById('pincode').value.trim();
         const state = document.getElementById('state').value;
+        const district = document.getElementById('district').value || '';
+        const lat = document.getElementById('lat').value || '';
+        const lon = document.getElementById('lon').value || '';
         const country = document.getElementById('country').value;
         const contactNumber = document.getElementById('contactNumber').value.trim();
-        const fullLocation = [addressLine, state, pincode, country].filter(Boolean).join(', ');
+        const fullLocation = [addressLine, district, state, pincode, country].filter(Boolean).join(', ');
 
         const bookingData = {
           customer_id: user.id,
@@ -2557,9 +2679,12 @@
           location: fullLocation,
           location_type: locationType,
           address_line: addressLine,
+          district: district,
           pincode: pincode,
           state: state,
           country: country,
+          latitude: lat,
+          longitude: lon,
           contact_number: contactNumber,
           notes: document.getElementById('notes').value,
           total_price: PACKAGES[selectedPackage].basePrice,
@@ -3175,13 +3300,27 @@
         'searchAddressLine': 'addressLine',
         'searchPincode': 'pincode',
         'searchState': 'state',
+        'searchDistrict': 'district',
         'searchCountry': 'country',
         'searchContactPhone': 'contactNumber'
       };
+      // For dependent dropdowns, we load districts after setting state
       for (const [src, dest] of Object.entries(searchFieldMap)) {
         const srcEl = document.getElementById(src);
         const dstEl = document.getElementById(dest);
-        if (srcEl && dstEl && srcEl.value) dstEl.value = srcEl.value;
+        if (srcEl && dstEl && srcEl.value) {
+          if (dest === 'district') {
+            setTimeout(() => {
+              const options = Array.from(dstEl.options);
+              const srcValLower = srcEl.value.toLowerCase();
+              const matchedOpt = options.find(o => o.value.toLowerCase() === srcValLower || (o.value && srcValLower.includes(o.value.toLowerCase())));
+              if (matchedOpt) dstEl.value = matchedOpt.value;
+            }, 100);
+          } else {
+            dstEl.value = srcEl.value;
+            if (src === 'searchState') updateDistricts('state', 'district');
+          }
+        }
       }
       // Trigger location preview in booking modal if address was prefilled
       if (typeof updateLocationPreview === 'function') updateLocationPreview();

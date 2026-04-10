@@ -1,18 +1,4 @@
 // Enhanced scroll reveal for elements with class 'reveal'
-function revealOnScroll() {
-  const reveals = document.querySelectorAll('.reveal');
-  const windowH = window.innerHeight;
-  reveals.forEach((el, index) => {
-    const rect = el.getBoundingClientRect();
-    if (rect.top < windowH - 100) { 
-      setTimeout(() => {
-        el.classList.add('visible');
-      }, index * 100);
-    }
-  });
-}
-
-// Add fade-in animation to sections on scroll
 function animateSections() {
   const sections = document.querySelectorAll('section:not(.hero)');
   const windowH = window.innerHeight;
@@ -28,23 +14,16 @@ function animateSections() {
 
 // Scroll event listeners
 window.addEventListener('scroll', () => {
-  revealOnScroll();
   animateSections();
   updateNavbarBackground();
 });
 
 window.addEventListener('load', () => {
-  revealOnScroll();
   animateSections();
   document.body.classList.add('loaded');
 });
 
-// Add loading animation
-window.addEventListener('load', () => {
-  document.body.classList.add('loaded');
-});
-
-// Navbar background on scroll
+// Navbar background on scroll ... existing code follows ...
 function updateNavbarBackground() {
   const navbar = document.getElementById('mainNavbar');
   if (navbar) {
@@ -70,22 +49,30 @@ function validatePhoneNumber(phone) {
   return phoneRegex.test(phone.replace(/\s/g, ''));
 }
 
+// Format path depending on subdirectories
+function getRootPrefix() {
+  const path = window.location.pathname;
+  return (path.includes('/services/') || path.includes('/portfolio/')) ? '../' : '';
+}
+
 // Show profile information
 function showProfile() {
   const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const pfx = getRootPrefix();
+
   if (user && user.user_type === 'photographer') {
-    window.location.href = 'photographer-dashboard.html';
+    window.location.href = pfx + 'photographer-dashboard.html';
   } else if (user && user.user_type === 'admin') {
-    window.location.href = 'admin-dashboard.html';
+    window.location.href = pfx + 'admin-dashboard.html';
   } else {
-    window.location.href = 'profile.html';
+    window.location.href = pfx + 'profile.html';
   }
 }
 
 // Logout function
 function logout() {
   localStorage.removeItem('user');
-  window.location.href = 'index.html';
+  window.location.href = getRootPrefix() + 'index.html';
 }
 
 // Toggle mobile menu
@@ -111,6 +98,7 @@ function animateCounters() {
   const counters = document.querySelectorAll('.stat-number');
   counters.forEach(counter => {
     const target = parseInt(counter.textContent.replace(/\D/g, ''));
+    if (isNaN(target)) return;
     const duration = 2000;
     const increment = target / (duration / 16);
     let current = 0;
@@ -136,12 +124,17 @@ const observerOptions = {
 };
 
 const observer = new IntersectionObserver((entries) => {
+  let delay = 0;
   entries.forEach(entry => {
     if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-      if (entry.target.classList.contains('stat-number')) {
-        animateCounters();
-      }
+      setTimeout(() => {
+        entry.target.classList.add('visible');
+        if (entry.target.classList.contains('stat-number') || entry.target.classList.contains('about-stats')) {
+          animateCounters();
+        }
+      }, delay);
+      delay += 150; // Stagger effect
+      observer.unobserve(entry.target);
     }
   });
 }, observerOptions);
@@ -161,3 +154,10 @@ window.addEventListener('scroll', () => {
     hero.style.backgroundPositionY = scrolled * 0.5 + 'px';
   }
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+});
+

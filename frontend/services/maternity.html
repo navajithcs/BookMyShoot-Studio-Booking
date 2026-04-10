@@ -40,7 +40,29 @@
     .cta-section p { font-size: 1.1em; margin-bottom: 30px; opacity: 0.8; }
     .cta-btn { display: inline-block; padding: 16px 48px; background: white; color: #20c997; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 1.1em; transition: all 0.3s ease; }
     .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-  </style>
+  
+    /* PRICING ALIGNMENT FIX */
+    .pricing-grid {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+    .pricing-card {
+      display: flex !important;
+      flex-direction: column;
+      height: 100%;
+      flex: 1 1 250px;
+    }
+    .pricing-features {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .pricing-card .book-btn, .book-btn.margin-auto {
+      margin-top: auto !important;
+    }
+</style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 <header class="navbar">
@@ -105,12 +127,53 @@
     <a href="../booking.html?service=maternity" class="cta-btn">Schedule Session</a>
   </div>
 </section>
-<footer>
-  <div class="footer-content">
-    <div class="footer-logo">BookMyShoot</div>
-    <div class="footer-links"><a href="../index.html">Home</a><a href="../index.html#about">About</a><a href="../index.html#services">Services</a><a href="../contact.html">Contact</a></div>
+<footer class="footer">
+  <div class="footer-container">
+
+    <!-- Logo & About -->
+    <div class="footer-col">
+      <h2 class="footer-logo">📷 BookMyShoot</h2>
+      <p class="footer-desc">
+        Capture your best moments with professional photography services.
+      </p>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="footer-col">
+      <h3>Quick Links</h3>
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../index.html#about">About</a></li>
+        <li><a href="../index.html#services">Services</a></li>
+        <li><a href="../index.html#portfolio">Portfolio</a></li>
+      </ul>
+    </div>
+
+    <!-- Contact -->
+    <div class="footer-col">
+      <h3>Contact</h3>
+      <p>Email: contact@bookmyshoot.com</p>
+      <p>Phone: +91 98765 43210</p>
+      <p>Location: Kerala, India</p>
+    </div>
+
+    <!-- Social Media -->
+    <div class="footer-col">
+      <h3>Follow Us</h3>
+      <div class="social-icons">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-x-twitter"></i></a>
+        <a href="#"><i class="fab fa-youtube"></i></a>
+      </div>
+    </div>
+
   </div>
-  <div class="footer-bottom">© 2026 BookMyShoot | BCA Final Project <br>Developed by Navajith C S</div>
+
+  <div class="footer-bottom">
+    <p>© 2026 BookMyShoot | BCA Final Project</p>
+    <p>Developed by Navajith C S</p>
+  </div>
 </footer>
 <script src="../js/main.js"></script>
 <script>

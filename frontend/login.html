@@ -386,6 +386,8 @@
       .auth-header h1 { font-size: 1.6em; }
     }
   </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -597,14 +599,22 @@
             return;
           }
           localStorage.setItem('user', JSON.stringify(data.user));
-          showModal('Success', 'Welcome back, ' + data.user.first_name + '!', () => {
-            if (data.user.user_type === 'photographer') {
-              window.location.href = 'photographer-dashboard.html';
-            } else if (data.user.user_type === 'admin') {
-              window.location.href = 'admin-dashboard.html';
-            } else {
-              window.location.href = 'index.html';
-            }
+          
+          let redirectUrl = 'index.html';
+          if (data.user.user_type === 'photographer') {
+            redirectUrl = 'photographer-dashboard.html';
+          } else if (data.user.user_type === 'admin') {
+            redirectUrl = 'admin-dashboard.html';
+          }
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Login Successful!',
+            text: 'Welcome back, ' + data.user.first_name + '! Redirecting...',
+            showConfirmButton: false,
+            timer: 1500
+          }).then(() => {
+            window.location.href = redirectUrl;
           });
         })
         .catch(error => {

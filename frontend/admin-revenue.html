@@ -121,6 +121,7 @@
     }
     .filter-bar input { min-width: 220px; }
   </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
   <div class="page-loader-v2" id="pageLoader"><div class="loader-spinner"></div></div>
@@ -896,7 +897,8 @@
         '<html><head><title>Print Revenue Report</title>' +
         '<link rel="stylesheet" href="css/design-system.css"><link rel="stylesheet" href="css/dashboard.css">' +
         '<style>body{padding:20px;font-family:Inter,sans-serif;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;font-size:11px;} th{background:#10b981;color:#fff;} .section-download-bar,.filter-bar{display:none;} .cust-detail{display:flex;flex-direction:column;} h1{color:#10b981;}</style>' +
-        '</head><body><h1>BookMyShoot Revenue Report</h1>' +
+        '  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head><body><h1>BookMyShoot Revenue Report</h1>' +
         '<p style="color:#888;">Generated: ' + new Date().toLocaleString('en-IN') + '</p>' +
         section.innerHTML + '</body></html>'
       );
